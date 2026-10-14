@@ -52,6 +52,7 @@ place (enemies, a ball), and the role passes on by itself when that page goes.
 | [testing.md](docs/testing.md) | Several players on one machine, a bad connection, phones, other browsers |
 | [security.md](docs/security.md) | What the room key, the invite and the site check protect, and what not |
 | [design-philosophy.md](docs/design-philosophy.md) | How p3p2 stays generic, and the kinds of game it is not for |
+| [comparison.md](docs/comparison.md) | Other projects like p3p2, and where each parts from it |
 | [`examples/`](examples) | A chat page, a small game with a host and a log, cards dealt face down, and a game in turns |
 
 **For players, and for whoever runs a server**
