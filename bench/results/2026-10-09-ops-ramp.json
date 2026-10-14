@@ -1,0 +1,526 @@
+{
+ "steps": [
+  {
+   "result": {
+    "profile": "ops",
+    "rooms": 1,
+    "members": 20,
+    "connections": 20,
+    "seconds": 20.006,
+    "cpu": 0.06672998100569828,
+    "rss": 100245504,
+    "rssPeak": 100245504,
+    "heapUsed": 16778752,
+    "loopP99": 1.854,
+    "loopMax": 2.812,
+    "framesIn": 42.03738878336499,
+    "framesOut": 805.7582725182446,
+    "bytesIn": 4661.651504548636,
+    "bytesOut": 106018.04458662402,
+    "writes": 39.63810856742977,
+    "presenceSkipped": 0,
+    "volatileDropped": 0,
+    "series": {
+     "ping": {
+      "sent": 40,
+      "received": 40,
+      "missed": 0,
+      "p50": 0.631,
+      "p95": 0.889,
+      "p99": 1.115,
+      "max": 1.115
+     },
+     "op": {
+      "sent": 802,
+      "received": 16040,
+      "missed": 0,
+      "p50": 1.139,
+      "p95": 1.851,
+      "p99": 2.341,
+      "max": 3.125
+     }
+    },
+    "errors": {},
+    "closes": 0,
+    "generatorLoopP99": 1.7637110000000007,
+    "throttledMs": 0
+   },
+   "why": null
+  },
+  {
+   "result": {
+    "profile": "ops",
+    "rooms": 2,
+    "members": 20,
+    "connections": 40,
+    "seconds": 20.004,
+    "cpu": 0.08998200359928014,
+    "rss": 102703104,
+    "rssPeak": 102703104,
+    "heapUsed": 17672288,
+    "loopP99": 1.969,
+    "loopMax": 28.011,
+    "framesIn": 84.08318336332732,
+    "framesOut": 1611.6776644671065,
+    "bytesIn": 9320.035992801439,
+    "bytesOut": 212875.174965007,
+    "writes": 79.78404319136172,
+    "presenceSkipped": 0,
+    "volatileDropped": 0,
+    "series": {
+     "ping": {
+      "sent": 81,
+      "received": 81,
+      "missed": 0,
+      "p50": 0.576,
+      "p95": 0.837,
+      "p99": 1.522,
+      "max": 1.742
+     },
+     "op": {
+      "sent": 1604,
+      "received": 32080,
+      "missed": 0,
+      "p50": 1.059,
+      "p95": 1.748,
+      "p99": 2.391,
+      "max": 23.455
+     }
+    },
+    "errors": {},
+    "closes": 0,
+    "generatorLoopP99": 1.7964789999999997,
+    "throttledMs": 0
+   },
+   "why": null
+  },
+  {
+   "result": {
+    "profile": "ops",
+    "rooms": 4,
+    "members": 20,
+    "connections": 80,
+    "seconds": 20.006,
+    "cpu": 0.16355093471958412,
+    "rss": 105136128,
+    "rssPeak": 105136128,
+    "heapUsed": 18487128,
+    "loopP99": 1.772,
+    "loopMax": 20.769,
+    "framesIn": 168.19954013795862,
+    "framesOut": 3224.032790162951,
+    "bytesIn": 18680.845746276118,
+    "bytesOut": 426599.3701889433,
+    "writes": 159.0522843147056,
+    "presenceSkipped": 0,
+    "volatileDropped": 0,
+    "series": {
+     "ping": {
+      "sent": 161,
+      "received": 161,
+      "missed": 0,
+      "p50": 0.542,
+      "p95": 1.057,
+      "p99": 1.656,
+      "max": 2.207
+     },
+     "op": {
+      "sent": 3213,
+      "received": 64260,
+      "missed": 0,
+      "p50": 1.051,
+      "p95": 1.832,
+      "p99": 2.473,
+      "max": 21.263
+     }
+    },
+    "errors": {},
+    "closes": 0,
+    "generatorLoopP99": 1.5343350000000004,
+    "throttledMs": 0
+   },
+   "why": null
+  },
+  {
+   "result": {
+    "profile": "ops",
+    "rooms": 8,
+    "members": 20,
+    "connections": 160,
+    "seconds": 20.004999999999995,
+    "cpu": 0.2871782054486379,
+    "rss": 110628864,
+    "rssPeak": 110628864,
+    "heapUsed": 21845336,
+    "loopP99": 1.633,
+    "loopMax": 40.397,
+    "framesIn": 336.41589602599356,
+    "framesOut": 6447.438140464886,
+    "bytesIn": 37446.138465383665,
+    "bytesOut": 855259.9350162462,
+    "writes": 319.47013246688334,
+    "presenceSkipped": 0,
+    "volatileDropped": 0,
+    "series": {
+     "ping": {
+      "sent": 322,
+      "received": 322,
+      "missed": 0,
+      "p50": 0.495,
+      "p95": 1.534,
+      "p99": 3.635,
+      "max": 14.607
+     },
+     "op": {
+      "sent": 6416,
+      "received": 128320,
+      "missed": 0,
+      "p50": 0.993,
+      "p95": 1.984,
+      "p99": 4.547,
+      "max": 36.607
+     }
+    },
+    "errors": {},
+    "closes": 0,
+    "generatorLoopP99": 0.9363189999999992,
+    "throttledMs": 0
+   },
+   "why": null
+  },
+  {
+   "result": {
+    "profile": "ops",
+    "rooms": 16,
+    "members": 20,
+    "connections": 320,
+    "seconds": 20.004999999999995,
+    "cpu": 0.413446638340415,
+    "rss": 110649344,
+    "rssPeak": 113455104,
+    "heapUsed": 17057984,
+    "loopP99": 2.861,
+    "loopMax": 54.52,
+    "framesIn": 672.7318170457387,
+    "framesOut": 12894.776305923522,
+    "bytesIn": 75398.90027493128,
+    "bytesOut": 1721548.6128467887,
+    "writes": 639.1902024493878,
+    "presenceSkipped": 0,
+    "volatileDropped": 0,
+    "series": {
+     "ping": {
+      "sent": 642,
+      "received": 642,
+      "missed": 0,
+      "p50": 0.387,
+      "p95": 1.772,
+      "p99": 8.067,
+      "max": 28.351
+     },
+     "op": {
+      "sent": 12841,
+      "received": 256757,
+      "missed": 0,
+      "p50": 0.823,
+      "p95": 2.465,
+      "p99": 13.655,
+      "max": 40.831
+     }
+    },
+    "errors": {},
+    "closes": 0,
+    "generatorLoopP99": 1.0018550000000008,
+    "throttledMs": 0
+   },
+   "why": null
+  },
+  {
+   "result": {
+    "profile": "ops",
+    "rooms": 32,
+    "members": 20,
+    "connections": 640,
+    "seconds": 20.003000000000014,
+    "cpu": 0.43263510473428957,
+    "rss": 116817920,
+    "rssPeak": 116817920,
+    "heapUsed": 23953560,
+    "loopP99": 9.382,
+    "loopMax": 43.969,
+    "framesIn": 1345.5981602759578,
+    "framesOut": 25792.131180322933,
+    "bytesIn": 150816.87746837962,
+    "bytesOut": 3444272.159176121,
+    "writes": 1275.0587411888207,
+    "presenceSkipped": 0,
+    "volatileDropped": 0,
+    "series": {
+     "ping": {
+      "sent": 1284,
+      "received": 1284,
+      "missed": 0,
+      "p50": 0.191,
+      "p95": 2.025,
+      "p99": 24.639,
+      "max": 38.271
+     },
+     "op": {
+      "sent": 25674,
+      "received": 513459,
+      "missed": 0,
+      "p50": 0.421,
+      "p95": 2.189,
+      "p99": 24.367,
+      "max": 42.879
+     }
+    },
+    "errors": {},
+    "closes": 0,
+    "generatorLoopP99": 0.9936629999999997,
+    "throttledMs": 0
+   },
+   "why": null
+  },
+  {
+   "result": {
+    "profile": "ops",
+    "rooms": 64,
+    "members": 20,
+    "connections": 1280,
+    "seconds": 20.00399999999999,
+    "cpu": 0.4978504299140174,
+    "rss": 128958464,
+    "rssPeak": 128958464,
+    "heapUsed": 18863040,
+    "loopP99": 29.584,
+    "loopMax": 59.206,
+    "framesIn": 2691.161767646472,
+    "framesOut": 51583.68326334735,
+    "bytesIn": 301646.970605879,
+    "bytesOut": 6888068.786242754,
+    "writes": 2550.4399120175976,
+    "presenceSkipped": 0,
+    "volatileDropped": 0,
+    "series": {
+     "ping": {
+      "sent": 2565,
+      "received": 2569,
+      "missed": 0,
+      "p50": 0.105,
+      "p95": 8.895,
+      "p99": 32.623,
+      "max": 42.303
+     },
+     "op": {
+      "sent": 51331,
+      "received": 1028040,
+      "missed": 0,
+      "p50": 0.294,
+      "p95": 14.439,
+      "p99": 33.663,
+      "max": 43.231
+     }
+    },
+    "errors": {},
+    "closes": 0,
+    "generatorLoopP99": 0.9936629999999997,
+    "throttledMs": 5.084000000000003
+   },
+   "why": null
+  },
+  {
+   "result": {
+    "profile": "ops",
+    "rooms": 96,
+    "members": 20,
+    "connections": 1920,
+    "seconds": 20.00399999999999,
+    "cpu": 0.7044591081783647,
+    "rss": 157528064,
+    "rssPeak": 157528064,
+    "heapUsed": 30143176,
+    "loopP99": 63.728,
+    "loopMax": 93.678,
+    "framesIn": 4036.49270145971,
+    "framesOut": 77367.6764647071,
+    "bytesIn": 453815.1369726057,
+    "bytesOut": 10394025.494901024,
+    "writes": 3834.433113377326,
+    "presenceSkipped": 0,
+    "volatileDropped": 0,
+    "series": {
+     "ping": {
+      "sent": 3849,
+      "received": 3849,
+      "missed": 0,
+      "p50": 0.352,
+      "p95": 35.231,
+      "p99": 45.951,
+      "max": 66.751
+     },
+     "op": {
+      "sent": 76980,
+      "received": 1539387,
+      "missed": 0,
+      "p50": 0.532,
+      "p95": 36.799,
+      "p99": 47.135,
+      "max": 79.871
+     }
+    },
+    "errors": {},
+    "closes": 0,
+    "generatorLoopP99": 1.0018550000000008,
+    "throttledMs": 715.3809999999999
+   },
+   "why": null
+  },
+  {
+   "result": {
+    "profile": "ops",
+    "rooms": 104,
+    "members": 20,
+    "connections": 2080,
+    "seconds": 20.002999999999986,
+    "cpu": 0.7550367444883272,
+    "rss": 156573696,
+    "rssPeak": 157057024,
+    "heapUsed": 30043728,
+    "loopP99": 65.235,
+    "loopMax": 89.025,
+    "framesIn": 4378.59321101835,
+    "framesOut": 83923.86142078694,
+    "bytesIn": 493094.3358496229,
+    "bytesOut": 11295186.3220517,
+    "writes": 4150.177473378996,
+    "presenceSkipped": 0,
+    "volatileDropped": 0,
+    "series": {
+     "ping": {
+      "sent": 4187,
+      "received": 4187,
+      "missed": 0,
+      "p50": 0.454,
+      "p95": 35.839,
+      "p99": 45.119,
+      "max": 68.479
+     },
+     "op": {
+      "sent": 83737,
+      "received": 1674700,
+      "missed": 0,
+      "p50": 0.625,
+      "p95": 36.671,
+      "p99": 44.703,
+      "max": 74.431
+     }
+    },
+    "errors": {},
+    "closes": 0,
+    "generatorLoopP99": 0.9854710000000004,
+    "throttledMs": 501.27100000000064
+   },
+   "why": null
+  },
+  {
+   "result": {
+    "profile": "ops",
+    "rooms": 112,
+    "members": 20,
+    "connections": 2240,
+    "seconds": 20.062999999999988,
+    "cpu": 0.8323780092707974,
+    "rss": 156295168,
+    "rssPeak": 157392896,
+    "heapUsed": 29374648,
+    "loopP99": 81.226,
+    "loopMax": 193.293,
+    "framesIn": 4710.11314359767,
+    "framesOut": 90282.26087823362,
+    "bytesIn": 529911.1797836818,
+    "bytesOut": 12142247.420625038,
+    "writes": 4449.135224044263,
+    "presenceSkipped": 0,
+    "volatileDropped": 0,
+    "series": {
+     "ping": {
+      "sent": 4518,
+      "received": 4514,
+      "missed": 0,
+      "p50": 3.633,
+      "p95": 45.759,
+      "p99": 89.663,
+      "max": 130.111
+     },
+     "op": {
+      "sent": 90359,
+      "received": 1806219,
+      "missed": 0,
+      "p50": 3.835,
+      "p95": 46.783,
+      "p99": 95.295,
+      "max": 130.559
+     }
+    },
+    "errors": {},
+    "closes": 0,
+    "generatorLoopP99": 0.9854710000000004,
+    "throttledMs": 1017.75
+   },
+   "why": "CPU 83 %, ping p99 89.7 ms, op p99 95.3 ms"
+  },
+  {
+   "result": {
+    "profile": "ops",
+    "rooms": 128,
+    "members": 20,
+    "connections": 2560,
+    "seconds": 20.204000000000008,
+    "cpu": 0.9319936646208667,
+    "rss": 157392896,
+    "rssPeak": 157392896,
+    "heapUsed": 33135984,
+    "loopP99": 164.064,
+    "loopMax": 231.566,
+    "framesIn": 5377.74698079588,
+    "framesOut": 103082.55790932485,
+    "bytesIn": 602137.052068897,
+    "bytesOut": 13771727.628192432,
+    "writes": 5113.244901999602,
+    "presenceSkipped": 0,
+    "volatileDropped": 0,
+    "series": {
+     "ping": {
+      "sent": 5205,
+      "received": 5196,
+      "missed": 0,
+      "p50": 39.135,
+      "p95": 135.679,
+      "p99": 177.279,
+      "max": 203.775
+     },
+     "op": {
+      "sent": 104200,
+      "received": 2081920,
+      "missed": 0,
+      "p50": 44.287,
+      "p95": 151.551,
+      "p99": 182.399,
+      "max": 205.055
+     }
+    },
+    "errors": {},
+    "closes": 0,
+    "generatorLoopP99": 0.9608950000000007,
+    "throttledMs": 1351.661
+   },
+   "why": "CPU 93 %, ping p99 177.3 ms, op p99 182.4 ms"
+  }
+ ],
+ "found": {
+  "pass": 104,
+  "fail": 112
+ },
+ "note": null
+}

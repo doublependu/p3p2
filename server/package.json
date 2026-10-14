@@ -1,0 +1,23 @@
+{
+  "name": "@p3p2/server",
+  "version": "0.0.0",
+  "private": true,
+  "license": "AGPL-3.0-only",
+  "type": "module",
+  "scripts": {
+    "dev": "node --watch src/main.ts",
+    "start": "node src/main.ts",
+    "typecheck": "tsc -p .",
+    "test": "node --test \"test/**/*.test.ts\""
+  },
+  "dependencies": {
+    "@hono/node-server": "^2.1.4",
+    "@p3p2/protocol": "*",
+    "hono": "^4.13.13",
+    "lean-qr": "^2.7.4",
+    "ws": "^8.22.0"
+  },
+  "devDependencies": {
+    "@types/ws": "^8.18.2"
+  }
+}

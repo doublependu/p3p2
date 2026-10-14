@@ -1,0 +1,60 @@
+# A p3p2 server on a VPS, behind Caddy, which gets and renews the HTTPS certificate itself.
+#
+#   cp .env.example .env               # and set P3P2_DOMAIN in it
+#   docker compose up -d --build
+#   docker compose logs p3p2      # prints the one-time setup link
+#
+# The whole walk-through is in docs/self-host.md.
+
+name: p3p2
+
+services:
+  p3p2:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile
+    image: p3p2/p3p2
+    restart: unless-stopped
+    # Every P3P2_ setting in .env reaches the server (the README lists them).
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      P3P2_PUBLIC_URL: https://${P3P2_DOMAIN:?Set P3P2_DOMAIN, in deploy/.env}
+      # Every connection comes from Caddy, which passes on the player's address. Without this
+      # all players would share one address, and one allowance of connections.
+      P3P2_TRUST_PROXY: "1"
+      # Where Caddy looks for the server, and where the volume is: not for .env to change.
+      P3P2_HOST: 0.0.0.0
+      P3P2_PORT: "8080"
+      P3P2_DATA_DIR: /data
+    volumes:
+      - p3p2-data:/data
+    logging: &logging
+      options:
+        max-size: 10m
+        max-file: "3"
+
+  caddy:
+    image: caddy:2
+    restart: unless-stopped
+    depends_on:
+      - p3p2
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    environment:
+      P3P2_DOMAIN: ${P3P2_DOMAIN}
+    volumes:
+      # Caddyfile for a domain name, Caddyfile.ip for a bare address, Caddyfile.local to try it at home.
+      - ./${P3P2_CADDYFILE:-Caddyfile}:/etc/caddy/Caddyfile:ro
+      # The certificates. Keep this volume: Let's Encrypt limits how often a name can ask again.
+      - caddy-data:/data
+      - caddy-config:/config
+    logging: *logging
+
+volumes:
+  p3p2-data:
+  caddy-data:
+  caddy-config:

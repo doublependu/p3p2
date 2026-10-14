@@ -1,0 +1,17 @@
+
+> bench
+> node bench/src/main.ts soak --hours 24
+
+Building p3p2/p3p2:bench …
+soak: 24 hours of "Soak: presence and chat, values saved every minute, a member replaced every 30 s, a connection cut every 5 minutes"
+  one line every 60 s into bench/results/soak-2026-10-11.jsonl
+Soak: 24.01 hours, 1438 samples
+  RSS      99.2 MB at the start → 100.6 MB at the end (+1.4 %), peak 103.1 MB, trend 0.05 MB/hour
+  JS heap  14.2 MB → 14.3 MB
+  CPU      median 5.9 %, highest sample 7.2 %
+  Event-loop delay p99, worst sample: 1.93 ms
+  ping     p99: median of the samples 0.97 ms, worst sample 2.66 ms
+  presence p99: median of the samples 50.9 ms, worst sample 51.7 ms
+  chat     p99: median of the samples 1.83 ms, worst sample 3.95 ms
+  saved    p99: median of the samples 2.24 ms, worst sample 57.8 ms
+  Not delivered: 56; connections dropped: 0; errors: none

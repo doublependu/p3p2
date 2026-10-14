@@ -1,0 +1,33 @@
+{
+  "name": "p3p2",
+  "private": true,
+  "license": "AGPL-3.0-only",
+  "type": "module",
+  "workspaces": [
+    "protocol",
+    "server",
+    "client",
+    "e2e",
+    "bench"
+  ],
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "dev": "npm run dev -w server",
+    "build": "npm run build -w client",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "lint": "biome lint .",
+    "test": "npm run test --workspaces --if-present",
+    "size": "npm run size -w client",
+    "examples": "node examples/serve.ts",
+    "lag": "node e2e/tools/lag-proxy.ts",
+    "bench": "node bench/src/main.ts",
+    "e2e": "npm run e2e -w e2e"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.5.15",
+    "@types/node": "^24.19.1",
+    "typescript": "^7.0.2"
+  }
+}

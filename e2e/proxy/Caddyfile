@@ -1,0 +1,21 @@
+# The three sites of the browser tests behind a proxy (E2E_PROXY=1): the server as
+# deploy/Caddyfile.local serves it, and the example pages twice, as examples/serve.ts does.
+# Caddy signs all three certificates itself.
+
+p3p2.localhost {
+	tls internal
+	reverse_proxy p3p2:8080
+}
+
+game.localhost, other.localhost {
+	tls internal
+	header Cache-Control no-store
+	handle_path /dist/* {
+		root * /srv/dist
+		file_server
+	}
+	handle {
+		root * /srv/examples
+		file_server
+	}
+}

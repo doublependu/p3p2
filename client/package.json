@@ -1,0 +1,41 @@
+{
+  "name": "@p3p2/client",
+  "version": "0.0.0",
+  "private": true,
+  "license": "MIT",
+  "type": "module",
+  "main": "./dist/p3p2.js",
+  "module": "./dist/p3p2.js",
+  "types": "./dist/types/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/types/index.d.ts",
+      "default": "./dist/p3p2.js"
+    },
+    "./smooth": {
+      "types": "./dist/types/smooth.d.ts",
+      "default": "./dist/p3p2-smooth.js"
+    },
+    "./pack": {
+      "types": "./dist/types/pack.d.ts",
+      "default": "./dist/p3p2-pack.js"
+    },
+    "./iife": "./dist/p3p2.iife.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "sideEffects": false,
+  "scripts": {
+    "build": "vite build && vite build --mode iife && tsc -p tsconfig.types.json",
+    "dev": "vite build --watch",
+    "typecheck": "tsc -p .",
+    "test": "node --test \"test/**/*.test.ts\"",
+    "size": "node scripts/size-check.ts"
+  },
+  "devDependencies": {
+    "@p3p2/protocol": "^0.0.0",
+    "lean-qr": "^2.7.4",
+    "vite": "^8.3.3"
+  }
+}

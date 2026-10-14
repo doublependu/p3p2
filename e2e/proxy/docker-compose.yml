@@ -1,0 +1,20 @@
+# Laid over deploy/docker-compose.yml for the browser tests behind a proxy (E2E_PROXY=1; see
+# setup.ts). It adds what the tests need and changes nothing else: the same server image, the
+# same Caddy, the same ports. Paths are relative to deploy/, where the first file is.
+
+services:
+  p3p2:
+    # A deploy/.env on this machine is someone's real settings, not the tests'.
+    env_file: !reset []
+    environment:
+      P3P2_OWNER_PASSWORD: ${E2E_PASSWORD}
+      P3P2_DATA_DIR: ":memory:"
+      P3P2_LOG_LEVEL: warn
+      # As in playwright.config.ts: a log this small is full after a few dozen ops.
+      P3P2_MAX_LOG_BYTES: "16384"
+      P3P2_MAX_ROOMS: "500"
+
+  caddy:
+    volumes:
+      - ../examples:/srv/examples:ro
+      - ../client/dist:/srv/dist:ro

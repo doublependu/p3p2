@@ -1,0 +1,53 @@
+{
+ "profile": "views",
+ "rooms": 1,
+ "members": 8,
+ "connections": 8,
+ "seconds": 60.003,
+ "cpu": 0.03273169674849591,
+ "rss": 100900864,
+ "rssPeak": 100909056,
+ "heapUsed": 17011016,
+ "loopP99": 0.871,
+ "loopMax": 1.641,
+ "framesIn": 153.70898121760578,
+ "framesOut": 232.7050314150959,
+ "bytesIn": 63421.962235221574,
+ "bytesOut": 112137.39313034348,
+ "writes": 0,
+ "presenceSkipped": 0,
+ "volatileDropped": 0,
+ "series": {
+  "ping": {
+   "sent": 48,
+   "received": 48,
+   "missed": 0,
+   "p50": 0.15,
+   "p95": 0.615,
+   "p99": 0.754,
+   "max": 0.754
+  },
+  "view": {
+   "sent": 5257,
+   "received": 5257,
+   "missed": 0,
+   "p50": 0.245,
+   "p95": 1.076,
+   "p99": 1.264,
+   "max": 1.758
+  },
+  "intent": {
+   "sent": 8410,
+   "received": 8410,
+   "missed": 0,
+   "p50": 0.145,
+   "p95": 0.608,
+   "p99": 0.697,
+   "max": 6.803
+  }
+ },
+ "errors": {},
+ "closes": 0,
+ "generatorLoopP99": 0.8707829999999994,
+ "throttledMs": 0
+}

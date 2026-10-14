@@ -1,0 +1,17 @@
+{
+  "name": "@p3p2/e2e",
+  "version": "0.0.0",
+  "private": true,
+  "license": "AGPL-3.0-only",
+  "type": "module",
+  "scripts": {
+    "e2e": "playwright test",
+    "test": "node --test \"node/**/*.test.ts\"",
+    "typecheck": "tsc -p ."
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.64.0",
+    "jsqr": "^1.4.0",
+    "@p3p2/protocol": "*"
+  }
+}

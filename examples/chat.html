@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>p3p2 chat example</title>
+<style>
+  :root { color-scheme: light dark; font: 16px/1.5 system-ui, sans-serif; }
+  body { max-width: 40rem; margin: 0 auto; padding: 4rem 1rem 2rem; }
+  h1 { font-size: 1.4rem; }
+  #log { list-style: none; padding: .5rem .75rem; margin: 1rem 0; min-height: 10rem; border: 1px solid #8886; border-radius: .5rem; overflow-wrap: anywhere; }
+  #log b { font-weight: 600; }
+  #typing { min-height: 1.5em; margin: -.5rem 0 .5rem; }
+  form { display: flex; gap: .5rem; }
+  input { flex: 1; min-width: 0; font: inherit; padding: .4rem .6rem; }
+  button { font: inherit; padding: .4rem .9rem; }
+  .soft { opacity: .7; }
+</style>
+</head>
+<body>
+<h1>Chat example</h1>
+<p id="state">Playing alone. Open the 👥 panel in the corner and paste a room URL to host.</p>
+<p id="world" class="soft"></p>
+<ol id="log" aria-live="polite"></ol>
+<p id="typing" class="soft" aria-live="polite"></p>
+<form id="form">
+  <input id="text" maxlength="500" placeholder="Type here once you are in a room" autocomplete="off" disabled>
+  <button id="send" type="submit" disabled>Send</button>
+</form>
+<p class="soft">This page stands in for a game. It uses the built-in panel, and the same room through the API:
+the list above is drawn by the page from <code>room.chat</code>, the "world" line is a value the first
+player saves in the room for everyone who comes later, and "is typing" is each player's presence.</p>
+
+<script type="module">
+  import { P3P2 } from './dist/p3p2.js'
+
+  const $ = (id) => document.getElementById(id)
+  // ?v=2.0.0 pretends to be another version of the game: the server keeps versions apart.
+  const version = new URLSearchParams(location.search).get('v') ?? '1.0.0'
+  const p3p2 = new P3P2({ game: { id: 'chat-example', version } })
+  window.p3p2 = p3p2
+
+  function line(who, text) {
+    const li = document.createElement('li')
+    const b = document.createElement('b')
+    b.textContent = `${who}: `
+    li.append(b, text)
+    $('log').append(li)
+  }
+
+  p3p2.on('room', (room) => {
+    const describe = () => {
+      const role = room.isHost ? 'the host' : `hosted by ${room.host?.name ?? 'nobody'}`
+      $('state').textContent = `In "${room.name}" as ${room.self.name} (${role}), ${room.members.length} here.`
+    }
+    const showWorld = () => {
+      const world = room.retained('world')
+      $('world').textContent = world ? `World seed: ${world.seed}, made by ${world.by}` : ''
+    }
+
+    // The first player's world becomes the room's world. A game would build its level from it.
+    if (!room.retained('world')) {
+      const seed = crypto.getRandomValues(new Uint32Array(1))[0]
+      room.send('world', { seed, by: room.self.name }, { retain: 'room' })
+    }
+    room.on('world', showWorld)
+
+    $('log').replaceChildren()
+    for (const m of room.chat.messages) line(m.name, m.text)
+    room.chat.on((m) => line(m.name, m.text))
+
+    // Presence: one small value per player, of which only the latest counts. A game would put
+    // positions here; this page says who is typing.
+    const showTyping = () => {
+      const names = room.members.filter((m) => m !== room.self && room.presence.get(m)?.typing).map((m) => m.name)
+      $('typing').textContent = names.length ? `${names.join(', ')} ${names.length === 1 ? 'is' : 'are'} typing…` : ''
+    }
+    room.presence.on(showTyping)
+    room.on('member-leave', showTyping)
+    showTyping()
+
+    for (const event of ['member-join', 'member-leave', 'host-change', 'status']) room.on(event, describe)
+    $('text').disabled = $('send').disabled = false
+    $('text').placeholder = 'Type a message'
+    describe()
+    showWorld()
+  })
+
+  p3p2.on('leave', (reason) => {
+    $('state').textContent = `Playing alone again (${reason}).`
+    $('world').textContent = ''
+    $('typing').textContent = ''
+    $('text').disabled = $('send').disabled = true
+  })
+
+  $('text').addEventListener('input', () => p3p2.room?.presence.set({ typing: $('text').value !== '' }))
+
+  $('form').addEventListener('submit', (e) => {
+    e.preventDefault()
+    p3p2.room?.chat.send($('text').value)
+    p3p2.room?.presence.set({ typing: false })
+    $('text').value = ''
+  })
+
+  // After a reload: back into the room. From an invite link: asks, then joins.
+  await p3p2.start()
+</script>
+</body>
+</html>

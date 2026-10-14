@@ -1,0 +1,2576 @@
+{
+ "environment": {
+  "date": "2026-10-08T22:44:00.153Z",
+  "commit": "8c71364 + uncommitted changes",
+  "server": {
+   "version": "0.0.0",
+   "node": "v24.21.0",
+   "where": "Docker container, --cpus=1 --memory=512m"
+  },
+  "generator": {
+   "node": "v24.18.0",
+   "workers": 4,
+   "speed": 1
+  },
+  "machine": {
+   "cpu": "11th Gen Intel(R) Core(TM) i5-11400F @ 2.60GHz",
+   "cores": 12,
+   "memoryGb": 30,
+   "kernel": "7.0.0-38-generic"
+  }
+ },
+ "sweeps": {
+  "chat": [
+   {
+    "profile": "chat",
+    "rooms": 1,
+    "members": 8,
+    "connections": 8,
+    "seconds": 60.004999999999995,
+    "cpu": 0.009215898675110409,
+    "rss": 99115008,
+    "rssPeak": 99291136,
+    "heapUsed": 15418488,
+    "loopP99": 1.174,
+    "loopMax": 2.1,
+    "framesIn": 1.599866677776852,
+    "framesOut": 8.799266727772686,
+    "bytesIn": 142.23814682109824,
+    "bytesOut": 1209.0159153403883,
+    "writes": 0,
+    "presenceSkipped": 0,
+    "volatileDropped": 0,
+    "series": {
+     "ping": {
+      "sent": 48,
+      "received": 48,
+      "missed": 0,
+      "p50": 0.869,
+      "p95": 1.086,
+      "p99": 1.282,
+      "max": 1.282
+     },
+     "chat": {
+      "sent": 48,
+      "received": 384,
+      "missed": 0,
+      "p50": 1.238,
+      "p95": 1.983,
+      "p99": 2.269,
+      "max": 2.621
+     }
+    },
+    "errors": {},
+    "closes": 0,
+    "generatorLoopP99": 1.1738870000000006,
+    "throttledMs": 0
+   },
+   {
+    "profile": "chat",
+    "rooms": 1,
+    "members": 16,
+    "connections": 16,
+    "seconds": 60.004999999999995,
+    "cpu": 0.012182318140154988,
+    "rss": 98103296,
+    "rssPeak": 99266560,
+    "heapUsed": 15589144,
+    "loopP99": 1.297,
+    "loopMax": 2.526,
+    "framesIn": 3.199733355553704,
+    "framesOut": 30.397466877760188,
+    "bytesIn": 290.37580201649865,
+    "bytesOut": 4721.806516123656,
+    "writes": 0,
+    "presenceSkipped": 0,
+    "volatileDropped": 0,
+    "series": {
+     "ping": {
+      "sent": 96,
+      "received": 96,
+      "missed": 0,
+      "p50": 0.845,
+      "p95": 0.951,
+      "p99": 1.069,
+      "max": 1.072
+     },
+     "chat": {
+      "sent": 96,
+      "received": 1536,
+      "missed": 0,
+      "p50": 1.304,
+      "p95": 2.183,
+      "p99": 2.727,
+      "max": 3.119
+     }
+    },
+    "errors": {},
+    "closes": 0,
+    "generatorLoopP99": 1.2394230000000004,
+    "throttledMs": 0
+   },
+   {
+    "profile": "chat",
+    "rooms": 1,
+    "members": 20,
+    "connections": 20,
+    "seconds": 60.00200000000001,
+    "cpu": 0.01229959001366621,
+    "rss": 98017280,
+    "rssPeak": 98897920,
+    "heapUsed": 15011984,
+    "loopP99": 1.362,
+    "loopMax": 2.468,
+    "framesIn": 3.9998666711109623,
+    "framesOut": 45.99846671777607,
+    "bytesIn": 362.93790206993094,
+    "bytesOut": 7324.372520915968,
+    "writes": 0,
+    "presenceSkipped": 0,
+    "volatileDropped": 0,
+    "series": {
+     "ping": {
+      "sent": 120,
+      "received": 120,
+      "missed": 0,
+      "p50": 0.799,
+      "p95": 0.947,
+      "p99": 1.249,
+      "max": 1.403
+     },
+     "chat": {
+      "sent": 120,
+      "received": 2400,
+      "missed": 0,
+      "p50": 1.25,
+      "p95": 2.075,
+      "p99": 2.693,
+      "max": 3.405
+     }
+    },
+    "errors": {},
+    "closes": 0,
+    "generatorLoopP99": 1.2558070000000008,
+    "throttledMs": 0
+   },
+   {
+    "profile": "chat",
+    "rooms": 1,
+    "members": 32,
+    "connections": 32,
+    "seconds": 60.00400000000002,
+    "cpu": 0.014932337844143719,
+    "rss": 99086336,
+    "rssPeak": 99221504,
+    "heapUsed": 16043064,
+    "loopP99": 0.764,
+    "loopMax": 3.599,
+    "framesIn": 6.39957336177588,
+    "framesOut": 111.99253383107789,
+    "bytesIn": 581.2612492500498,
+    "bytesOut": 18581.84454369708,
+    "writes": 0,
+    "presenceSkipped": 0,
+    "volatileDropped": 0,
+    "series": {
+     "ping": {
+      "sent": 193,
+      "received": 193,
+      "missed": 0,
+      "p50": 0.63,
+      "p95": 0.85,
+      "p99": 1.497,
+      "max": 1.802
+     },
+     "chat": {
+      "sent": 193,
+      "received": 6176,
+      "missed": 0,
+      "p50": 1.321,
+      "p95": 2.193,
+      "p99": 2.927,
+      "max": 3.647
+     }
+    },
+    "errors": {},
+    "closes": 0,
+    "generatorLoopP99": 0.6905590000000004,
+    "throttledMs": 0
+   },
+   {
+    "profile": "chat",
+    "rooms": 1,
+    "members": 64,
+    "connections": 64,
+    "seconds": 60.00200000000001,
+    "cpu": 0.025132495583480546,
+    "rss": 101183488,
+    "rssPeak": 101195776,
+    "heapUsed": 17692232,
+    "loopP99": 0.961,
+    "loopMax": 5.229,
+    "framesIn": 12.799573347555079,
+    "framesOut": 428.7857071430952,
+    "bytesIn": 1162.6445785140493,
+    "bytesOut": 73640.52864904502,
+    "writes": 0,
+    "presenceSkipped": 0,
+    "volatileDropped": 0,
+    "series": {
+     "ping": {
+      "sent": 386,
+      "received": 386,
+      "missed": 0,
+      "p50": 0.574,
+      "p95": 0.78,
+      "p99": 2.049,
+      "max": 2.863
+     },
+     "chat": {
+      "sent": 384,
+      "received": 24576,
+      "missed": 0,
+      "p50": 1.425,
+      "p95": 2.951,
+      "p99": 4.207,
+      "max": 5.195
+     }
+    },
+    "errors": {},
+    "closes": 0,
+    "generatorLoopP99": 0.8462069999999997,
+    "throttledMs": 0
+   }
+  ],
+  "presence": [
+   {
+    "profile": "presence",
+    "rooms": 1,
+    "members": 8,
+    "connections": 8,
+    "seconds": 60.002,
+    "cpu": 0.03494883503883204,
+    "rss": 100450304,
+    "rssPeak": 100450304,
+    "heapUsed": 16261768,
+    "loopP99": 0.953,
+    "loopMax": 3.042,
+    "framesIn": 80.79730675644144,
+    "framesOut": 161.994600179994,
+    "bytesIn": 6633.545548481717,
+    "bytesOut": 38764.55784807173,
+    "writes": 0,
+    "presenceSkipped": 0,
+    "volatileDropped": 0,
+    "series": {
+     "ping": {
+      "sent": 48,
+      "received": 48,
+      "missed": 0,
+      "p50": 0.54,
+      "p95": 0.679,
+      "p99": 1.177,
+      "max": 1.177
+     },
+     "presence": {
+      "sent": 4805,
+      "received": 33621,
+      "missed": 0,
+      "p50": 25.583,
+      "p95": 48.095,
+      "p99": 50.623,
+      "max": 51.967
+     }
+    },
+    "errors": {},
+    "closes": 0,
+    "generatorLoopP99": 0.821631,
+    "throttledMs": 0
+   },
+   {
+    "profile": "presence",
+    "rooms": 1,
+    "members": 16,
+    "connections": 16,
+    "seconds": 60.004999999999995,
+    "cpu": 0.056478626781101576,
+    "rss": 100319232,
+    "rssPeak": 100532224,
+    "heapUsed": 16505472,
+    "loopP99": 1.076,
+    "loopMax": 3.189,
+    "framesIn": 161.58653445546204,
+    "framesOut": 323.97300224981257,
+    "bytesIn": 13193.583868011001,
+    "bytesOut": 156690.6424464628,
+    "writes": 0,
+    "presenceSkipped": 0,
+    "volatileDropped": 0,
+    "series": {
+     "ping": {
+      "sent": 96,
+      "received": 96,
+      "missed": 0,
+      "p50": 0.513,
+      "p95": 0.649,
+      "p99": 0.959,
+      "max": 1.106
+     },
+     "presence": {
+      "sent": 9611,
+      "received": 144075,
+      "missed": 0,
+      "p50": 25.007,
+      "p95": 47.839,
+      "p99": 50.591,
+      "max": 55.871
+     }
+    },
+    "errors": {},
+    "closes": 0,
+    "generatorLoopP99": 0.9445110000000003,
+    "throttledMs": 0
+   },
+   {
+    "profile": "presence",
+    "rooms": 1,
+    "members": 20,
+    "connections": 20,
+    "seconds": 60.00399999999999,
+    "cpu": 0.057279514699020075,
+    "rss": 100528128,
+    "rssPeak": 100712448,
+    "heapUsed": 16001248,
+    "loopP99": 1.018,
+    "loopMax": 2.861,
+    "framesIn": 201.9865342310513,
+    "framesOut": 404.9730017998801,
+    "bytesIn": 16549.980001333246,
+    "bytesOut": 246885.5076328245,
+    "writes": 0,
+    "presenceSkipped": 0,
+    "volatileDropped": 0,
+    "series": {
+     "ping": {
+      "sent": 120,
+      "received": 120,
+      "missed": 0,
+      "p50": 0.472,
+      "p95": 0.618,
+      "p99": 0.811,
+      "max": 0.935
+     },
+     "presence": {
+      "sent": 12012,
+      "received": 228095,
+      "missed": 0,
+      "p50": 25.055,
+      "p95": 48.351,
+      "p99": 50.879,
+      "max": 53.759
+     }
+    },
+    "errors": {},
+    "closes": 0,
+    "generatorLoopP99": 0.9445110000000003,
+    "throttledMs": 0
+   },
+   {
+    "profile": "presence",
+    "rooms": 1,
+    "members": 32,
+    "connections": 32,
+    "seconds": 60.00400000000002,
+    "cpu": 0.08972735150989931,
+    "rss": 102518784,
+    "rssPeak": 102518784,
+    "heapUsed": 18346608,
+    "loopP99": 1.33,
+    "loopMax": 2.657,
+    "framesIn": 323.17845476968193,
+    "framesOut": 647.9568028798078,
+    "bytesIn": 26454.169722018523,
+    "bytesOut": 635108.5427638155,
+    "writes": 0,
+    "presenceSkipped": 0,
+    "volatileDropped": 0,
+    "series": {
+     "ping": {
+      "sent": 192,
+      "received": 192,
+      "missed": 0,
+      "p50": 0.454,
+      "p95": 0.619,
+      "p99": 1.852,
+      "max": 2.495
+     },
+     "presence": {
+      "sent": 19215,
+      "received": 595541,
+      "missed": 0,
+      "p50": 26.735,
+      "p95": 48.895,
+      "p99": 51.519,
+      "max": 54.751
+     }
+    },
+    "errors": {},
+    "closes": 0,
+    "generatorLoopP99": 0.9936629999999997,
+    "throttledMs": 0
+   },
+   {
+    "profile": "presence",
+    "rooms": 1,
+    "members": 64,
+    "connections": 64,
+    "seconds": 60.004999999999995,
+    "cpu": 0.16023664694608783,
+    "rss": 106127360,
+    "rssPeak": 106991616,
+    "heapUsed": 15642088,
+    "loopP99": 3.853,
+    "loopMax": 6.187,
+    "framesIn": 646.3794683776352,
+    "framesOut": 1295.8920089992503,
+    "bytesIn": 53069.02758103492,
+    "bytesOut": 2563123.523039747,
+    "writes": 0,
+    "presenceSkipped": 0,
+    "volatileDropped": 0,
+    "series": {
+     "ping": {
+      "sent": 384,
+      "received": 384,
+      "missed": 0,
+      "p50": 0.445,
+      "p95": 2.525,
+      "p99": 5.871,
+      "max": 6.839
+     },
+     "presence": {
+      "sent": 38434,
+      "received": 2420901,
+      "missed": 0,
+      "p50": 28.895,
+      "p95": 51.583,
+      "p99": 55.679,
+      "max": 63.903
+     }
+    },
+    "errors": {},
+    "closes": 0,
+    "generatorLoopP99": 2.4190710000000006,
+    "throttledMs": 0
+   }
+  ],
+  "snapshots": [
+   {
+    "profile": "snapshots",
+    "rooms": 1,
+    "members": 8,
+    "connections": 8,
+    "seconds": 60.002,
+    "cpu": 0.06713109563014565,
+    "rss": 101036032,
+    "rssPeak": 101089280,
+    "heapUsed": 16888320,
+    "loopP99": 0.985,
+    "loopMax": 1.28,
+    "framesIn": 155.81147295090162,
+    "framesOut": 247.50841638612044,
+    "bytesIn": 77001.43328555714,
+    "bytesOut": 451077.99740008666,
+    "writes": 0,
+    "presenceSkipped": 0,
+    "volatileDropped": 0,
+    "series": {
+     "ping": {
+      "sent": 48,
+      "received": 48,
+      "missed": 0,
+      "p50": 0.5,
+      "p95": 0.595,
+      "p99": 0.865,
+      "max": 0.865
+     },
+     "snapshot": {
+      "sent": 901,
+      "received": 6307,
+      "missed": 0,
+      "p50": 0.954,
+      "p95": 1.265,
+      "p99": 1.424,
+      "max": 2.397
+     },
+     "input": {
+      "sent": 8407,
+      "received": 8407,
+      "missed": 0,
+      "p50": 0.541,
+      "p95": 0.666,
+      "p99": 0.779,
+      "max": 2.879
+     }
+    },
+    "errors": {},
+    "closes": 0,
+    "generatorLoopP99": 1.0018550000000008,
+    "throttledMs": 0
+   },
+   {
+    "profile": "snapshots",
+    "rooms": 1,
+    "members": 16,
+    "connections": 16,
+    "seconds": 60.00399999999999,
+    "cpu": 0.1062262515832278,
+    "rss": 100364288,
+    "rssPeak": 101371904,
+    "heapUsed": 16301104,
+    "loopP99": 0.936,
+    "loopMax": 1.354,
+    "framesIn": 316.5788947403507,
+    "framesOut": 529.7646823545098,
+    "bytesIn": 93789.86400906608,
+    "bytesOut": 966209.4360375976,
+    "writes": 0,
+    "presenceSkipped": 0,
+    "volatileDropped": 0,
+    "series": {
+     "ping": {
+      "sent": 96,
+      "received": 96,
+      "missed": 0,
+      "p50": 0.47,
+      "p95": 0.627,
+      "p99": 0.636,
+      "max": 0.672
+     },
+     "snapshot": {
+      "sent": 901,
+      "received": 13515,
+      "missed": 0,
+      "p50": 0.983,
+      "p95": 1.513,
+      "p99": 1.832,
+      "max": 3.155
+     },
+     "input": {
+      "sent": 18015,
+      "received": 18016,
+      "missed": 0,
+      "p50": 0.512,
+      "p95": 0.72,
+      "p99": 1.16,
+      "max": 2.953
+     }
+    },
+    "errors": {},
+    "closes": 0,
+    "generatorLoopP99": 0.9608950000000007,
+    "throttledMs": 0
+   },
+   {
+    "profile": "snapshots",
+    "rooms": 1,
+    "members": 20,
+    "connections": 20,
+    "seconds": 60.00399999999999,
+    "cpu": 0.11282581161255917,
+    "rss": 100487168,
+    "rssPeak": 101675008,
+    "heapUsed": 16224640,
+    "loopP99": 0.928,
+    "loopMax": 2.288,
+    "framesIn": 396.9735350976602,
+    "framesOut": 670.9552696486902,
+    "bytesIn": 102530.0813279115,
+    "bytesOut": 1224575.6116258919,
+    "writes": 0,
+    "presenceSkipped": 0,
+    "volatileDropped": 0,
+    "series": {
+     "ping": {
+      "sent": 120,
+      "received": 120,
+      "missed": 0,
+      "p50": 0.439,
+      "p95": 0.582,
+      "p99": 0.956,
+      "max": 1.282
+     },
+     "snapshot": {
+      "sent": 901,
+      "received": 17119,
+      "missed": 0,
+      "p50": 1.025,
+      "p95": 1.534,
+      "p99": 1.775,
+      "max": 3.489
+     },
+     "input": {
+      "sent": 22818,
+      "received": 22818,
+      "missed": 0,
+      "p50": 0.475,
+      "p95": 0.638,
+      "p99": 0.797,
+      "max": 3.267
+     }
+    },
+    "errors": {},
+    "closes": 0,
+    "generatorLoopP99": 0.9936629999999997,
+    "throttledMs": 0
+   },
+   {
+    "profile": "snapshots",
+    "rooms": 1,
+    "members": 32,
+    "connections": 32,
+    "seconds": 60.002999999999986,
+    "cpu": 0.15425895371898077,
+    "rss": 101879808,
+    "rssPeak": 101879808,
+    "heapUsed": 17091312,
+    "loopP99": 0.945,
+    "loopMax": 2.468,
+    "framesIn": 638.2180890955453,
+    "framesOut": 1094.5952702364884,
+    "bytesIn": 128145.34273286338,
+    "bytesOut": 1999987.2006399685,
+    "writes": 0,
+    "presenceSkipped": 0,
+    "volatileDropped": 0,
+    "series": {
+     "ping": {
+      "sent": 192,
+      "received": 192,
+      "missed": 0,
+      "p50": 0.407,
+      "p95": 0.609,
+      "p99": 1.659,
+      "max": 2.089
+     },
+     "snapshot": {
+      "sent": 901,
+      "received": 27931,
+      "missed": 0,
+      "p50": 1.224,
+      "p95": 2.071,
+      "p99": 2.611,
+      "max": 3.535
+     },
+     "input": {
+      "sent": 37239,
+      "received": 37239,
+      "missed": 0,
+      "p50": 0.44,
+      "p95": 0.8,
+      "p99": 1.867,
+      "max": 6.767
+     }
+    },
+    "errors": {},
+    "closes": 0,
+    "generatorLoopP99": 0.9854710000000004,
+    "throttledMs": 0
+   },
+   {
+    "profile": "snapshots",
+    "rooms": 1,
+    "members": 64,
+    "connections": 64,
+    "seconds": 60.00200000000001,
+    "cpu": 0.2207426419119362,
+    "rss": 105066496,
+    "rssPeak": 105066496,
+    "heapUsed": 19909288,
+    "loopP99": 1.002,
+    "loopMax": 4.877,
+    "framesIn": 1281.3739542015264,
+    "framesOut": 2224.1425285823802,
+    "bytesIn": 196235.0754974834,
+    "bytesOut": 4073851.504949834,
+    "writes": 0,
+    "presenceSkipped": 0,
+    "volatileDropped": 0,
+    "series": {
+     "ping": {
+      "sent": 384,
+      "received": 384,
+      "missed": 0,
+      "p50": 0.34,
+      "p95": 0.605,
+      "p99": 1.669,
+      "max": 4.123
+     },
+     "snapshot": {
+      "sent": 900,
+      "received": 56700,
+      "missed": 0,
+      "p50": 1.44,
+      "p95": 3.375,
+      "p99": 4.215,
+      "max": 6.907
+     },
+     "input": {
+      "sent": 75656,
+      "received": 75656,
+      "missed": 0,
+      "p50": 0.372,
+      "p95": 0.729,
+      "p99": 2.923,
+      "max": 7.483
+     }
+    },
+    "errors": {},
+    "closes": 0,
+    "generatorLoopP99": 0.969087,
+    "throttledMs": 0
+   }
+  ]
+ },
+ "ramps": {
+  "chat": {
+   "steps": [
+    {
+     "result": {
+      "profile": "chat",
+      "rooms": 1,
+      "members": 20,
+      "connections": 20,
+      "seconds": 20.004,
+      "cpu": 0.017796440711857625,
+      "rss": 99143680,
+      "rssPeak": 99254272,
+      "heapUsed": 15830544,
+      "loopP99": 1.444,
+      "loopMax": 3.894,
+      "framesIn": 3.999200159968006,
+      "framesOut": 45.99080183963207,
+      "bytesIn": 367.37652469506094,
+      "bytesOut": 7357.47850429914,
+      "writes": 0,
+      "presenceSkipped": 0,
+      "volatileDropped": 0,
+      "series": {
+       "ping": {
+        "sent": 40,
+        "received": 40,
+        "missed": 0,
+        "p50": 0.872,
+        "p95": 1.055,
+        "p99": 1.091,
+        "max": 1.091
+       },
+       "chat": {
+        "sent": 40,
+        "received": 800,
+        "missed": 0,
+        "p50": 1.576,
+        "p95": 2.945,
+        "p99": 3.955,
+        "max": 5.579
+       }
+      },
+      "errors": {},
+      "closes": 0,
+      "generatorLoopP99": 1.3131509999999995,
+      "throttledMs": 0
+     },
+     "why": null
+    },
+    {
+     "result": {
+      "profile": "chat",
+      "rooms": 2,
+      "members": 20,
+      "connections": 40,
+      "seconds": 20.005000000000003,
+      "cpu": 0.018245438640339912,
+      "rss": 99717120,
+      "rssPeak": 99774464,
+      "heapUsed": 16256160,
+      "loopP99": 1.624,
+      "loopMax": 4.033,
+      "framesIn": 7.9980004998750305,
+      "framesOut": 91.97700574856285,
+      "bytesIn": 735.1162209447638,
+      "bytesOut": 14681.979505123718,
+      "writes": 0,
+      "presenceSkipped": 0,
+      "volatileDropped": 0,
+      "series": {
+       "ping": {
+        "sent": 80,
+        "received": 80,
+        "missed": 0,
+        "p50": 0.802,
+        "p95": 0.919,
+        "p99": 0.968,
+        "max": 0.998
+       },
+       "chat": {
+        "sent": 80,
+        "received": 1600,
+        "missed": 0,
+        "p50": 1.415,
+        "p95": 2.361,
+        "p99": 2.899,
+        "max": 3.817
+       }
+      },
+      "errors": {},
+      "closes": 0,
+      "generatorLoopP99": 1.3213430000000006,
+      "throttledMs": 0
+     },
+     "why": null
+    },
+    {
+     "result": {
+      "profile": "chat",
+      "rooms": 4,
+      "members": 20,
+      "connections": 80,
+      "seconds": 20.002000000000002,
+      "cpu": 0.0260973902609739,
+      "rss": 100360192,
+      "rssPeak": 100507648,
+      "heapUsed": 17129976,
+      "loopP99": 1.01,
+      "loopMax": 5.131,
+      "framesIn": 15.998400159984,
+      "framesOut": 183.981601839816,
+      "bytesIn": 1469.75302469753,
+      "bytesOut": 29382.261773822614,
+      "writes": 0,
+      "presenceSkipped": 0,
+      "volatileDropped": 0,
+      "series": {
+       "ping": {
+        "sent": 161,
+        "received": 161,
+        "missed": 0,
+        "p50": 0.72,
+        "p95": 0.908,
+        "p99": 1.116,
+        "max": 2.301
+       },
+       "chat": {
+        "sent": 161,
+        "received": 3220,
+        "missed": 0,
+        "p50": 1.289,
+        "p95": 2.321,
+        "p99": 3.017,
+        "max": 3.987
+       }
+      },
+      "errors": {},
+      "closes": 0,
+      "generatorLoopP99": 0.821631,
+      "throttledMs": 0
+     },
+     "why": null
+    },
+    {
+     "result": {
+      "profile": "chat",
+      "rooms": 8,
+      "members": 20,
+      "connections": 160,
+      "seconds": 20.003,
+      "cpu": 0.034744788281757734,
+      "rss": 101859328,
+      "rssPeak": 101859328,
+      "heapUsed": 18214472,
+      "loopP99": 0.953,
+      "loopMax": 9.12,
+      "framesIn": 31.995200719892015,
+      "framesOut": 367.94480827875816,
+      "bytesIn": 2940.8588711693246,
+      "bytesOut": 58841.97370394441,
+      "writes": 0,
+      "presenceSkipped": 0,
+      "volatileDropped": 0,
+      "series": {
+       "ping": {
+        "sent": 320,
+        "received": 320,
+        "missed": 0,
+        "p50": 0.631,
+        "p95": 0.786,
+        "p99": 1.095,
+        "max": 1.6
+       },
+       "chat": {
+        "sent": 320,
+        "received": 6400,
+        "missed": 0,
+        "p50": 1.085,
+        "p95": 1.591,
+        "p99": 2.115,
+        "max": 2.783
+       }
+      },
+      "errors": {},
+      "closes": 0,
+      "generatorLoopP99": 0.8298229999999993,
+      "throttledMs": 0
+     },
+     "why": null
+    },
+    {
+     "result": {
+      "profile": "chat",
+      "rooms": 16,
+      "members": 20,
+      "connections": 320,
+      "seconds": 20.004000000000005,
+      "cpu": 0.06853629274145169,
+      "rss": 103165952,
+      "rssPeak": 103165952,
+      "heapUsed": 18361584,
+      "loopP99": 1.239,
+      "loopMax": 25.815,
+      "framesIn": 63.98720255948809,
+      "framesOut": 735.852829434113,
+      "bytesIn": 5881.323735252948,
+      "bytesOut": 117756.69866026792,
+      "writes": 0,
+      "presenceSkipped": 0,
+      "volatileDropped": 0,
+      "series": {
+       "ping": {
+        "sent": 642,
+        "received": 642,
+        "missed": 0,
+        "p50": 0.624,
+        "p95": 0.911,
+        "p99": 1.802,
+        "max": 20.575
+       },
+       "chat": {
+        "sent": 643,
+        "received": 12880,
+        "missed": 0,
+        "p50": 1.117,
+        "p95": 1.914,
+        "p99": 2.473,
+        "max": 10.255
+       }
+      },
+      "errors": {},
+      "closes": 0,
+      "generatorLoopP99": 0.9199350000000006,
+      "throttledMs": 0
+     },
+     "why": null
+    },
+    {
+     "result": {
+      "profile": "chat",
+      "rooms": 32,
+      "members": 20,
+      "connections": 640,
+      "seconds": 20.00399999999999,
+      "cpu": 0.10752849430113981,
+      "rss": 109228032,
+      "rssPeak": 109228032,
+      "heapUsed": 22972784,
+      "loopP99": 1.362,
+      "loopMax": 27.88,
+      "framesIn": 127.97440511897626,
+      "framesOut": 1471.7056588682271,
+      "bytesIn": 11764.647070585888,
+      "bytesOut": 235681.46370725866,
+      "writes": 0,
+      "presenceSkipped": 0,
+      "volatileDropped": 0,
+      "series": {
+       "ping": {
+        "sent": 1281,
+        "received": 1281,
+        "missed": 0,
+        "p50": 0.574,
+        "p95": 1.214,
+        "p99": 1.69,
+        "max": 21.183
+       },
+       "chat": {
+        "sent": 1283,
+        "received": 25660,
+        "missed": 0,
+        "p50": 0.981,
+        "p95": 1.777,
+        "p99": 2.497,
+        "max": 18.831
+       }
+      },
+      "errors": {},
+      "closes": 0,
+      "generatorLoopP99": 0.8953589999999991,
+      "throttledMs": 0
+     },
+     "why": null
+    },
+    {
+     "result": {
+      "profile": "chat",
+      "rooms": 64,
+      "members": 20,
+      "connections": 1280,
+      "seconds": 20.004999999999995,
+      "cpu": 0.18370407398150465,
+      "rss": 115404800,
+      "rssPeak": 115404800,
+      "heapUsed": 23863120,
+      "loopP99": 1.403,
+      "loopMax": 41.872,
+      "framesIn": 255.98600349912527,
+      "framesOut": 2943.3141714571366,
+      "bytesIn": 23529.56760809798,
+      "bytesOut": 472128.2679330169,
+      "writes": 0,
+      "presenceSkipped": 0,
+      "volatileDropped": 0,
+      "series": {
+       "ping": {
+        "sent": 2567,
+        "received": 2567,
+        "missed": 0,
+        "p50": 0.531,
+        "p95": 1.25,
+        "p99": 2.213,
+        "max": 27.535
+       },
+       "chat": {
+        "sent": 2567,
+        "received": 51340,
+        "missed": 0,
+        "p50": 0.919,
+        "p95": 1.701,
+        "p99": 2.505,
+        "max": 24.879
+       }
+      },
+      "errors": {},
+      "closes": 0,
+      "generatorLoopP99": 0.9281269999999999,
+      "throttledMs": 0
+     },
+     "why": null
+    },
+    {
+     "result": {
+      "profile": "chat",
+      "rooms": 128,
+      "members": 20,
+      "connections": 2560,
+      "seconds": 20.002999999999986,
+      "cpu": 0.31720241963705464,
+      "rss": 121143296,
+      "rssPeak": 124739584,
+      "heapUsed": 26695272,
+      "loopP99": 1.551,
+      "loopMax": 62.417,
+      "framesIn": 511.92321151827264,
+      "framesOut": 5887.116932460135,
+      "bytesIn": 47062.39064140382,
+      "bytesOut": 940739.1891216324,
+      "writes": 0,
+      "presenceSkipped": 0,
+      "volatileDropped": 0,
+      "series": {
+       "ping": {
+        "sent": 5137,
+        "received": 5137,
+        "missed": 0,
+        "p50": 0.495,
+        "p95": 1.689,
+        "p99": 7.619,
+        "max": 52.959
+       },
+       "chat": {
+        "sent": 5146,
+        "received": 102920,
+        "missed": 0,
+        "p50": 0.9,
+        "p95": 2.151,
+        "p99": 7.635,
+        "max": 49.919
+       }
+      },
+      "errors": {},
+      "closes": 0,
+      "generatorLoopP99": 0.9854710000000004,
+      "throttledMs": 0
+     },
+     "why": null
+    },
+    {
+     "result": {
+      "profile": "chat",
+      "rooms": 256,
+      "members": 20,
+      "connections": 5120,
+      "seconds": 20.00399999999999,
+      "cpu": 0.3935712857428516,
+      "rss": 137830400,
+      "rssPeak": 137830400,
+      "heapUsed": 39119256,
+      "loopP99": 1.264,
+      "loopMax": 122.252,
+      "framesIn": 1023.8952209558094,
+      "framesOut": 11774.695060987808,
+      "bytesIn": 94126.72465506903,
+      "bytesOut": 1874167.9664067195,
+      "writes": 0,
+      "presenceSkipped": 0,
+      "volatileDropped": 0,
+      "series": {
+       "ping": {
+        "sent": 10260,
+        "received": 10260,
+        "missed": 0,
+        "p50": 0.304,
+        "p95": 1.648,
+        "p99": 47.295,
+        "max": 83.839
+       },
+       "chat": {
+        "sent": 10268,
+        "received": 205327,
+        "missed": 0,
+        "p50": 0.567,
+        "p95": 2.059,
+        "p99": 48.799,
+        "max": 84.671
+       }
+      },
+      "errors": {},
+      "closes": 0,
+      "generatorLoopP99": 0.9936629999999997,
+      "throttledMs": 12.831000000000017
+     },
+     "why": null
+    },
+    {
+     "result": {
+      "profile": "chat",
+      "rooms": 272,
+      "members": 20,
+      "connections": 5440,
+      "seconds": 20.00200000000001,
+      "cpu": 0.4206079392060792,
+      "rss": 179646464,
+      "rssPeak": 179855360,
+      "heapUsed": 47080256,
+      "loopP99": 1.452,
+      "loopMax": 164.457,
+      "framesIn": 1087.9412058794114,
+      "framesOut": 12510.798920107984,
+      "bytesIn": 100508.64913508644,
+      "bytesOut": 2008433.1066893302,
+      "writes": 0,
+      "presenceSkipped": 0,
+      "volatileDropped": 0,
+      "series": {
+       "ping": {
+        "sent": 10920,
+        "received": 10919,
+        "missed": 0,
+        "p50": 0.309,
+        "p95": 2.013,
+        "p99": 66.943,
+        "max": 111.487
+       },
+       "chat": {
+        "sent": 10905,
+        "received": 218119,
+        "missed": 0,
+        "p50": 0.582,
+        "p95": 2.481,
+        "p99": 66.815,
+        "max": 111.871
+       }
+      },
+      "errors": {},
+      "closes": 0,
+      "generatorLoopP99": 1.0100470000000001,
+      "throttledMs": 215.70699999999988
+     },
+     "why": "ping p99 66.9 ms, chat p99 66.8 ms"
+    },
+    {
+     "result": {
+      "profile": "chat",
+      "rooms": 287,
+      "members": 20,
+      "connections": 5740,
+      "seconds": 20.004999999999995,
+      "cpu": 0.348612846788303,
+      "rss": 179568640,
+      "rssPeak": 180695040,
+      "heapUsed": 46684296,
+      "loopP99": 1.362,
+      "loopMax": 167.996,
+      "framesIn": 1147.86303424144,
+      "framesOut": 13198.850287428146,
+      "bytesIn": 106019.34516370909,
+      "bytesOut": 2116048.887778056,
+      "writes": 0,
+      "presenceSkipped": 0,
+      "volatileDropped": 0,
+      "series": {
+       "ping": {
+        "sent": 11515,
+        "received": 11512,
+        "missed": 0,
+        "p50": 0.204,
+        "p95": 1.913,
+        "p99": 70.719,
+        "max": 114.815
+       },
+       "chat": {
+        "sent": 11508,
+        "received": 230108,
+        "missed": 0,
+        "p50": 0.364,
+        "p95": 2.295,
+        "p99": 71.615,
+        "max": 119.103
+       }
+      },
+      "errors": {},
+      "closes": 0,
+      "generatorLoopP99": 0.9772789999999993,
+      "throttledMs": 34.9399999999996
+     },
+     "why": "ping p99 70.7 ms, chat p99 71.6 ms"
+    },
+    {
+     "result": {
+      "profile": "chat",
+      "rooms": 317,
+      "members": 20,
+      "connections": 6340,
+      "seconds": 20.00400000000002,
+      "cpu": 0.361327734453109,
+      "rss": 181223424,
+      "rssPeak": 181223424,
+      "heapUsed": 52867160,
+      "loopP99": 1.346,
+      "loopMax": 173.763,
+      "framesIn": 1267.8964207158556,
+      "framesOut": 14581.133773245338,
+      "bytesIn": 116954.00919816026,
+      "bytesOut": 2348085.032993399,
+      "writes": 0,
+      "presenceSkipped": 0,
+      "volatileDropped": 0,
+      "series": {
+       "ping": {
+        "sent": 12707,
+        "received": 12707,
+        "missed": 0,
+        "p50": 0.193,
+        "p95": 1.978,
+        "p99": 87.487,
+        "max": 117.567
+       },
+       "chat": {
+        "sent": 12706,
+        "received": 254112,
+        "missed": 0,
+        "p50": 0.357,
+        "p95": 2.331,
+        "p99": 83.455,
+        "max": 117.695
+       }
+      },
+      "errors": {},
+      "closes": 0,
+      "generatorLoopP99": 0.9936629999999997,
+      "throttledMs": 70.03600000000006
+     },
+     "why": "ping p99 87.5 ms, chat p99 83.5 ms"
+    },
+    {
+     "result": {
+      "profile": "chat",
+      "rooms": 378,
+      "members": 20,
+      "connections": 7560,
+      "seconds": 20.003000000000043,
+      "cpu": 0.32740088986651933,
+      "rss": 181137408,
+      "rssPeak": 181137408,
+      "heapUsed": 51233416,
+      "loopP99": 1.084,
+      "loopMax": 196.569,
+      "framesIn": 1511.923211518269,
+      "framesOut": 17387.441883717405,
+      "bytesIn": 139147.22791581234,
+      "bytesOut": 2795137.8293255954,
+      "writes": 0,
+      "presenceSkipped": 0,
+      "volatileDropped": 0,
+      "series": {
+       "ping": {
+        "sent": 15157,
+        "received": 15156,
+        "missed": 0,
+        "p50": 0.128,
+        "p95": 1.716,
+        "p99": 104.319,
+        "max": 137.599
+       },
+       "chat": {
+        "sent": 15158,
+        "received": 303175,
+        "missed": 0,
+        "p50": 0.244,
+        "p95": 1.952,
+        "p99": 105.535,
+        "max": 137.215
+       }
+      },
+      "errors": {},
+      "closes": 0,
+      "generatorLoopP99": 0.9936629999999997,
+      "throttledMs": 151.43499999999995
+     },
+     "why": "ping p99 104.3 ms, chat p99 105.5 ms"
+    },
+    {
+     "result": {
+      "profile": "chat",
+      "rooms": 500,
+      "members": 20,
+      "connections": 10000,
+      "seconds": 20.005999999999972,
+      "cpu": 0.3586923922823158,
+      "rss": 180264960,
+      "rssPeak": 180264960,
+      "heapUsed": 67500744,
+      "loopP99": 1.043,
+      "loopMax": 477.064,
+      "framesIn": 2000.249925022496,
+      "framesOut": 23003.44896531044,
+      "bytesIn": 183902.0293911829,
+      "bytesOut": 3691612.1163650956,
+      "writes": 0,
+      "presenceSkipped": 0,
+      "volatileDropped": 0,
+      "series": {
+       "ping": {
+        "sent": 20059,
+        "received": 20056,
+        "missed": 0,
+        "p50": 0.115,
+        "p95": 50.559,
+        "p99": 190.719,
+        "max": 379.647
+       },
+       "chat": {
+        "sent": 20063,
+        "received": 401260,
+        "missed": 0,
+        "p50": 0.229,
+        "p95": 53.311,
+        "p99": 192.255,
+        "max": 382.207
+       }
+      },
+      "errors": {},
+      "closes": 0,
+      "generatorLoopP99": 0.9854710000000004,
+      "throttledMs": 850.655
+     },
+     "why": "ping p99 190.7 ms, chat p99 192.3 ms"
+    }
+   ],
+   "found": {
+    "pass": 256,
+    "fail": 272
+   },
+   "note": null
+  },
+  "presence": {
+   "steps": [
+    {
+     "result": {
+      "profile": "presence",
+      "rooms": 1,
+      "members": 20,
+      "connections": 20,
+      "seconds": 20.006,
+      "cpu": 0.07552734179746076,
+      "rss": 99860480,
+      "rssPeak": 99860480,
+      "heapUsed": 15985288,
+      "loopP99": 1.28,
+      "loopMax": 2.009,
+      "framesIn": 201.9894031790463,
+      "framesOut": 404.8785364390683,
+      "bytesIn": 16621.91342597221,
+      "bytesOut": 248218.3344996501,
+      "writes": 0,
+      "presenceSkipped": 0,
+      "volatileDropped": 0,
+      "series": {
+       "ping": {
+        "sent": 40,
+        "received": 40,
+        "missed": 0,
+        "p50": 0.531,
+        "p95": 0.658,
+        "p99": 1.583,
+        "max": 1.583
+       },
+       "presence": {
+        "sent": 4010,
+        "received": 76000,
+        "missed": 0,
+        "p50": 25.647,
+        "p95": 48.991,
+        "p99": 51.039,
+        "max": 54.047
+       }
+      },
+      "errors": {},
+      "closes": 0,
+      "generatorLoopP99": 0.9936629999999997,
+      "throttledMs": 0
+     },
+     "why": null
+    },
+    {
+     "result": {
+      "profile": "presence",
+      "rooms": 2,
+      "members": 20,
+      "connections": 40,
+      "seconds": 20.002,
+      "cpu": 0.11613838616138386,
+      "rss": 100782080,
+      "rssPeak": 100954112,
+      "heapUsed": 16339056,
+      "loopP99": 1.895,
+      "loopMax": 3.418,
+      "framesIn": 403.95960403959606,
+      "framesOut": 809.9190080991901,
+      "bytesIn": 33457.254274572544,
+      "bytesOut": 500617.9382061794,
+      "writes": 0,
+      "presenceSkipped": 0,
+      "volatileDropped": 0,
+      "series": {
+       "ping": {
+        "sent": 81,
+        "received": 81,
+        "missed": 0,
+        "p50": 0.504,
+        "p95": 0.607,
+        "p99": 2.057,
+        "max": 3.043
+       },
+       "presence": {
+        "sent": 8028,
+        "received": 152399,
+        "missed": 0,
+        "p50": 27.855,
+        "p95": 49.439,
+        "p99": 51.263,
+        "max": 53.567
+       }
+      },
+      "errors": {},
+      "closes": 0,
+      "generatorLoopP99": 0.9772789999999993,
+      "throttledMs": 0
+     },
+     "why": null
+    },
+    {
+     "result": {
+      "profile": "presence",
+      "rooms": 4,
+      "members": 20,
+      "connections": 80,
+      "seconds": 20.005000000000003,
+      "cpu": 0.18355411147213196,
+      "rss": 101867520,
+      "rssPeak": 101867520,
+      "heapUsed": 17465936,
+      "loopP99": 3.697,
+      "loopMax": 6.753,
+      "framesIn": 807.9980004998749,
+      "framesOut": 1623.594101474631,
+      "bytesIn": 66891.37715571106,
+      "bytesOut": 1002036.1909522618,
+      "writes": 0,
+      "presenceSkipped": 0,
+      "volatileDropped": 0,
+      "series": {
+       "ping": {
+        "sent": 161,
+        "received": 161,
+        "missed": 0,
+        "p50": 0.456,
+        "p95": 1.836,
+        "p99": 4.319,
+        "max": 6.151
+       },
+       "presence": {
+        "sent": 16057,
+        "received": 305178,
+        "missed": 0,
+        "p50": 27.311,
+        "p95": 49.567,
+        "p99": 51.455,
+        "max": 54.143
+       }
+      },
+      "errors": {},
+      "closes": 0,
+      "generatorLoopP99": 1.0100470000000001,
+      "throttledMs": 0
+     },
+     "why": null
+    },
+    {
+     "result": {
+      "profile": "presence",
+      "rooms": 8,
+      "members": 20,
+      "connections": 160,
+      "seconds": 20.001999999999995,
+      "cpu": 0.24937506249375072,
+      "rss": 110358528,
+      "rssPeak": 110358528,
+      "heapUsed": 22011008,
+      "loopP99": 8.383,
+      "loopMax": 11.168,
+      "framesIn": 1616.0383961603843,
+      "framesOut": 3247.675232476753,
+      "bytesIn": 133440.4059594041,
+      "bytesOut": 1995693.4306569349,
+      "writes": 0,
+      "presenceSkipped": 0,
+      "volatileDropped": 0,
+      "series": {
+       "ping": {
+        "sent": 321,
+        "received": 321,
+        "missed": 0,
+        "p50": 0.367,
+        "p95": 4.567,
+        "p99": 6.015,
+        "max": 9.191
+       },
+       "presence": {
+        "sent": 32080,
+        "received": 609824,
+        "missed": 0,
+        "p50": 28.159,
+        "p95": 50.367,
+        "p99": 52.127,
+        "max": 56.351
+       }
+      },
+      "errors": {},
+      "closes": 0,
+      "generatorLoopP99": 0.9936629999999997,
+      "throttledMs": 0
+     },
+     "why": null
+    },
+    {
+     "result": {
+      "profile": "presence",
+      "rooms": 16,
+      "members": 20,
+      "connections": 320,
+      "seconds": 20.00399999999999,
+      "cpu": 0.17581483703259357,
+      "rss": 106811392,
+      "rssPeak": 110321664,
+      "heapUsed": 16863568,
+      "loopP99": 9.497,
+      "loopMax": 15.051,
+      "framesIn": 3232.603479304141,
+      "framesOut": 6494.751049790045,
+      "bytesIn": 267404.7690461909,
+      "bytesOut": 3999560.587882425,
+      "writes": 0,
+      "presenceSkipped": 0,
+      "volatileDropped": 0,
+      "series": {
+       "ping": {
+        "sent": 641,
+        "received": 642,
+        "missed": 0,
+        "p50": 0.079,
+        "p95": 2,
+        "p99": 5.939,
+        "max": 10.575
+       },
+       "presence": {
+        "sent": 64156,
+        "received": 1219268,
+        "missed": 0,
+        "p50": 26.991,
+        "p95": 49.887,
+        "p99": 52.991,
+        "max": 61.759
+       }
+      },
+      "errors": {},
+      "closes": 0,
+      "generatorLoopP99": 0.9527029999999996,
+      "throttledMs": 0
+     },
+     "why": null
+    },
+    {
+     "result": {
+      "profile": "presence",
+      "rooms": 32,
+      "members": 20,
+      "connections": 640,
+      "seconds": 20.003000000000014,
+      "cpu": 0.24826276058591196,
+      "rss": 108572672,
+      "rssPeak": 109629440,
+      "heapUsed": 17522776,
+      "loopP99": 8.252,
+      "loopMax": 14.248,
+      "framesIn": 6464.430335449678,
+      "framesOut": 12990.051492276149,
+      "bytesIn": 534572.2141678744,
+      "bytesOut": 7997793.930910357,
+      "writes": 0,
+      "presenceSkipped": 0,
+      "volatileDropped": 0,
+      "series": {
+       "ping": {
+        "sent": 1284,
+        "received": 1284,
+        "missed": 0,
+        "p50": 0.07,
+        "p95": 5.355,
+        "p99": 7.231,
+        "max": 9.863
+       },
+       "presence": {
+        "sent": 128285,
+        "received": 2439372,
+        "missed": 0,
+        "p50": 29.359,
+        "p95": 50.495,
+        "p99": 51.903,
+        "max": 59.391
+       }
+      },
+      "errors": {},
+      "closes": 0,
+      "generatorLoopP99": 0.9445110000000003,
+      "throttledMs": 0
+     },
+     "why": null
+    },
+    {
+     "result": {
+      "profile": "presence",
+      "rooms": 64,
+      "members": 20,
+      "connections": 1280,
+      "seconds": 20.004999999999995,
+      "cpu": 0.4612846788302925,
+      "rss": 117063680,
+      "rssPeak": 117850112,
+      "heapUsed": 20473504,
+      "loopP99": 14.166,
+      "loopMax": 36.793,
+      "framesIn": 12927.368157960513,
+      "framesOut": 25977.50562359411,
+      "bytesIn": 1069266.23344164,
+      "bytesOut": 15998677.880529871,
+      "writes": 0,
+      "presenceSkipped": 0,
+      "volatileDropped": 0,
+      "series": {
+       "ping": {
+        "sent": 2564,
+        "received": 2566,
+        "missed": 0,
+        "p50": 0.087,
+        "p95": 10.535,
+        "p99": 12.767,
+        "max": 39.775
+       },
+       "presence": {
+        "sent": 256779,
+        "received": 4881438,
+        "missed": 0,
+        "p50": 31.839,
+        "p95": 52.671,
+        "p99": 54.591,
+        "max": 84.159
+       }
+      },
+      "errors": {},
+      "closes": 0,
+      "generatorLoopP99": 1.0018550000000008,
+      "throttledMs": 28.033000000000015
+     },
+     "why": null
+    },
+    {
+     "result": {
+      "profile": "presence",
+      "rooms": 96,
+      "members": 20,
+      "connections": 1920,
+      "seconds": 20.007000000000005,
+      "cpu": 0.7265457090018491,
+      "rss": 131170304,
+      "rssPeak": 131457024,
+      "heapUsed": 22463472,
+      "loopP99": 29.158,
+      "loopMax": 66.284,
+      "framesIn": 19391.26305792972,
+      "framesOut": 38770.48033188383,
+      "bytesIn": 1617368.6209826556,
+      "bytesOut": 24255697.75578547,
+      "writes": 0,
+      "presenceSkipped": 0,
+      "volatileDropped": 0,
+      "series": {
+       "ping": {
+        "sent": 3852,
+        "received": 3852,
+        "missed": 0,
+        "p50": 0.941,
+        "p95": 19.423,
+        "p99": 23.727,
+        "max": 50.015
+       },
+       "presence": {
+        "sent": 385107,
+        "received": 7320168,
+        "missed": 0,
+        "p50": 36.735,
+        "p95": 57.919,
+        "p99": 62.879,
+        "max": 108.031
+       }
+      },
+      "errors": {},
+      "closes": 0,
+      "generatorLoopP99": 0.9527029999999996,
+      "throttledMs": 146.88099999999986
+     },
+     "why": null
+    },
+    {
+     "result": {
+      "profile": "presence",
+      "rooms": 104,
+      "members": 20,
+      "connections": 2080,
+      "seconds": 20.002999999999986,
+      "cpu": 0.781782732590112,
+      "rss": 131710976,
+      "rssPeak": 131993600,
+      "heapUsed": 26202632,
+      "loopP99": 35.023,
+      "loopMax": 87.976,
+      "framesIn": 21009.098635204733,
+      "framesOut": 41801.72974053895,
+      "bytesIn": 1767590.261460782,
+      "bytesOut": 26547371.64425338,
+      "writes": 0,
+      "presenceSkipped": 0,
+      "volatileDropped": 0,
+      "series": {
+       "ping": {
+        "sent": 4172,
+        "received": 4172,
+        "missed": 0,
+        "p50": 2.943,
+        "p95": 20.783,
+        "p99": 29.727,
+        "max": 43.583
+       },
+       "presence": {
+        "sent": 417131,
+        "received": 7922981,
+        "missed": 1957,
+        "p50": 37.727,
+        "p95": 59.423,
+        "p99": 69.375,
+        "max": 130.175
+       }
+      },
+      "errors": {},
+      "closes": 0,
+      "generatorLoopP99": 0.9608950000000007,
+      "throttledMs": 212.53499999999985
+     },
+     "why": null
+    },
+    {
+     "result": {
+      "profile": "presence",
+      "rooms": 112,
+      "members": 20,
+      "connections": 2240,
+      "seconds": 20.01600000000002,
+      "cpu": 0.870103916866506,
+      "rss": 131629056,
+      "rssPeak": 132313088,
+      "heapUsed": 28095544,
+      "loopP99": 54.586,
+      "loopMax": 67.332,
+      "framesIn": 22623.10151878495,
+      "framesOut": 44537.12030375695,
+      "bytesIn": 1889801.4588329317,
+      "bytesOut": 28308734.76219022,
+      "writes": 0,
+      "presenceSkipped": 0,
+      "volatileDropped": 0,
+      "series": {
+       "ping": {
+        "sent": 4494,
+        "received": 4493,
+        "missed": 0,
+        "p50": 7.899,
+        "p95": 29.727,
+        "p99": 48.031,
+        "max": 65.535
+       },
+       "presence": {
+        "sent": 449537,
+        "received": 8535199,
+        "missed": 1311,
+        "p50": 40.415,
+        "p95": 65.439,
+        "p99": 85.887,
+        "max": 124.607
+       }
+      },
+      "errors": {},
+      "closes": 0,
+      "generatorLoopP99": 0.9608950000000007,
+      "throttledMs": 990.931
+     },
+     "why": "CPU 87 %"
+    },
+    {
+     "result": {
+      "profile": "presence",
+      "rooms": 128,
+      "members": 20,
+      "connections": 2560,
+      "seconds": 20.076999999999998,
+      "cpu": 0.9479005827563879,
+      "rss": 131661824,
+      "rssPeak": 131661824,
+      "heapUsed": 25218328,
+      "loopP99": 79.653,
+      "loopMax": 166.947,
+      "framesIn": 25846.939283757536,
+      "framesOut": 48326.144344274544,
+      "bytesIn": 2139874.9315136727,
+      "bytesOut": 31713699.60651492,
+      "writes": 0,
+      "presenceSkipped": 0,
+      "volatileDropped": 0,
+      "series": {
+       "ping": {
+        "sent": 5155,
+        "received": 5152,
+        "missed": 0,
+        "p50": 12.823,
+        "p95": 40.415,
+        "p99": 60.607,
+        "max": 94.975
+       },
+       "presence": {
+        "sent": 515382,
+        "received": 9719222,
+        "missed": 67811,
+        "p50": 44.959,
+        "p95": 82.303,
+        "p99": 111.487,
+        "max": 187.647
+       }
+      },
+      "errors": {},
+      "closes": 0,
+      "generatorLoopP99": 0.9445110000000003,
+      "throttledMs": 2083.732
+     },
+     "why": "CPU 95 %, ping p99 60.6 ms, presence p99 111.5 ms"
+    }
+   ],
+   "found": {
+    "pass": 104,
+    "fail": 112
+   },
+   "note": null
+  },
+  "snapshots": {
+   "steps": [
+    {
+     "result": {
+      "profile": "snapshots",
+      "rooms": 1,
+      "members": 20,
+      "connections": 20,
+      "seconds": 20.005,
+      "cpu": 0.10417395651087229,
+      "rss": 100233216,
+      "rssPeak": 100233216,
+      "heapUsed": 16813392,
+      "loopP99": 0.895,
+      "loopMax": 2.567,
+      "framesIn": 397.0507373156711,
+      "framesOut": 671.8820294926269,
+      "bytesIn": 102607.49812546864,
+      "bytesOut": 1228195.8510372408,
+      "writes": 0,
+      "presenceSkipped": 0,
+      "volatileDropped": 0,
+      "series": {
+       "ping": {
+        "sent": 41,
+        "received": 41,
+        "missed": 0,
+        "p50": 0.441,
+        "p95": 0.721,
+        "p99": 2.819,
+        "max": 2.819
+       },
+       "snapshot": {
+        "sent": 302,
+        "received": 5738,
+        "missed": 0,
+        "p50": 0.933,
+        "p95": 1.905,
+        "p99": 2.363,
+        "max": 15.935
+       },
+       "input": {
+        "sent": 7627,
+        "received": 7624,
+        "missed": 0,
+        "p50": 0.436,
+        "p95": 0.682,
+        "p99": 1.432,
+        "max": 3.955
+       }
+      },
+      "errors": {},
+      "closes": 0,
+      "generatorLoopP99": 0.9854710000000004,
+      "throttledMs": 0
+     },
+     "why": null
+    },
+    {
+     "result": {
+      "profile": "snapshots",
+      "rooms": 2,
+      "members": 20,
+      "connections": 40,
+      "seconds": 20.002,
+      "cpu": 0.11498850114988501,
+      "rss": 101228544,
+      "rssPeak": 101228544,
+      "heapUsed": 17515624,
+      "loopP99": 0.969,
+      "loopMax": 1.551,
+      "framesIn": 793.970602939706,
+      "framesOut": 1341.915808419158,
+      "bytesIn": 204828.11718828118,
+      "bytesOut": 2448819.518048195,
+      "writes": 0,
+      "presenceSkipped": 0,
+      "volatileDropped": 0,
+      "series": {
+       "ping": {
+        "sent": 80,
+        "received": 80,
+        "missed": 0,
+        "p50": 0.287,
+        "p95": 0.566,
+        "p99": 1.156,
+        "max": 5.799
+       },
+       "snapshot": {
+        "sent": 602,
+        "received": 11438,
+        "missed": 0,
+        "p50": 0.37,
+        "p95": 1.526,
+        "p99": 1.924,
+        "max": 2.489
+       },
+       "input": {
+        "sent": 15246,
+        "received": 15246,
+        "missed": 0,
+        "p50": 0.153,
+        "p95": 0.599,
+        "p99": 0.913,
+        "max": 2.899
+       }
+      },
+      "errors": {},
+      "closes": 0,
+      "generatorLoopP99": 0.9772789999999993,
+      "throttledMs": 0
+     },
+     "why": null
+    },
+    {
+     "result": {
+      "profile": "snapshots",
+      "rooms": 4,
+      "members": 20,
+      "connections": 80,
+      "seconds": 20.002000000000002,
+      "cpu": 0.11793820617938204,
+      "rss": 102621184,
+      "rssPeak": 102621184,
+      "heapUsed": 18067304,
+      "loopP99": 0.92,
+      "loopMax": 2.214,
+      "framesIn": 1587.8912108789118,
+      "framesOut": 2683.7816218378157,
+      "bytesIn": 410023.9476052394,
+      "bytesOut": 4897986.951304869,
+      "writes": 0,
+      "presenceSkipped": 0,
+      "volatileDropped": 0,
+      "series": {
+       "ping": {
+        "sent": 160,
+        "received": 160,
+        "missed": 0,
+        "p50": 0.098,
+        "p95": 0.395,
+        "p99": 0.576,
+        "max": 1.42
+       },
+       "snapshot": {
+        "sent": 1204,
+        "received": 22876,
+        "missed": 0,
+        "p50": 0.25,
+        "p95": 1.242,
+        "p99": 1.706,
+        "max": 2.787
+       },
+       "input": {
+        "sent": 30473,
+        "received": 30473,
+        "missed": 0,
+        "p50": 0.089,
+        "p95": 0.473,
+        "p99": 0.699,
+        "max": 5.503
+       }
+      },
+      "errors": {},
+      "closes": 0,
+      "generatorLoopP99": 0.9527029999999996,
+      "throttledMs": 0
+     },
+     "why": null
+    },
+    {
+     "result": {
+      "profile": "snapshots",
+      "rooms": 8,
+      "members": 20,
+      "connections": 160,
+      "seconds": 20.003,
+      "cpu": 0.11868219767034945,
+      "rss": 107802624,
+      "rssPeak": 107802624,
+      "heapUsed": 17435736,
+      "loopP99": 0.912,
+      "loopMax": 1.543,
+      "framesIn": 3175.9236114582814,
+      "framesOut": 5367.594860770884,
+      "bytesIn": 820032.6451032346,
+      "bytesOut": 9795534.819777034,
+      "writes": 0,
+      "presenceSkipped": 0,
+      "volatileDropped": 0,
+      "series": {
+       "ping": {
+        "sent": 320,
+        "received": 320,
+        "missed": 0,
+        "p50": 0.054,
+        "p95": 0.127,
+        "p99": 0.217,
+        "max": 2.817
+       },
+       "snapshot": {
+        "sent": 2406,
+        "received": 45714,
+        "missed": 0,
+        "p50": 0.186,
+        "p95": 0.338,
+        "p99": 0.482,
+        "max": 3.481
+       },
+       "input": {
+        "sent": 60937,
+        "received": 60937,
+        "missed": 0,
+        "p50": 0.052,
+        "p95": 0.144,
+        "p99": 0.297,
+        "max": 3.647
+       }
+      },
+      "errors": {},
+      "closes": 0,
+      "generatorLoopP99": 0.9936629999999997,
+      "throttledMs": 0
+     },
+     "why": null
+    },
+    {
+     "result": {
+      "profile": "snapshots",
+      "rooms": 16,
+      "members": 20,
+      "connections": 320,
+      "seconds": 20.003,
+      "cpu": 0.2322651602259661,
+      "rss": 106369024,
+      "rssPeak": 110288896,
+      "heapUsed": 13108824,
+      "loopP99": 0.805,
+      "loopMax": 8.956,
+      "framesIn": 6351.547267909814,
+      "framesOut": 10734.88976653502,
+      "bytesIn": 1640086.886966955,
+      "bytesOut": 19590340.648902666,
+      "writes": 0,
+      "presenceSkipped": 0,
+      "volatileDropped": 0,
+      "series": {
+       "ping": {
+        "sent": 642,
+        "received": 642,
+        "missed": 0,
+        "p50": 0.061,
+        "p95": 0.206,
+        "p99": 0.479,
+        "max": 5.535
+       },
+       "snapshot": {
+        "sent": 4810,
+        "received": 91390,
+        "missed": 0,
+        "p50": 0.2,
+        "p95": 0.43,
+        "p99": 0.701,
+        "max": 10.471
+       },
+       "input": {
+        "sent": 121894,
+        "received": 121891,
+        "missed": 0,
+        "p50": 0.061,
+        "p95": 0.249,
+        "p99": 0.482,
+        "max": 9.423
+       }
+      },
+      "errors": {},
+      "closes": 0,
+      "generatorLoopP99": 0.969087,
+      "throttledMs": 0
+     },
+     "why": null
+    },
+    {
+     "result": {
+      "profile": "snapshots",
+      "rooms": 32,
+      "members": 20,
+      "connections": 640,
+      "seconds": 20.003000000000014,
+      "cpu": 0.44033394990751357,
+      "rss": 109916160,
+      "rssPeak": 109916160,
+      "heapUsed": 19068040,
+      "loopP99": 0.822,
+      "loopMax": 19.491,
+      "framesIn": 12704.294355846614,
+      "framesOut": 21472.779083137513,
+      "bytesIn": 3280674.598810176,
+      "bytesOut": 39189932.41013845,
+      "writes": 0,
+      "presenceSkipped": 0,
+      "volatileDropped": 0,
+      "series": {
+       "ping": {
+        "sent": 1283,
+        "received": 1283,
+        "missed": 0,
+        "p50": 0.088,
+        "p95": 0.397,
+        "p99": 0.858,
+        "max": 15.287
+       },
+       "snapshot": {
+        "sent": 9626,
+        "received": 182894,
+        "missed": 0,
+        "p50": 0.236,
+        "p95": 0.609,
+        "p99": 1.053,
+        "max": 16.319
+       },
+       "input": {
+        "sent": 243777,
+        "received": 243760,
+        "missed": 0,
+        "p50": 0.096,
+        "p95": 0.452,
+        "p99": 0.869,
+        "max": 16.815
+       }
+      },
+      "errors": {},
+      "closes": 0,
+      "generatorLoopP99": 0.9854710000000004,
+      "throttledMs": 0
+     },
+     "why": null
+    },
+    {
+     "result": {
+      "profile": "snapshots",
+      "rooms": 48,
+      "members": 20,
+      "connections": 960,
+      "seconds": 20.003000000000014,
+      "cpu": 0.6466530020496921,
+      "rss": 113332224,
+      "rssPeak": 114683904,
+      "heapUsed": 17344432,
+      "loopP99": 0.797,
+      "loopMax": 39.938,
+      "framesIn": 19056.891466280045,
+      "framesOut": 32208.718692196147,
+      "bytesIn": 4928706.044093383,
+      "bytesOut": 58789241.7137429,
+      "writes": 0,
+      "presenceSkipped": 0,
+      "volatileDropped": 0,
+      "series": {
+       "ping": {
+        "sent": 1923,
+        "received": 1923,
+        "missed": 0,
+        "p50": 0.134,
+        "p95": 0.736,
+        "p99": 1.94,
+        "max": 16.399
+       },
+       "snapshot": {
+        "sent": 14436,
+        "received": 274246,
+        "missed": 0,
+        "p50": 0.284,
+        "p95": 0.932,
+        "p99": 3.013,
+        "max": 32.223
+       },
+       "input": {
+        "sent": 365730,
+        "received": 365720,
+        "missed": 0,
+        "p50": 0.167,
+        "p95": 0.808,
+        "p99": 2.691,
+        "max": 33.151
+       }
+      },
+      "errors": {},
+      "closes": 0,
+      "generatorLoopP99": 0.9772789999999993,
+      "throttledMs": 32.969999999999914
+     },
+     "why": null
+    },
+    {
+     "result": {
+      "profile": "snapshots",
+      "rooms": 56,
+      "members": 20,
+      "connections": 1120,
+      "seconds": 20.004999999999995,
+      "cpu": 0.7537115721069734,
+      "rss": 114253824,
+      "rssPeak": 114253824,
+      "heapUsed": 19883392,
+      "loopP99": 1.723,
+      "loopMax": 55.405,
+      "framesIn": 22234.691327168213,
+      "framesOut": 37577.55561109723,
+      "bytesIn": 5753754.361409649,
+      "bytesOut": 68587212.3469133,
+      "writes": 0,
+      "presenceSkipped": 0,
+      "volatileDropped": 0,
+      "series": {
+       "ping": {
+        "sent": 2246,
+        "received": 2246,
+        "missed": 0,
+        "p50": 0.191,
+        "p95": 1.267,
+        "p99": 7.295,
+        "max": 24.511
+       },
+       "snapshot": {
+        "sent": 16855,
+        "received": 320150,
+        "missed": 0,
+        "p50": 0.355,
+        "p95": 1.411,
+        "p99": 9.575,
+        "max": 32.031
+       },
+       "input": {
+        "sent": 427000,
+        "received": 426968,
+        "missed": 0,
+        "p50": 0.244,
+        "p95": 1.285,
+        "p99": 8.123,
+        "max": 43.775
+       }
+      },
+      "errors": {},
+      "closes": 0,
+      "generatorLoopP99": 0.9854710000000004,
+      "throttledMs": 93.8470000000001
+     },
+     "why": null
+    },
+    {
+     "result": {
+      "profile": "snapshots",
+      "rooms": 60,
+      "members": 20,
+      "connections": 1200,
+      "seconds": 20.00400000000002,
+      "cpu": 0.8505298940211949,
+      "rss": 114024448,
+      "rssPeak": 114827264,
+      "heapUsed": 20058016,
+      "loopP99": 8.383,
+      "loopMax": 155.675,
+      "framesIn": 23822.385522895398,
+      "framesOut": 40263.59728054385,
+      "bytesIn": 6164017.996400714,
+      "bytesOut": 73494175.16496694,
+      "writes": 0,
+      "presenceSkipped": 0,
+      "volatileDropped": 0,
+      "series": {
+       "ping": {
+        "sent": 2405,
+        "received": 2405,
+        "missed": 0,
+        "p50": 0.326,
+        "p95": 9.527,
+        "p99": 22.575,
+        "max": 72.255
+       },
+       "snapshot": {
+        "sent": 18059,
+        "received": 343159,
+        "missed": 0,
+        "p50": 0.5,
+        "p95": 11.687,
+        "p99": 28.815,
+        "max": 101.247
+       },
+       "input": {
+        "sent": 457465,
+        "received": 457553,
+        "missed": 0,
+        "p50": 0.4,
+        "p95": 11.191,
+        "p99": 28.239,
+        "max": 112.639
+       }
+      },
+      "errors": {},
+      "closes": 0,
+      "generatorLoopP99": 0.9936629999999997,
+      "throttledMs": 497.94900000000007
+     },
+     "why": "CPU 85 %"
+    },
+    {
+     "result": {
+      "profile": "snapshots",
+      "rooms": 64,
+      "members": 20,
+      "connections": 1280,
+      "seconds": 20.00200000000001,
+      "cpu": 0.8530646935306465,
+      "rss": 113491968,
+      "rssPeak": 114343936,
+      "heapUsed": 19678216,
+      "loopP99": 8.448,
+      "loopMax": 67.332,
+      "framesIn": 25412.258774122576,
+      "framesOut": 42949.20507949203,
+      "bytesIn": 6562011.1488851085,
+      "bytesOut": 78380126.63733622,
+      "writes": 0,
+      "presenceSkipped": 0,
+      "volatileDropped": 0,
+      "series": {
+       "ping": {
+        "sent": 2569,
+        "received": 2569,
+        "missed": 0,
+        "p50": 0.306,
+        "p95": 7.311,
+        "p99": 17.327,
+        "max": 42.431
+       },
+       "snapshot": {
+        "sent": 19261,
+        "received": 365932,
+        "missed": 0,
+        "p50": 0.466,
+        "p95": 8.107,
+        "p99": 18.127,
+        "max": 44.991
+       },
+       "input": {
+        "sent": 487966,
+        "received": 487947,
+        "missed": 0,
+        "p50": 0.379,
+        "p95": 7.899,
+        "p99": 17.823,
+        "max": 46.879
+       }
+      },
+      "errors": {},
+      "closes": 0,
+      "generatorLoopP99": 0.9936629999999997,
+      "throttledMs": 368.54099999999994
+     },
+     "why": "CPU 85 %"
+    }
+   ],
+   "found": {
+    "pass": 56,
+    "fail": 60
+   },
+   "note": null
+  }
+ },
+ "idle": {
+  "empty": 97767424,
+  "steps": [
+   {
+    "profile": "idle",
+    "rooms": 50,
+    "members": 20,
+    "connections": 1000,
+    "seconds": 60.004999999999995,
+    "cpu": 0.039696691942338144,
+    "rss": 115568640,
+    "rssPeak": 115568640,
+    "heapUsed": 27378928,
+    "loopP99": 0.985,
+    "loopMax": 38.136,
+    "framesIn": 99.99166736105326,
+    "framesOut": 299.9750020831598,
+    "bytesIn": 4889.459211732356,
+    "bytesOut": 103737.22189817516,
+    "writes": 0,
+    "presenceSkipped": 0,
+    "volatileDropped": 0,
+    "series": {
+     "ping": {
+      "sent": 6004,
+      "received": 6004,
+      "missed": 0,
+      "p50": 0.486,
+      "p95": 0.688,
+      "p99": 1.1,
+      "max": 35.711
+     }
+    },
+    "errors": {},
+    "closes": 0,
+    "generatorLoopP99": 0.9117429999999995,
+    "throttledMs": 0
+   },
+   {
+    "profile": "idle",
+    "rooms": 100,
+    "members": 20,
+    "connections": 2000,
+    "seconds": 60.003,
+    "cpu": 0.07067979934336616,
+    "rss": 122036224,
+    "rssPeak": 125034496,
+    "heapUsed": 26960720,
+    "loopP99": 1.002,
+    "loopMax": 59.009,
+    "framesIn": 199.990000499975,
+    "framesOut": 599.970001499925,
+    "bytesIn": 9777.427795276903,
+    "bytesOut": 205244.32111727746,
+    "writes": 0,
+    "presenceSkipped": 0,
+    "volatileDropped": 0,
+    "series": {
+     "ping": {
+      "sent": 12008,
+      "received": 12007,
+      "missed": 0,
+      "p50": 0.483,
+      "p95": 0.633,
+      "p99": 9.031,
+      "max": 54.751
+     }
+    },
+    "errors": {},
+    "closes": 0,
+    "generatorLoopP99": 0.8953589999999991,
+    "throttledMs": 5.650999999999954
+   }
+  ],
+  "perMemberFirst": 17801.216,
+  "perMemberNext": 6467.584
+ }
+}

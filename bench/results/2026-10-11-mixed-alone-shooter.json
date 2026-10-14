@@ -1,0 +1,70 @@
+{
+ "profile": "shooter",
+ "rooms": 1,
+ "members": 8,
+ "connections": 8,
+ "seconds": 120.00900000000001,
+ "cpu": 0.06948645518252797,
+ "rss": 102240256,
+ "rssPeak": 102731776,
+ "heapUsed": 16667464,
+ "loopP99": 1.002,
+ "loopMax": 21.08,
+ "framesIn": 250.81452224416498,
+ "framesOut": 818.921914189769,
+ "bytesIn": 25346.890649867924,
+ "bytesOut": 175620.8451032839,
+ "writes": 26.681332233415823,
+ "presenceSkipped": 0,
+ "volatileDropped": 0,
+ "series": {
+  "ping": {
+   "sent": 96,
+   "received": 96,
+   "missed": 0,
+   "p50": 0.432,
+   "p95": 0.561,
+   "p99": 0.675,
+   "max": 0.851
+  },
+  "presence": {
+   "sent": 19202,
+   "received": 133168,
+   "missed": 1267,
+   "p50": 25.631,
+   "p95": 47.839,
+   "p99": 50.079,
+   "max": 52.799
+  },
+  "shots": {
+   "sent": 6406,
+   "received": 44842,
+   "missed": 0,
+   "p50": 0.543,
+   "p95": 0.914,
+   "p99": 1.165,
+   "max": 7.815
+  },
+  "report": {
+   "sent": 1200,
+   "received": 8400,
+   "missed": 0,
+   "p50": 0.612,
+   "p95": 0.93,
+   "p99": 1.194,
+   "max": 19.615
+  },
+  "paint": {
+   "sent": 3200,
+   "received": 25600,
+   "missed": 0,
+   "p50": 0.553,
+   "p95": 0.918,
+   "p99": 1.193,
+   "max": 15.847
+  }
+ },
+ "errors": {},
+ "closes": 0,
+ "generatorLoopP99": 0.9527029999999996
+}

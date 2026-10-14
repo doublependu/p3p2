@@ -1,0 +1,10 @@
+.git
+ai
+node_modules
+**/node_modules
+**/dist
+**/data
+e2e/test-results
+e2e/playwright-report
+bench/results
+**/.env

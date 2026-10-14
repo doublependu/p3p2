@@ -1,0 +1,9 @@
+# HTTPS for a domain name, with a certificate from Let's Encrypt. Caddy answers on port 80 too,
+# to prove to Let's Encrypt that the name is ours and to send http:// visitors to https://.
+#
+# There is no access log, on purpose: a room URL has the room's key in it, and an access log
+# would keep every one it sees.
+
+{$P3P2_DOMAIN} {
+	reverse_proxy p3p2:8080
+}

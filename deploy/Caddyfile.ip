@@ -1,0 +1,20 @@
+# HTTPS without a domain name: P3P2_DOMAIN is the VPS's public IPv4 address, and the
+# certificate is one of Let's Encrypt's for IP addresses. Those only come in the "shortlived"
+# kind, good for 6 days, which Caddy renews every few days by itself.
+{
+	# A browser that connects to an address names no site. Caddy would then look for a
+	# certificate for the address the connection arrived at, which in a container is the
+	# container's own, and find none.
+	default_sni {$P3P2_DOMAIN}
+}
+
+{$P3P2_DOMAIN} {
+	# Caddy would sign a certificate for an address itself, as it does for localhost, unless
+	# it is told who to ask.
+	tls {
+		issuer acme {
+			profile shortlived
+		}
+	}
+	reverse_proxy p3p2:8080
+}

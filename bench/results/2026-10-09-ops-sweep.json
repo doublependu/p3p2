@@ -1,0 +1,222 @@
+[
+ {
+  "profile": "ops",
+  "rooms": 1,
+  "members": 8,
+  "connections": 8,
+  "seconds": 60.006,
+  "cpu": 0.024264240242642402,
+  "rss": 100106240,
+  "rssPeak": 100106240,
+  "heapUsed": 16107232,
+  "loopP99": 1.239,
+  "loopMax": 2.935,
+  "framesIn": 16.814985168149853,
+  "framesOut": 130.3869613038696,
+  "bytesIn": 1816.301703163017,
+  "bytesOut": 17019.764690197648,
+  "writes": 15.931740159317402,
+  "presenceSkipped": 0,
+  "volatileDropped": 0,
+  "series": {
+   "ping": {
+    "sent": 48,
+    "received": 48,
+    "missed": 0,
+    "p50": 0.641,
+    "p95": 0.84,
+    "p99": 0.921,
+    "max": 0.921
+   },
+   "op": {
+    "sent": 961,
+    "received": 7680,
+    "missed": 0,
+    "p50": 1.009,
+    "p95": 1.374,
+    "p99": 1.629,
+    "max": 3.481
+   }
+  },
+  "errors": {},
+  "closes": 0,
+  "generatorLoopP99": 1.2312309999999993,
+  "throttledMs": 0
+ },
+ {
+  "profile": "ops",
+  "rooms": 1,
+  "members": 16,
+  "connections": 16,
+  "seconds": 60.001999999999995,
+  "cpu": 0.02836572114262858,
+  "rss": 100282368,
+  "rssPeak": 100691968,
+  "heapUsed": 16604016,
+  "loopP99": 1.117,
+  "loopMax": 15.969,
+  "framesIn": 33.63221225959135,
+  "framesOut": 516.7827739075365,
+  "bytesIn": 3666.511116296124,
+  "bytesOut": 69109.27969067698,
+  "writes": 31.998933368887705,
+  "presenceSkipped": 0,
+  "volatileDropped": 0,
+  "series": {
+   "ping": {
+    "sent": 96,
+    "received": 96,
+    "missed": 0,
+    "p50": 0.254,
+    "p95": 0.728,
+    "p99": 0.77,
+    "max": 0.772
+   },
+   "op": {
+    "sent": 1923,
+    "received": 30768,
+    "missed": 0,
+    "p50": 0.522,
+    "p95": 1.321,
+    "p99": 1.643,
+    "max": 3.371
+   }
+  },
+  "errors": {},
+  "closes": 0,
+  "generatorLoopP99": 1.1738870000000006,
+  "throttledMs": 0
+ },
+ {
+  "profile": "ops",
+  "rooms": 1,
+  "members": 20,
+  "connections": 20,
+  "seconds": 60.003000000000014,
+  "cpu": 0.05061413595986866,
+  "rss": 100327424,
+  "rssPeak": 101523456,
+  "heapUsed": 16474096,
+  "loopP99": 1.231,
+  "loopMax": 18.59,
+  "framesIn": 42.047897605119736,
+  "framesOut": 805.9597020148991,
+  "bytesIn": 4720.113994300284,
+  "bytesOut": 108106.12802693195,
+  "writes": 39.99800009999499,
+  "presenceSkipped": 0,
+  "volatileDropped": 0,
+  "series": {
+   "ping": {
+    "sent": 120,
+    "received": 120,
+    "missed": 0,
+    "p50": 0.598,
+    "p95": 0.762,
+    "p99": 0.896,
+    "max": 1.15
+   },
+   "op": {
+    "sent": 2402,
+    "received": 48040,
+    "missed": 0,
+    "p50": 1.028,
+    "p95": 1.502,
+    "p99": 1.845,
+    "max": 9.671
+   }
+  },
+  "errors": {},
+  "closes": 0,
+  "generatorLoopP99": 1.2312309999999993,
+  "throttledMs": 0
+ },
+ {
+  "profile": "ops",
+  "rooms": 1,
+  "members": 32,
+  "connections": 32,
+  "seconds": 60.002999999999986,
+  "cpu": 0.08676232855023919,
+  "rss": 106323968,
+  "rssPeak": 106323968,
+  "heapUsed": 20259088,
+  "loopP99": 1.706,
+  "loopMax": 28.699,
+  "framesIn": 67.2633035014916,
+  "framesOut": 2057.4971251437432,
+  "bytesIn": 7333.166674999585,
+  "bytesOut": 277098.9283869141,
+  "writes": 63.78014432611704,
+  "presenceSkipped": 0,
+  "volatileDropped": 0,
+  "series": {
+   "ping": {
+    "sent": 192,
+    "received": 192,
+    "missed": 0,
+    "p50": 0.543,
+    "p95": 0.819,
+    "p99": 1.422,
+    "max": 1.6
+   },
+   "op": {
+    "sent": 3844,
+    "received": 123008,
+    "missed": 0,
+    "p50": 1.142,
+    "p95": 1.709,
+    "p99": 2.109,
+    "max": 21.311
+   }
+  },
+  "errors": {},
+  "closes": 0,
+  "generatorLoopP99": 1.6572150000000008,
+  "throttledMs": 0
+ },
+ {
+  "profile": "ops",
+  "rooms": 1,
+  "members": 64,
+  "connections": 64,
+  "seconds": 60.00400000000002,
+  "cpu": 0.245466968868742,
+  "rss": 109981696,
+  "rssPeak": 110075904,
+  "heapUsed": 20737664,
+  "loopP99": 3.001,
+  "loopMax": 65.432,
+  "framesIn": 134.52436504233046,
+  "framesOut": 8210.652623158454,
+  "bytesIn": 14665.755616292243,
+  "bytesOut": 1108831.1279248046,
+  "writes": 125.59162722485163,
+  "presenceSkipped": 0,
+  "volatileDropped": 0,
+  "series": {
+   "ping": {
+    "sent": 384,
+    "received": 384,
+    "missed": 0,
+    "p50": 0.525,
+    "p95": 2.637,
+    "p99": 4.061,
+    "max": 43.679
+   },
+   "op": {
+    "sent": 7687,
+    "received": 492032,
+    "missed": 0,
+    "p50": 1.751,
+    "p95": 3.731,
+    "p99": 5.251,
+    "max": 53.183
+   }
+  },
+  "errors": {},
+  "closes": 0,
+  "generatorLoopP99": 1.8210549999999994,
+  "throttledMs": 0
+ }
+]

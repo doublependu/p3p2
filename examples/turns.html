@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>p3p2 turns example</title>
+<style>
+  :root { color-scheme: light dark; font: 16px/1.5 system-ui, sans-serif; }
+  body { max-width: 40rem; margin: 0 auto; padding: 4rem 1rem 2rem; }
+  h1 { font-size: 1.4rem; }
+  button { font: inherit; padding: .4rem .9rem; }
+  #board { display: grid; grid-template-columns: repeat(3, 4.5rem); gap: .3rem; margin: 1rem 0; }
+  #board button { height: 4.5rem; font: 700 2rem system-ui, sans-serif; }
+  .soft { opacity: .7; }
+</style>
+</head>
+<body>
+<h1>Turns example</h1>
+<p id="state">Playing alone. Open the 👥 panel in the corner and paste a room URL to host.</p>
+<section id="board" aria-label="Board"></section>
+<p><button id="again" type="button" hidden>Next game</button></p>
+<p class="soft">This page stands in for a game played in turns: noughts and crosses. Everything is in the room's
+log: taking a seat, every move, the next game. Each page builds the board from the same ops in the same order, and
+ignores an op that breaks the rules, so every page has the same board without a host. A move is shown when its op
+comes back, as on every other page. The room keeps the log: close the page, and the game is there tomorrow.</p>
+
+<script type="module">
+  import { P3P2 } from './dist/p3p2.js'
+
+  const $ = (id) => document.getElementById(id)
+  const p3p2 = new P3P2({ game: { id: 'turns-example', version: '1.0.0' } })
+  window.p3p2 = p3p2
+
+  const LINES = [[0, 1, 2], [3, 4, 5], [6, 7, 8], [0, 3, 6], [1, 4, 7], [2, 5, 8], [0, 4, 8], [2, 4, 6]]
+  const winner = (cells) => LINES.find(([a, b, c]) => cells[a] !== null && cells[a] === cells[b] && cells[a] === cells[c])
+  const full = (cells) => cells.every((x) => x !== null)
+
+  /** The table: who plays X (seat 0) and O, the game's number, and its cells. Built from ops alone. */
+  const fresh = () => ({ seats: [null, null], names: ['', ''], n: 1, cells: Array(9).fill(null) })
+  let table = fresh()
+
+  /** One op, from player `pid`. Anything against the rules changes nothing, on every page alike. */
+  function apply(op, pid) {
+    const seat = table.seats.indexOf(pid)
+    const turn = table.cells.filter((x) => x !== null).length % 2
+    const over = winner(table.cells) || full(table.cells)
+    if (op?.t === 'sit' && (op.c === 0 || op.c === 1) && !table.seats[op.c] && seat === -1) {
+      table.seats[op.c] = pid
+      table.names[op.c] = String(op.name).slice(0, 40)
+    } else if (op?.t === 'move' && op.n === table.n && !over && seat === turn && table.cells[op.i] === null) {
+      table.cells[op.i] = seat
+    } else if (op?.t === 'new' && op.n === table.n && over && seat !== -1) {
+      table = { ...table, seats: table.seats.reverse(), names: table.names.reverse(), n: table.n + 1, cells: Array(9).fill(null) }
+    }
+  }
+
+  p3p2.on('room', async (room) => {
+    table = fresh()
+    const draw = () => {
+      const me = table.seats.indexOf(room.self.pid)
+      const turn = table.cells.filter((x) => x !== null).length % 2
+      const line = winner(table.cells)
+      const who = (c) => table.names[c] || (c ? 'O' : 'X')
+      const now = line ? `${who(table.cells[line[0]])} wins.`
+        : full(table.cells) ? 'A draw.'
+        : !table.seats[0] || !table.seats[1] ? 'Waiting for a second player.'
+        : turn === me ? 'Your move.' : `${who(turn)} to move.`
+      $('state').textContent = `In "${room.name}" as ${room.self.name}, ${me === -1 ? 'watching' : `playing ${me ? 'O' : 'X'}`}. ${now}`
+      $('board').replaceChildren(...table.cells.map((x, i) => {
+        const b = document.createElement('button')
+        b.textContent = x === null ? '' : x ? 'O' : 'X'
+        b.setAttribute('aria-label', `Cell ${i + 1}`)
+        b.disabled = x !== null || !!line || turn !== me || !table.seats[1 - me]
+        b.onclick = () => room.log.submit({ t: 'move', n: table.n, i })
+        return b
+      }))
+      $('again').hidden = !(line || full(table.cells)) || me === -1
+    }
+    $('again').onclick = () => room.log.submit({ t: 'new', n: table.n })
+
+    await room.log.open({
+      load: (state) => { table = state ?? fresh() },
+      apply: (op, entry) => { apply(op, entry.pid); draw() },
+      save: () => table,
+    })
+    // A seat, if there is one free.
+    const free = table.seats.indexOf(null)
+    if (free !== -1 && !table.seats.includes(room.self.pid)) room.log.submit({ t: 'sit', c: free, name: room.self.name })
+    draw()
+  })
+  p3p2.on('leave', () => {
+    $('state').textContent = 'Playing alone.'
+    $('board').replaceChildren()
+    $('again').hidden = true
+  })
+  await p3p2.start()
+</script>
+</body>
+</html>

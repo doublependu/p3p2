@@ -1,0 +1,267 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>p3p2 host-ball example</title>
+<style>
+  :root { color-scheme: light dark; font: 16px/1.5 system-ui, sans-serif; }
+  body { max-width: 40rem; margin: 0 auto; padding: 4rem 1rem 2rem; }
+  h1 { font-size: 1.4rem; }
+  canvas { display: block; width: 100%; aspect-ratio: 4 / 3; border: 1px solid #8886; border-radius: .5rem; cursor: crosshair; touch-action: none; }
+  .soft { opacity: .7; }
+</style>
+</head>
+<body>
+<h1>Ball and bricks</h1>
+<p id="state">Playing alone. Open the 👥 panel in the corner and paste a room URL to host.</p>
+<canvas id="field" width="800" height="600" aria-label="A ball bouncing under a wall of bricks. Click to send the ball that way."></canvas>
+<p id="score" class="soft"></p>
+<p id="who" class="soft"></p>
+<p class="soft">This page stands in for a game that needs one player to be in charge. The host's browser
+moves the ball and decides which brick it hits; the others see what the host sends them, and a click
+anywhere asks the host to send the ball that way. Every brick that falls is an op in the room's log,
+which the server numbers and saves. Close the host's tab and the next player carries on with the same
+ball. Let everyone leave, and the wall is as you left it when somebody comes back.</p>
+
+<script type="module">
+  import { P3P2 } from '../dist/p3p2.js'
+
+  const $ = (id) => document.getElementById(id)
+  const canvas = $('field')
+  const ctx = canvas.getContext('2d')
+
+  // The field, in its own units.
+  const W = 400
+  const H = 300
+  const R = 6
+  const COLS = 8
+  const ROWS = 5
+  const BRICKS = COLS * ROWS
+  const BW = W / COLS
+  const BH = 14
+  const TOP = 30
+  // ?speed=3 makes the ball three times as fast, for a test or for the impatient.
+  const SPEED = 170 * (Number(new URLSearchParams(location.search).get('speed')) || 1)
+  /** The host replaces the ops so far by a snapshot every so many bricks, so the log stays short. */
+  const SNAP_EVERY = 10
+  /** How often the host says where the ball is. In between, everyone moves it along by themselves. */
+  const SEND_MS = 1000 / 15
+  /** With no word from the host for this long, the ball waits where it is for the next host. */
+  const QUIET_MS = 500
+
+  const round = (v) => Math.round(v * 100) / 100
+  const isBall = (b) => Array.isArray(b) && b.length === 4 && b.every(Number.isFinite)
+  const isWorld = (w) => w && Number.isInteger(w.wall) && Number.isInteger(w.hits) && Array.isArray(w.gone) && isBall(w.ball)
+  const freshWorld = () => ({ wall: 1, gone: [], hits: 0, ball: [W / 2, H - 60, SPEED * 0.6, -SPEED * 0.8] })
+
+  /** Plays in one room until the function it returns is called. Alone, the room is a room of one. */
+  function play(room) {
+    // What the log adds up to: which bricks are gone, and where the ball was when the last one went.
+    let world = freshWorld()
+    // Where this page thinks the ball is now: x, y, and its speed along each.
+    let ball = [...world.ball]
+    // Bricks the host has hit, until the server sends the op back. Nobody else has such a list.
+    const pending = new Set()
+    let loaded = 0
+    let ticks = 0
+
+    room.log.open({
+      // The last snapshot, or nothing. Whatever comes from a server is checked before it is used.
+      load(state) {
+        world = isWorld(state) ? state : freshWorld()
+        ball = [...world.ball]
+        loaded = world.hits
+        pending.clear()
+      },
+      // The one place where the world changes: every page gets the same ops in the same order.
+      apply(op, entry) {
+        if (op?.t === 'hit' && op.wall === world.wall && Number.isInteger(op.i) && isBall(op.ball) && !world.gone.includes(op.i)) {
+          world.gone.push(op.i)
+          world.hits++
+          world.ball = op.ball
+          pending.delete(op.i)
+          // The host knows better where the ball is by now. Everyone else takes it from the op.
+          if (!room.isHost || entry.replayed) ball = [...op.ball]
+          if (room.isHost && !entry.replayed && world.hits % SNAP_EVERY === 0) room.log.snapshot()
+        } else if (op?.t === 'wall' && op.wall === world.wall + 1) {
+          world.wall = op.wall
+          world.gone = []
+          pending.clear()
+        }
+        describe()
+      },
+      // What a snapshot holds: the world, with the ball where it is right now.
+      save: () => ({ ...world, ball: ball.map(round) }),
+    })
+
+    function move(dt) {
+      let [x, y, vx, vy] = ball
+      x += vx * dt
+      y += vy * dt
+      if (x < R) [x, vx] = [R, Math.abs(vx)]
+      else if (x > W - R) [x, vx] = [W - R, -Math.abs(vx)]
+      if (y < R) [y, vy] = [R, Math.abs(vy)]
+      else if (y > H - R) [y, vy] = [H - R, -Math.abs(vy)]
+      ball = [x, y, vx, vy]
+    }
+
+    /** The host's part: what the ball hits. A brick goes when its op has come back from the server. */
+    function collide() {
+      const [x, y] = ball
+      for (let i = 0; i < BRICKS; i++) {
+        if (world.gone.includes(i) || pending.has(i)) continue
+        const left = (i % COLS) * BW
+        const top = TOP + Math.floor(i / COLS) * BH
+        const dx = Math.min(x + R - left, left + BW - (x - R))
+        const dy = Math.min(y + R - top, top + BH - (y - R))
+        if (dx <= 0 || dy <= 0) continue
+        if (dx < dy) ball[2] = -ball[2]
+        else ball[3] = -ball[3]
+        if (room.log.submit({ t: 'hit', wall: world.wall, i, ball: ball.map(round) })) pending.add(i)
+        return
+      }
+      if (world.gone.length === BRICKS && !pending.has('wall') && room.log.submit({ t: 'wall', wall: world.wall + 1 })) {
+        pending.add('wall')
+      }
+    }
+
+    function kick(to) {
+      if (!Array.isArray(to) || !to.every(Number.isFinite)) return
+      const [x, y] = ball
+      const far = Math.hypot(to[0] - x, to[1] - y) || 1
+      ball = [x, y, ((to[0] - x) / far) * SPEED, ((to[1] - y) / far) * SPEED]
+    }
+
+    /** A click: the host turns the ball itself, everyone else asks the host to. */
+    function ask(x, y) {
+      if (room.isHost) kick([x, y])
+      else room.send('kick', [round(x), round(y)], { to: 'host' })
+    }
+
+    function describe() {
+      const role = room.isHost ? 'the host' : `hosted by ${room.host?.name ?? 'nobody'}`
+      $('state').textContent = room.server
+        ? `In "${room.name}" as ${room.self.name} (${role}), ${room.members.length} here.`
+        : 'Playing alone. Open the 👥 panel in the corner and paste a room URL to host.'
+      $('score').textContent = `Wall ${world.wall}: ${world.gone.length} of ${BRICKS} bricks down, ${world.hits} since the beginning.`
+      // Who can be counted on right now: a page in the background, or one the server has not
+      // heard from (its connection is down, or it froze), keeps its place but is not here.
+      const states = { here: 'here', away: 'in the background', lost: 'not heard from' }
+      $('who').textContent = room.server ? room.members.map((m) => `${m.name}: ${states[m.state]}`).join(' · ') : ''
+    }
+
+    let last = performance.now()
+    let sent = 0
+    let heard = last
+    // A timer, not animation frames: those stop in a tab that is not in front.
+    const timer = setInterval(() => {
+      const now = performance.now()
+      let left = Math.min(0.25, (now - last) / 1000)
+      last = now
+      // Everyone moves the ball along. Only the host decides what it hits, and says where it is.
+      // When the host has gone quiet, the ball stays put rather than fly through the wall.
+      if (!room.isHost && now - heard > QUIET_MS) left = 0
+      for (; left > 0; left -= 1 / 120) {
+        move(Math.min(left, 1 / 120))
+        if (room.isHost) collide()
+      }
+      ticks++
+      if (room.isHost && now - sent >= SEND_MS) {
+        sent = now
+        room.send('ball', ball.map(round), { volatile: true })
+      }
+    }, 1000 / 60)
+
+    const off = [
+      room.on('ball', (data, from) => {
+        if (room.isHost || from !== room.host || !isBall(data)) return
+        ball = data
+        heard = performance.now()
+      }),
+      room.on('kick', (data) => {
+        if (room.isHost) kick(data)
+      }),
+      // A new host starts from where the ball is on its own screen. If that is this page, it has
+      // no bricks waiting for an answer: the old host's list went with the old host.
+      room.on('host-change', () => {
+        pending.clear()
+        describe()
+      }),
+      room.on('member-join', describe),
+      room.on('member-leave', describe),
+      room.on('member-state', describe),
+      room.on('status', describe),
+    ]
+
+    const click = (e) => {
+      const box = canvas.getBoundingClientRect()
+      ask(((e.clientX - box.left) / box.width) * W, ((e.clientY - box.top) / box.height) * H)
+    }
+    canvas.addEventListener('pointerdown', click)
+
+    let frame = requestAnimationFrame(function draw() {
+      const ink = getComputedStyle(canvas).color
+      ctx.setTransform(canvas.width / W, 0, 0, canvas.height / H, 0, 0)
+      ctx.clearRect(0, 0, W, H)
+      for (let i = 0; i < BRICKS; i++) {
+        if (world.gone.includes(i)) continue
+        const row = Math.floor(i / COLS)
+        ctx.globalAlpha = pending.has(i) ? 0.3 : 1
+        ctx.fillStyle = `hsl(${(world.wall * 67 + row * 28) % 360} 60% 55%)`
+        ctx.fillRect((i % COLS) * BW + 1, TOP + row * BH + 1, BW - 2, BH - 2)
+      }
+      ctx.globalAlpha = 1
+      ctx.fillStyle = ink
+      ctx.beginPath()
+      ctx.arc(ball[0], ball[1], R, 0, Math.PI * 2)
+      ctx.fill()
+      frame = requestAnimationFrame(draw)
+    })
+
+    // For the browser tests, and for a look from the console.
+    window.game = {
+      get x() { return ball[0] },
+      get y() { return ball[1] },
+      get wall() { return world.wall },
+      get gone() { return [...world.gone].sort((a, b) => a - b) },
+      get hits() { return world.hits },
+      /** How many of the hits came with the snapshot this page started from. */
+      get loaded() { return loaded },
+      get seq() { return room.log.seq },
+      get host() { return room.isHost },
+      get ticks() { return ticks },
+      kick: ask,
+    }
+    describe()
+
+    return () => {
+      clearInterval(timer)
+      cancelAnimationFrame(frame)
+      canvas.removeEventListener('pointerdown', click)
+      for (const stop of off) stop()
+    }
+  }
+
+  const p3p2 = new P3P2({ game: { id: 'host-ball', version: '1.0.0' } })
+  window.p3p2 = p3p2
+
+  let stop = () => {}
+  function enter(room) {
+    stop()
+    stop = play(room)
+  }
+  // The same game alone and with friends: alone, it plays in a room of one that talks to no server.
+  const alone = async () => {
+    const room = await P3P2.local()
+    if (!p3p2.room) enter(room)
+  }
+  p3p2.on('room', enter)
+  p3p2.on('leave', alone)
+
+  await alone()
+  // After a reload: back into the room. From an invite link: asks, then joins.
+  await p3p2.start()
+</script>
+</body>
+</html>

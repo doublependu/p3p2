@@ -1,0 +1,8 @@
+# To try the whole setup on your own machine: the certificate comes from Caddy's own authority,
+# which no browser trusts, so expect a warning. P3P2_DOMAIN=p3p2.localhost works
+# without touching DNS.
+
+{$P3P2_DOMAIN} {
+	tls internal
+	reverse_proxy p3p2:8080
+}

@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>p3p2 cards example</title>
+<style>
+  :root { color-scheme: light dark; font: 16px/1.5 system-ui, sans-serif; }
+  body { max-width: 40rem; margin: 0 auto; padding: 4rem 1rem 2rem; }
+  h1 { font-size: 1.4rem; }
+  #table { list-style: none; padding: 0; display: flex; flex-wrap: wrap; gap: .75rem; }
+  #table li { border: 1px solid #8886; border-radius: .5rem; padding: .5rem .75rem; min-width: 7rem; }
+  .card { font-size: 2rem; line-height: 1.2; }
+  .red { color: #c22; }
+  button { font: inherit; padding: .4rem .9rem; }
+  .soft { opacity: .7; }
+</style>
+</head>
+<body>
+<h1>Cards example</h1>
+<p id="state">Playing alone. Open the 👥 panel in the corner and paste a room URL to host.</p>
+<p><button id="deal" type="button" hidden>Deal</button> <button id="show" type="button" hidden>Show my card</button></p>
+<ul id="table" aria-live="polite"></ul>
+<p class="soft">This page stands in for a card game. The host shuffles and deals each player one card with
+<code>room.sendEach</code>: one message, in which each player's card goes to that player alone. Nobody else's
+page ever gets it, the host's apart. A player who shows their card sends it to everybody.</p>
+
+<script type="module">
+  import { P3P2 } from './dist/p3p2.js'
+
+  const $ = (id) => document.getElementById(id)
+  const p3p2 = new P3P2({ game: { id: 'cards-example', version: '1.0.0' } })
+  window.p3p2 = p3p2
+
+  const SUITS = ['♠', '♥', '♦', '♣']
+  const RANKS = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K']
+  /** A card is one byte: 0 to 51. */
+  const name = (card) => `${RANKS[card % 13]}${SUITS[Math.floor(card / 13)]}`
+
+  p3p2.on('room', (room) => {
+    let mine = null
+    const shown = new Map()
+
+    const draw = () => {
+      $('state').textContent = `In "${room.name}" as ${room.self.name}${room.isHost ? ', the dealer' : ''}.`
+      $('deal').hidden = !room.isHost
+      $('show').hidden = mine === null
+      $('table').replaceChildren(
+        ...room.members.map((m) => {
+          const li = document.createElement('li')
+          const card = m === room.self ? mine : shown.get(m.id)
+          const face = document.createElement('div')
+          face.className = 'card'
+          face.textContent = card === null || card === undefined ? (room.presence.get(m)?.dealt ? '🂠' : '–') : name(card)
+          if (card !== null && card !== undefined && (Math.floor(card / 13) === 1 || Math.floor(card / 13) === 2)) face.classList.add('red')
+          li.append(face, m === room.self ? `${m.name} (you)` : m.name)
+          return li
+        }),
+      )
+    }
+
+    // The dealer: a shuffled deck, and each player's card in their part of one message.
+    $('deal').onclick = () => {
+      const deck = Array.from({ length: 52 }, (_, i) => i)
+      for (let i = deck.length - 1; i > 0; i--) {
+        const j = crypto.getRandomValues(new Uint32Array(1))[0] % (i + 1)
+        ;[deck[i], deck[j]] = [deck[j], deck[i]]
+      }
+      const deal = room.members.map((m, i) => [m, Uint8Array.of(deck[i])])
+      room.sendEach('card', deal.filter(([m]) => m !== room.self))
+      // The dealer's own card stays on its own page.
+      mine = deal.find(([m]) => m === room.self)[1][0]
+      shown.clear()
+      room.send('reset', null)
+      room.presence.set({ dealt: true })
+      draw()
+    }
+
+    // A card for this player alone, from the dealer.
+    room.on('card', (data, from) => {
+      if (from !== room.host) return
+      mine = data[0]
+      shown.clear()
+      room.presence.set({ dealt: true })
+      draw()
+    })
+    room.on('reset', () => {
+      shown.clear()
+      draw()
+    })
+
+    $('show').onclick = () => room.send('shown', Uint8Array.of(mine), { to: 'all' })
+    room.on('shown', (data, from) => {
+      if (from) shown.set(from.id, data[0])
+      draw()
+    })
+
+    room.presence.on(draw)
+    for (const event of ['member-join', 'member-leave', 'host-change']) room.on(event, draw)
+    draw()
+  })
+
+  p3p2.on('leave', (reason) => {
+    $('state').textContent = `Playing alone again (${reason}).`
+    $('deal').hidden = $('show').hidden = true
+    $('table').replaceChildren()
+  })
+
+  await p3p2.start()
+</script>
+</body>
+</html>
