@@ -127,11 +127,8 @@ jobs:
           package-manager-cache: false
       - run: npm ci
       - run: npm run build
+      # Through npm's trusted publisher for @p3p2/client, with no secret: the package takes no tokens.
       - if: needs.ready.outputs.publish == 'true'
         run: npm publish --workspace @p3p2/client
-        env:
-          # Only until npm has a trusted publisher for @p3p2/client, which it can only have once the package
-          # exists. With one, npm publishes through it and this secret is not needed.
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
       - if: needs.ready.outputs.publish != 'true'
         run: npm publish --workspace @p3p2/client --dry-run

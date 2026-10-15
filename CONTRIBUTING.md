@@ -84,7 +84,9 @@ What it needs:
   - user `doublependu`;
   - repository `p3p2`;
   - workflow `release.yml`;
-  - environment `release`.
+  - environment `release`;
+  - allowed to run `npm publish`, which a new trusted publisher isn't unless it is ticked.
 
-  npm takes a trusted publisher only for a package that exists. Until then, a granular token for the scope
-  `@p3p2`, stored as `NPM_TOKEN` in the environment, publishes instead.
+  The package's publishing access requires two-factor authentication and disallows tokens, so the trusted
+  publisher is the only way to publish from the workflow. A trusted publisher can't be edited, only deleted
+  and added again, and a new one expires unless it publishes within 2 days.
