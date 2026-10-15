@@ -10,8 +10,8 @@ recommendations.
 
 ## Decisions for you
 
-1. **Committing.** `CLAUDE.md` says not to commit, and the prompt says to commit on a branch `itr-0`.
-   *Recommended:* the prompt wins for this iteration. One commit per step below, on `itr-0`, and no push.
+1. **Committing.** *Decided:* `CLAUDE.md` wins. There is no branch `itr-0`. Every change is made on `main`
+   in this checkout and left unstaged. You stage, commit and push.
 2. **How a server operator gets the setup files** once the server is an image:
    - *Recommended:* clone the repository into `/opt/p3p2`, as today. The image comes from Docker Hub, and the
      clone only provides `deploy/`. Updating is `git pull && docker compose pull && docker compose up -d`, and
@@ -60,8 +60,10 @@ These findings shape the plan. None of them reopens a decision from the prompt.
 ## The steps
 
 After each step: `npm run lint && npm run typecheck && npm test && npm run build && npm run size`, plus
-`npm run test:pack` from step 2 on, and `docker build` whenever the Dockerfile changes. Each commit message
-says what changed, without iteration numbers.
+`npm run test:pack` from step 2 on, and `docker build` whenever the Dockerfile changes. The changes stay
+unstaged on `main`. Each step ends with a suggested commit message, which says what changed without
+iteration numbers. `next_0.md` repeats these messages with each step's files, for you to commit in one
+piece or several.
 
 ### 1. The client, ready for npm
 
@@ -81,7 +83,7 @@ says what changed, without iteration numbers.
   links to the documents on GitHub, because npm doesn't resolve relative ones. It is added to the
   documents that `doc-snippets.test.ts` type-checks.
 - **The `lean-qr` notice**, as in decision 5.
-- Commit: `client: package fields, README, declarations without the private protocol package`.
+- Suggested commit message: `client: package fields, README, declarations without the private protocol package`.
 
 ### 2. A test of the client as npm packs it
 
@@ -109,7 +111,7 @@ the `e2e` workspace. It isn't part of `npm test`, because it takes about a minut
    - the Vite-built page: 👥 opens the panel, which loads the lazy chunks from the game's own build, with no
      errors in the console.
 
-Commit: `e2e: test the client as npm packs it`.
+Suggested commit message: `e2e: test the client as npm packs it`.
 
 ### 3. The source link
 
@@ -127,7 +129,7 @@ Commit: `e2e: test the client as npm packs it`.
 - **Documents**: the README's settings table, and a section in `docs/self-host.md`, "If you change the
   server", which says what the AGPL asks of an operator and how to point the link at a changed source.
 - **Tests**: the setting (default, set, refused), `/info` with `source`, and the footer on a public page.
-- Commit: `server: a link to its source code, in the portal and in /info`.
+- Suggested commit message: `server: a link to its source code, in the portal and in /info`.
 
 ### 4. The server, ready for Docker Hub
 
@@ -158,7 +160,7 @@ Commit: `e2e: test the client as npm packs it`.
   paste on Docker Hub. It covers what the image is, its tags, a compose quick start, settings by link, the
   licence and the source.
 - README: `Layout` updated.
-- Commit: `deploy: the server as an image from Docker Hub, built for amd64 and arm64`.
+- Suggested commit message: `deploy: the server as an image from Docker Hub, built for amd64 and arm64`.
 
 ### 5. The repository's own files
 
@@ -173,7 +175,7 @@ Commit: `e2e: test the client as npm packs it`.
   what is in scope (the server, the client, the image, `deploy/`), which version is supported (the latest
   0.x), and what to expect. It links to `docs/security.md`.
 - **README**: a "Contributing" line pointing to `CONTRIBUTING.md` and `SECURITY.md`.
-- Commit: `Contributing and security policy`.
+- Suggested commit message: `Contributing and security policy`.
 
 ### 6. CI
 
@@ -190,7 +192,7 @@ Commit: `e2e: test the client as npm packs it`.
     must have a `version` and a `source`, and the labels must be on the image.
 - `on: workflow_call` as well, so the release workflow runs these same checks.
 - `.github/dependabot.yml`, if decision 7 is yes.
-- Commit: `ci: pinned actions, the packed client and the image for both machines`.
+- Suggested commit message: `ci: pinned actions, the packed client and the image for both machines`.
 
 ### 7. The release workflow, `.github/workflows/release.yml`
 
@@ -219,7 +221,7 @@ On a tag `v*`, with no permissions by default and one release at a time. `ready`
    builds without pushing, and `npm` runs `npm publish --dry-run`. Neither job needs the environment or a
    secret.
 
-Commit: `ci: the release workflow, for npm and Docker Hub`.
+Suggested commit message: `ci: the release workflow, for npm and Docker Hub`.
 
 ### 8. The audit plan, `ai/plan_security_audit.md`
 
@@ -279,7 +281,7 @@ Written for p3p2 as it is at the end of this iteration:
   the first pass's findings. The two lists are then merged, and the overlap between them is recorded.
 - **Done when** every high and medium finding is fixed or accepted, each fix has its test, and CI is green.
 
-Commit: `The security audit plan`.
+Suggested commit message: `The security audit plan`.
 
 ### 9. Close
 
@@ -288,8 +290,9 @@ Commit: `The security audit plan`.
 - A local build for both machines with `docker buildx`, if QEMU is installed here. CI does it anyway.
 - The workflows, through `actionlint` if it can run here. Otherwise `next_0.md` says they have only been
   read.
-- `ai/next_0.md`: what was done, every check with its result, your commands (push `itr-0`, merge, what CI
-  should show), how to run the VPS trial from a checkout before the image exists, and what comes next.
+- `ai/next_0.md`: what was done, every check with its result, the files and suggested message of each step,
+  your commands (commit, push `main`, what CI should show), how to run the VPS trial from a checkout before
+  the image exists, and what comes next.
 
 ## The release commit: how and when
 
@@ -303,7 +306,7 @@ Until then:
 
 `main` stays green throughout: nothing in this iteration depends on the release commit.
 
-**How:** you ask me for it. On a branch `release-0.1.0` from `main`:
+**How:** you ask me for it, and I make these changes on `main` in this checkout:
 
 1. `npm version 0.1.0 --workspaces --include-workspace-root --no-git-tag-version`, which sets every
    `package.json` and the lockfile, and through step 3 the server's version too;
@@ -312,9 +315,9 @@ Until then:
    from a checkout kept for unreleased changes;
 4. the version in `docs/protocol.md`'s example;
 5. every check, `npm run test:pack` and `npm run e2e`;
-6. one commit, `Version 0.1.0`.
+6. everything left unstaged, for you to commit as `Version 0.1.0`.
 
-You push it, wait for CI, fast-forward `main` to it, and tag that commit. `ready` in the release workflow
+You commit and push it, wait until CI is green on `main`, and tag that commit. `ready` in the release workflow
 refuses a tag whose versions don't agree or whose commit isn't on `main`. The compose file already names
 `0.1`. A later minor version changes it in its own release commit.
 
