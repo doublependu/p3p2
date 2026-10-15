@@ -1,21 +1,44 @@
 # The security audit
 
-Iteration 1 runs this. It audits p3p2 as it is once iteration 0 is committed: the server, the protocol, the client,
-the setup in `deploy/` and the workflows in `.github/`. It doesn't cover `bench/` and `e2e/`, which are test tools,
-or `examples/`, except for what they teach games to do: games copy them.
+Iteration 2 runs this. It audits `main` as it is when the audit starts, which is `0.1.0` (tag `v0.1.0`, commit
+`6e3465b`) plus what came after: the server, the protocol, the client, the setup in `deploy/`, the workflows in
+`.github/`, and what was published from them. It doesn't cover `bench/` and `e2e/`, which are test tools, or
+`examples/`, except for what they teach games to do: games copy them.
+
+The audit comes after the release. `0.1.0` is on npm and Docker Hub, and the repository is public, so what the
+audit finds is about code that people can already run. "Public already" below says what that changes.
 
 ## How
 
 - **For each area below**: read the files it names, list what an attacker controls there, and try it against a
-  server on this machine. Nothing is tried on the internet.
+  server on this machine. Nothing is tried on the internet. Reading what is published is fine: npm's and Docker
+  Hub's metadata, and GitHub's settings through `gh api` (read only).
 - **For each suspicion, write a test first**, in the test suite of the package it is about (`server/test/`,
   `client/test/`, `protocol/test/`, `e2e/`), so that it fails while the hole is there. Where no test can be
   written, give the exact steps.
 - **Tools**, beside reading:
   - `npm audit --omit=dev` for the server's dependencies, and `npm audit` for the rest;
-  - a scan of the image for each machine (Trivy, or Docker Scout);
-  - `actionlint` and `zizmor` on `.github/workflows/`.
-- **Findings** go in `ai/findings_1.md`, written as in "A finding" below.
+  - a scan of the published image, `p3p2/p3p2:0.1.0`, for each machine (Trivy, or Docker Scout);
+  - `actionlint` and `zizmor` on `.github/workflows/`;
+  - a secret scanner (gitleaks, or trufflehog) over the whole history.
+- **Findings** go in `ai/findings_2.md`, written as in "A finding" below.
+
+## Public already
+
+A finding written down and pushed is a finding disclosed, to everyone, before servers and games have the fix.
+
+- **`ai/findings_2.md` stays uncommitted** until every critical, high and medium finding in it is released or
+  accepted. Like `ai/plan_0_me.md`, it is left out of `git add`.
+- **A critical, high or medium fix** is committed with its test, and stays on this machine until the release
+  that carries it. Then the fixes and the release commit of `0.1.x` are pushed together, and tagged once CI is
+  green. The fix is visible for as long as CI takes, and no longer. Until then, the commit message says what
+  changed, not how to exploit what was there.
+- **Low and info findings** are fixed in ordinary commits.
+- **After the release**, a critical or high finding gets a GitHub security advisory (Security → Advisories), and
+  `ai/findings_2.md` is committed.
+- **A fix release is `0.1.x`.** `deploy/docker-compose.yml` pulls `0.1`, so operators get it with
+  `docker compose pull`, and games get it with the next `npm update`. jsDelivr's `@0.1` follows within its cache
+  time.
 
 ## What is worth protecting
 
@@ -32,7 +55,7 @@ or `examples/`, except for what they teach games to do: games copy them.
 | The server running | CPU, memory, disk, the VPS's monthly data allowance | Everybody's games |
 | Players' addresses | The server's memory (limits) and its log (refused joins) | The operator sees them, and nobody else should |
 | The game's page | The client runs in it, with its origin's rights | A hole in the client is a hole in every game that uses it |
-| The release | `@p3p2/client` on npm, `p3p2/p3p2` on Docker Hub, `DOCKERHUB_TOKEN`, `NPM_TOKEN`, npm's trusted publisher | Code that runs on every server and in every game that updates |
+| The release | `@p3p2/client` on npm, `p3p2/p3p2` on Docker Hub, `DOCKERHUB_TOKEN`, npm's trusted publisher, the `v*` tags, the maintainer's accounts | Code that runs on every server and in every game that updates |
 
 ## Who might attack
 
@@ -46,7 +69,8 @@ or `examples/`, except for what they teach games to do: games copy them.
 7. **A hostile server**. A player can paste a room URL from any server, and the client has to survive whatever that
    server answers.
 8. **Someone on the network**: on the LAN, where the server runs over plain http, and between Caddy and the server.
-9. **A contributor's pull request**, which runs its own version of the workflows in CI.
+9. **A contributor's pull request**, which runs its own version of the workflows in CI. The repository is public,
+   so this is anybody with a GitHub account.
 10. **A compromised dependency, base image or action.**
 
 The operator isn't an attacker here. [docs/security.md](../docs/security.md) says what they can see, and that page
@@ -181,10 +205,16 @@ is checked to be true.
 - **The server's**: `hono`, `@hono/node-server`, `ws`, `lean-qr`, with `npm audit --omit=dev`, and their versions in
   the lockfile.
 - **The client's bundle**: only `lean-qr` and the protocol should be in it. Check the output for anything else.
-- **The base image**, pinned by digest: a scan for amd64 and arm64.
+- **The base image**, pinned by digest: a scan of the published image for amd64 and arm64.
 - **The pins**: every action by commit, and `.github/dependabot.yml` keeping them fresh.
+- **What was published**:
+  - Does the npm tarball of `0.1.0` hold the same files as `npm pack` of `v0.1.0` here, and nothing else?
+  - Does its provenance name `release.yml`, `refs/tags/v0.1.0` and `6e3465b`?
+  - Do `0.1.0`, `0.1` and `latest` on Docker Hub carry provenance and an SBOM for both machines?
+  - Image tags can be pushed again. How would an operator notice a `0.1` that the workflow didn't push, and should
+    `docs/self-host.md` say how to pin a digest?
 
-## What iteration 0 added
+## What iterations 0 and 1 added
 
 ### The source link
 
@@ -205,21 +235,45 @@ the footer of every page in `server/src/http/pages.ts` and given as `source` in 
   - Who can push a `v*` tag (the tag ruleset), and what `ready` refuses.
   - The `release` environment, limited to `v*` tags.
   - `checks` runs `ci.yml` again.
-  - The image job holds `DOCKERHUB_TOKEN`. The npm job alone holds `id-token: write`. The release builds without
-    a cache.
+  - The image job holds `DOCKERHUB_TOKEN`. The npm job alone holds `id-token: write`, and publishes with no
+    secret, through npm's trusted publisher. The release builds without a cache.
   - The dry run from the Actions tab: does it really push and publish nothing, and use no environment?
   - Expression injection: is any value an attacker names (a tag, a branch, a title) put into a `run:` script
     through `${{ }}`, and not through `env`?
 - **`dependabot.yml`**: what its pull requests can change.
 
-### The tokens
+### The settings on GitHub
 
-- **`DOCKERHUB_TOKEN`**: a personal access token with read and write on every repository of the user `p3p2`, its
-  lifetime, and where it is stored.
-- **`NPM_TOKEN`**: granular, the scope `@p3p2` only, bypassing two-factor, with a short life. It goes after the
-  first release, and trusted publishing, tied to `release.yml` and the `release` environment, takes over.
-- **For each**: what someone who had it could do, and how anybody would notice (a release without its provenance,
-  a tag nobody pushed).
+They are outside the repository, and were set on release day. Read them with `gh api`, and compare them with
+`CONTRIBUTING.md`'s "Releasing":
+
+- **The branch ruleset on `main`**: the required checks (`check`, `e2e`, `pack`, `image`), no force push or
+  deletion, and who is on the bypass list.
+- **The tag ruleset on `v*`**: creation, update and deletion restricted, with Repository admin as the only
+  bypass.
+- **The `release` environment**: deployments from tags `v*` only, whether it has a required reviewer, and that
+  `DOCKERHUB_TOKEN` is its only secret.
+- **Actions**: workflow permissions read-only by default, approval for outside contributors' pull requests, and
+  whether actions must be pinned to a commit.
+- **Security**: private vulnerability reporting, Dependabot alerts, secret scanning with push protection.
+- **The history**, now public: anything private in it is out already. A secret found there is rotated, not only
+  removed.
+
+### The publishing credentials
+
+- **`DOCKERHUB_TOKEN`**: a personal access token of the user `p3p2`, with read and write on every repository of
+  that user, kept only in the `release` environment. Its lifetime, and what someone holding it could push.
+- **npm takes no token.** The package's publishing access requires two-factor authentication and disallows
+  tokens: check it on the package's settings page. The trusted publisher is GitHub Actions, `doublependu/p3p2`,
+  `release.yml`, environment `release`, with `npm publish` allowed. Check:
+  - that a run of `release.yml` from a branch, or from a pull request, can't get a token npm accepts. The
+    environment takes tags `v*` only;
+  - who can push a `v*` tag, and whether anything but the tag ruleset stands between a tag and npm;
+  - `0.0.0-stage` and `0.0.1`, the placeholders that created the package: deprecated, with nothing in them.
+- **The maintainer's machine**, outside the repository: the npm session that `npm login` left in `~/.npmrc`,
+  Docker's and `gh`'s logins. These are info findings at most: what each opens, and when to log out.
+- **For each**: what someone who had it could do, and how anybody would notice (a version on npm without its
+  provenance, an image without its attestation, a tag nobody pushed).
 
 ## A finding
 
@@ -247,20 +301,22 @@ Each fix comes with its test. When a fix changes what the documents promise, `do
 
 Independent of the first: a fresh Claude session, or a person.
 
-- **It gets** this file's "What is worth protecting", "Who might attack", "The areas" and "What iteration 0 added",
-  and the repository at the same commit.
-- **It doesn't get** `ai/findings_1.md`, or any note from the first pass.
-- **It writes** `ai/findings_1b.md`, in the same form.
+- **It gets** this file's "What is worth protecting", "Who might attack", "The areas" and "What iterations 0 and 1
+  added", and the repository at the same commit.
+- **It doesn't get** `ai/findings_2.md`, or any note from the first pass.
+- **It writes** `ai/findings_2b.md`, in the same form, also uncommitted.
 
-Then every finding of the second pass is matched to one of the first, or added to `ai/findings_1.md`. That file
+Then every finding of the second pass is matched to one of the first, or added to `ai/findings_2.md`. That file
 records how many each pass found that the other didn't. If the overlap is small, another pass is worth it.
 
 ## Done when
 
-- every critical, high and medium finding is fixed, with its test, or accepted in writing in `ai/findings_1.md`;
+- every critical, high and medium finding is fixed, with its test, or accepted in writing in `ai/findings_2.md`;
 - `npm audit --omit=dev` shows nothing high, or each one is accepted;
 - the image scan shows nothing high that a newer base image would fix;
 - `docs/security.md` says what changed;
-- CI is green on `main`.
+- the fixes are released as `0.1.x`, with CI green on `main` and the release workflow green;
+- then, and not before, `ai/findings_2.md` and `ai/findings_2b.md` are committed, and a critical or high finding
+  has its advisory.
 
 Then comes the VPS, with the audited image.
