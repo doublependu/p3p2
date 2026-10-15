@@ -1,0 +1,18 @@
+# The server built from this checkout, in place of the image from Docker Hub. Laid over docker-compose.yml,
+# either on each command:
+#
+#   docker compose -f docker-compose.yml -f docker-compose.build.yml up -d
+#
+# or once, in .env, after which every docker compose command here builds from the checkout:
+#
+#   COMPOSE_FILE=docker-compose.yml:docker-compose.build.yml
+#
+# The image gets a name of its own, so that a build is never taken for the published image of the same tag.
+
+services:
+  p3p2:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile
+    image: p3p2/p3p2:checkout
+    pull_policy: build

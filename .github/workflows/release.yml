@@ -1,0 +1,137 @@
+name: release
+
+# On a tag vX.Y.Z on main: every check, then the server's image to Docker Hub, then the client to npm.
+#
+# Run from the Actions tab (Run workflow), it is a dry run of the same: the checks, the image built for both
+# machines, and `npm publish --dry-run`. It pushes nothing, and needs no environment and no secret.
+#
+# What has to be set up on GitHub, Docker Hub and npm first is in CONTRIBUTING.md, "Releasing".
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+
+permissions: {}
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  # Refuses a tag that doesn't match what the commit says, before anything runs.
+  ready:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      version: ${{ steps.check.outputs.version }}
+      tags: ${{ steps.check.outputs.tags }}
+      publish: ${{ steps.check.outputs.publish }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          # All of main's history, to tell whether the tagged commit is on it.
+          fetch-depth: 0
+      - id: check
+        env:
+          EVENT: ${{ github.event_name }}
+          REF_TYPE: ${{ github.ref_type }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+          refuse() { echo "::error::$1"; exit 1; }
+          version="$(jq -r .version server/package.json)"
+          minor="${version%.*}"
+          if [ "$EVENT" = push ]; then
+            [ "$REF_TYPE" = tag ] || refuse "Releases come from tags only."
+            [[ "$TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]] || refuse "The tag $TAG is not vX.Y.Z."
+            [ "${TAG#v}" = "$version" ] || refuse "The tag is $TAG, but server/package.json says $version."
+            [ "$(jq -r .version client/package.json)" = "$version" ] || refuse "client/package.json is not at $version."
+            # npm skips a private workspace without failing: the release would publish nothing, and say it had.
+            [ "$(jq -r '.private // false' client/package.json)" = false ] || refuse "@p3p2/client is still private."
+            grep -q "^    image: p3p2/p3p2:$minor$" deploy/docker-compose.yml || refuse "deploy/docker-compose.yml does not pull p3p2/p3p2:$minor."
+            grep -q "@p3p2/client@$minor/" client/README.md || refuse "client/README.md's script tag does not name $minor."
+            git merge-base --is-ancestor "$GITHUB_SHA" origin/main || refuse "The tagged commit is not on main."
+            publish=true
+          else
+            publish=false
+          fi
+          {
+            echo "version=$version"
+            echo "tags=p3p2/p3p2:$version,p3p2/p3p2:$minor,p3p2/p3p2:latest"
+            echo "publish=$publish"
+          } >> "$GITHUB_OUTPUT"
+          echo "$version, publish: $publish"
+
+  checks:
+    needs: ready
+    permissions:
+      contents: read
+    uses: ./.github/workflows/ci.yml
+
+  # Before npm: an image tag can be pushed again after a failure, an npm version cannot.
+  image:
+    needs: [ready, checks]
+    runs-on: ubuntu-latest
+    # The environment holds DOCKERHUB_TOKEN, and lets only tags v* use it.
+    environment: ${{ needs.ready.outputs.publish == 'true' && 'release' || '' }}
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: docker/setup-qemu-action@99012661954931238ded8c8b007157a8430204e1 # v4.4.0
+        with:
+          platforms: arm64
+      - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
+      - if: needs.ready.outputs.publish == 'true'
+        uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
+        with:
+          # Not a secret: a secret "p3p2" would be masked in every line of the log that names the image.
+          username: p3p2
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
+        with:
+          context: .
+          file: deploy/Dockerfile
+          platforms: linux/amd64,linux/arm64
+          build-args: |
+            VERSION=${{ needs.ready.outputs.version }}
+            REVISION=${{ github.sha }}
+          tags: ${{ needs.ready.outputs.tags }}
+          push: ${{ needs.ready.outputs.publish == 'true' }}
+          provenance: ${{ needs.ready.outputs.publish == 'true' && 'mode=max' || 'false' }}
+          sbom: ${{ needs.ready.outputs.publish == 'true' }}
+          # No cache: nothing that another run wrote reaches a release.
+          no-cache: true
+
+  npm:
+    needs: [ready, image]
+    runs-on: ubuntu-latest
+    environment: ${{ needs.ready.outputs.publish == 'true' && 'release' || '' }}
+    permissions:
+      contents: read
+      # Trusted publishing, and the provenance of the package.
+      id-token: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24
+          registry-url: https://registry.npmjs.org
+          package-manager-cache: false
+      - run: npm ci
+      - run: npm run build
+      - if: needs.ready.outputs.publish == 'true'
+        run: npm publish --workspace @p3p2/client
+        env:
+          # Only until npm has a trusted publisher for @p3p2/client, which it can only have once the package
+          # exists. With one, npm publishes through it and this secret is not needed.
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+      - if: needs.ready.outputs.publish != 'true'
+        run: npm publish --workspace @p3p2/client --dry-run

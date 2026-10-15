@@ -4,13 +4,20 @@ import { html } from 'hono/html'
 import type { HtmlEscapedString } from 'hono/utils/html'
 import type { LiveInfo } from '../core/hub.ts'
 import type { InviteRecord, RoomRecord, VersionPolicy } from '../core/types.ts'
+import { VERSION } from '../version.ts'
 import { PASSWORD_MIN } from './password.ts'
 
 export type Page = HtmlEscapedString | Promise<HtmlEscapedString>
 
+/** What every page says about this server: its name, and where its source code is. */
+export interface Server {
+  name: string
+  source: string
+}
+
 interface Frame {
   title: string
-  server: string
+  server: Server
   owner: boolean
 }
 
@@ -28,10 +35,11 @@ function layout(f: Frame, body: Page): Page {
 <body>
 <header>
   <a class="brand" href="/">p3p2</a>
-  <span class="where">${f.server}</span>
+  <span class="where">${f.server.name}</span>
   ${f.owner ? html`<form method="post" action="/logout"><button class="link" type="submit">Log out</button></form>` : ''}
 </header>
 <main>${body}</main>
+<footer>p3p2 ${VERSION} · <a href="${f.server.source}">Source code</a></footer>
 </body>
 </html>`
 }
@@ -44,7 +52,7 @@ function host(url: string): string {
   }
 }
 
-export function setupPage(server: string, token: string, error: string = ''): Page {
+export function setupPage(server: Server, token: string, error: string = ''): Page {
   return layout(
     { title: 'Set up', server, owner: false },
     html`<div class="card narrow">
@@ -63,7 +71,7 @@ export function setupPage(server: string, token: string, error: string = ''): Pa
   )
 }
 
-export function setupNeededPage(server: string): Page {
+export function setupNeededPage(server: Server): Page {
   return layout(
     { title: 'Set up', server, owner: false },
     html`<div class="card narrow">
@@ -75,7 +83,7 @@ export function setupNeededPage(server: string): Page {
   )
 }
 
-export function loginPage(server: string, error: string = ''): Page {
+export function loginPage(server: Server, error: string = ''): Page {
   return layout(
     { title: 'Log in', server, owner: false },
     html`<div class="card narrow">
@@ -104,7 +112,7 @@ export interface NewRoomForm {
   error: string
 }
 
-export function dashboardPage(server: string, rooms: RoomSummary[], form: NewRoomForm, defaultMax: number, cap: number): Page {
+export function dashboardPage(server: Server, rooms: RoomSummary[], form: NewRoomForm, defaultMax: number, cap: number): Page {
   return layout(
     { title: 'Rooms', server, owner: true },
     html`<h1>Rooms</h1>
@@ -164,7 +172,7 @@ export interface RoomView {
   cap: number
 }
 
-export function roomPage(server: string, v: RoomView): Page {
+export function roomPage(server: Server, v: RoomView): Page {
   const { room, live } = v
   const base = `/room/${room.key}`
   const members = live?.members ?? []
@@ -282,7 +290,7 @@ ${v.error ? html`<p class="error" role="alert">${v.error}</p>` : ''}
   )
 }
 
-export function publicRoomPage(server: string, room: RoomRecord): Page {
+export function publicRoomPage(server: Server, room: RoomRecord): Page {
   return layout(
     { title: room.name, server, owner: false },
     html`<div class="card narrow">
@@ -294,7 +302,7 @@ export function publicRoomPage(server: string, room: RoomRecord): Page {
   )
 }
 
-export function messagePage(server: string, owner: boolean, title: string, text: string): Page {
+export function messagePage(server: Server, owner: boolean, title: string, text: string): Page {
   return layout(
     { title, server, owner },
     html`<div class="card narrow">

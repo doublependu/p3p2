@@ -23,7 +23,8 @@
     "examples": "node examples/serve.ts",
     "lag": "node e2e/tools/lag-proxy.ts",
     "bench": "node bench/src/main.ts",
-    "e2e": "npm run e2e -w e2e"
+    "e2e": "npm run e2e -w e2e",
+    "test:pack": "npm run test:pack -w e2e"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.5.15",

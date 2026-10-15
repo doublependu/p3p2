@@ -11,6 +11,9 @@ from Let's Encrypt, and renews it by itself.
 players ── https, wss ──▶ Caddy :443 ──▶ the server :8080 ──▶ SQLite, in a Docker volume
 ```
 
+The server is the image [`p3p2/p3p2`](https://hub.docker.com/r/p3p2/p3p2) on Docker Hub, for amd64 and arm64
+machines. This repository holds what runs it: the compose file, Caddy's settings, and a template for yours.
+
 ## What you need
 
 - **A VPS with Docker**, and its Compose plugin (`docker compose version` answers). One vCPU
@@ -25,8 +28,9 @@ players ── https, wss ──▶ Caddy :443 ──▶ the server :8080 ──
 Rent it close to the players. Everything they send each other goes through this machine, so
 its distance is their lag.
 
-These steps have run as they are on a DigitalOcean droplet made from its Docker image
-(Marketplace → Docker). Its firewall needed no change.
+These steps have run on a DigitalOcean droplet made from its Docker image (Marketplace → Docker), with the
+server built on it from a checkout ([Building from a checkout](#building-from-a-checkout)). Its firewall
+needed no change. Pulling the published image in its place has not been tried on a VPS yet.
 
 ## How big a machine
 
@@ -58,19 +62,16 @@ Add an `A` record for the name, say `p3p2.example.com`, with the VPS's IPv4 addr
 - **Do this first.** Caddy asks for the certificate when it starts, and Let's Encrypt stops
   answering for an hour after five failed tries for a name.
 
-## 2. Put the code on the VPS
+## 2. Get the setup files
 
-With git on the VPS, clone this repository into `/opt/p3p2`. Or copy a checkout from your
-own machine, which needs only SSH and `rsync` on the VPS:
+On the VPS:
 
 ```sh
-rsync -az --delete --filter=':- .gitignore' --exclude=.git --exclude=.env \
-  ./ root@p3p2.example.com:/opt/p3p2/
+git clone https://github.com/doublependu/p3p2 /opt/p3p2
 ```
 
-That sends the checkout as it is, without what git ignores.
-`--exclude=.env` keeps the copy from deleting the settings file of step 3 the next time you
-run it.
+What runs is in `/opt/p3p2/deploy`: `docker-compose.yml`, the Caddyfiles, and `.env.example`. The server
+itself comes from Docker Hub in the next step.
 
 ## 3. Start it
 
@@ -79,9 +80,11 @@ On the VPS:
 ```sh
 cd /opt/p3p2/deploy
 cp .env.example .env          # then set P3P2_DOMAIN in it to your name
-docker compose up -d --build
+docker compose up -d
 docker compose logs p3p2
 ```
+
+The first start pulls two images, the server's (`p3p2/p3p2:0.1`) and Caddy's (`caddy:2`).
 
 The log ends with a link, `https://p3p2.example.com/setup?token=…`. Open it once and choose the
 owner password. From then on `https://p3p2.example.com/` is the portal, where you log in and
@@ -111,18 +114,23 @@ for what players notice.
 
 ## Updating
 
-Copy the new code as in step 2 (or `git pull`), then on the VPS:
+On the VPS:
 
 ```sh
-cd /opt/p3p2/deploy && docker compose up -d --build
+cd /opt/p3p2 && git pull
+cd deploy && docker compose pull && docker compose up -d
 ```
+
+`p3p2/p3p2:0.1` is the newest release of 0.1, so `pull` brings its fixes. A new minor version, 0.2, is a new
+tag in `docker-compose.yml`, which `git pull` brings. It may change the database in a way that an older
+server can't read: take a [backup](#backups) first.
 
 - **The server is gone for a few seconds.** Everyone who is playing is cut off, and their
   pages come back by themselves, into the same room.
 - **What a room has saved is still there**: its saved values and its log are in the database.
   The recent chat is not.
 - **Who hosts may change**: the first player back is the host.
-- Each build leaves the image before it behind. `docker image prune -f` removes them.
+- Each update leaves the image before it behind. `docker image prune -f` removes them.
 
 ## Backups
 
@@ -146,7 +154,7 @@ docker compose run --rm --no-deps --user root -v "$PWD:/backup" p3p2 \
   tar xzf /backup/p3p2-data.tar.gz -C /data
 ```
 
-It builds the image first if there is none yet. Then `docker compose up -d --build` as in step 3:
+It pulls the image first if there is none yet. Then `docker compose up -d` as in step 3:
 no setup link is printed, because the owner came back with the database, and the old password
 logs in.
 
@@ -177,7 +185,7 @@ invites protect.
 - **A room**: **Delete room**. Its URL and its invite stop working.
 - **Everything**: on the VPS, `cd /opt/p3p2/deploy && docker compose down -v` stops the server and Caddy and
   deletes both volumes, the database with them; `rm -rf /opt/p3p2` removes the code, and
-  `docker image rm p3p2/p3p2 caddy:2` the two images. (Not `docker image prune -a`, unless p3p2 is all the
+  `docker image rm p3p2/p3p2:0.1 caddy:2` the two images. (Not `docker image prune -a`, unless p3p2 is all the
   machine runs: it removes every image that no running container uses.)
 
 ## Without a domain name
@@ -203,7 +211,7 @@ The same setup runs on a machine at home, with a certificate that Caddy signs it
 ```sh
 cd deploy
 printf 'P3P2_DOMAIN=p3p2.localhost\nP3P2_CADDYFILE=Caddyfile.local\n' > .env
-docker compose up -d --build
+docker compose up -d
 ```
 
 `https://p3p2.localhost/` then shows the portal, after the browser's warning about the
@@ -216,9 +224,8 @@ describes.
 
 ## Behind a proxy you already have
 
-The server's image runs alone as well: `docker build -f deploy/Dockerfile -t p3p2/p3p2 .`
-and the `docker run` line at the top of [`deploy/Dockerfile`](../deploy/Dockerfile). The proxy
-in front of it has to do three things:
+The server's image runs alone as well: the `docker run` line at the top of
+[`deploy/Dockerfile`](../deploy/Dockerfile). The proxy in front of it has to do three things:
 
 - pass WebSocket upgrades on `/api/v1/ws`;
 - pass the `Host` header unchanged: the portal checks its forms against it;
@@ -227,6 +234,42 @@ in front of it has to do three things:
 
 Set `P3P2_PUBLIC_URL` to the address players use. And keep the proxy's access log off,
 or out of reach: a room URL has the room's key in its path.
+
+## Building from a checkout
+
+To run code that has not been released, your own change or what is on `main`, the VPS builds the server's
+image from a copy of this repository. In `deploy/.env`:
+
+```sh
+COMPOSE_FILE=docker-compose.yml:docker-compose.build.yml
+```
+
+From then on, every `docker compose` command on this page builds the server from the copy, as the image
+`p3p2/p3p2:checkout`, and doesn't pull it. To update, bring in the new code, then run `docker compose up -d`,
+which builds it and restarts. A build leaves the image before it behind, like an update.
+
+To bring in the code, use `git pull` in `/opt/p3p2`. Or copy a checkout from your own machine, which needs
+only SSH and `rsync` on the VPS:
+
+```sh
+rsync -az --delete --filter=':- .gitignore' --exclude=.git --exclude=.env \
+  ./ root@p3p2.example.com:/opt/p3p2/
+```
+
+That sends the checkout as it is, without what git ignores. `--exclude=.env` keeps the copy from deleting
+your settings.
+
+## If you change the server
+
+The server is free software under the [GNU Affero General Public License](../LICENSE). If you run a changed
+copy of it, that licence asks you to offer everybody who uses it over the network the source of what you
+run. The server says where that source is at the foot of every portal page, and as `source` in
+`/api/v1/info`. Without a setting, both point to this repository, which is right for the published image.
+For a server of your own making, put the address of its source in `deploy/.env`:
+
+```sh
+P3P2_SOURCE_URL=https://github.com/you/p3p2
+```
 
 ## When something is wrong
 

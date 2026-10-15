@@ -10,6 +10,7 @@ import { after } from 'node:test'
 import type { Auth } from '@p3p2/protocol'
 import { type Resume, RoomClient } from '../../client/src/room.ts'
 import type { CloseReason } from '../../client/src/types.ts'
+import { SOURCE_URL } from '../../server/src/config.ts'
 import { newInviteCode, newRoomKey } from '../../server/src/core/ids.ts'
 import { DEFAULT_LIMITS, type Limits } from '../../server/src/core/limits.ts'
 import { type Running, startServer } from '../../server/src/server.ts'
@@ -74,6 +75,7 @@ export async function world(limits: Partial<Limits> = {}): Promise<World> {
   const running = await startServer({
     publicUrl: 'https://p3p2.example.com',
     name: 'test server',
+    sourceUrl: SOURCE_URL,
     port: 0,
     host: '127.0.0.1',
     dataDir: ':memory:',

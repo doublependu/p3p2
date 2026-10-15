@@ -13,7 +13,7 @@ import { join } from 'node:path'
 import { test } from 'node:test'
 
 const ROOT = join(import.meta.dirname, '..', '..')
-const DOCS = ['README.md', 'docs/integrate.md', 'docs/sharing-state.md', 'docs/api.md', 'docs/testing.md']
+const DOCS = ['README.md', 'client/README.md', 'docs/integrate.md', 'docs/sharing-state.md', 'docs/api.md', 'docs/testing.md']
 
 /** What a block may use without declaring it: p3p2's own objects, typed. Only those the block does not make itself. */
 function prelude(code: string): string {

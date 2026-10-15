@@ -53,6 +53,7 @@ export function apiRoutes(app: App): Hono {
       version: VERSION,
       protocols: [PROTO],
       limits: { maxFrameBytes: limits.maxFrameBytes, msgRate: limits.msgRate, maxMembers: limits.maxMembersCap },
+      source: app.config.sourceUrl,
     } satisfies ServerInfo)
   })
 

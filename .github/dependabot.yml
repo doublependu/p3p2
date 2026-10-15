@@ -1,0 +1,15 @@
+# Keeps the pins fresh: the actions, pinned to commits, and the server's base image, pinned to a digest. npm
+# dependencies are left out: the lockfile changes by hand, and is read when it does.
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly
+    groups:
+      actions:
+        patterns: ['*']
+  - package-ecosystem: docker
+    directory: /deploy
+    schedule:
+      interval: monthly

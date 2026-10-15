@@ -3,6 +3,7 @@
 
 import assert from 'node:assert/strict'
 import { after, before, test } from 'node:test'
+import { SOURCE_URL } from '../../server/src/config.ts'
 import { DEFAULT_LIMITS } from '../../server/src/core/limits.ts'
 import { type Running, startServer } from '../../server/src/server.ts'
 import { Load } from '../src/load.ts'
@@ -18,6 +19,7 @@ before(async () => {
   server = await startServer({
     publicUrl: 'http://127.0.0.1',
     name: 'bench test',
+    sourceUrl: SOURCE_URL,
     port: 0,
     host: '127.0.0.1',
     dataDir: ':memory:',

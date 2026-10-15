@@ -2,11 +2,32 @@
   "name": "@p3p2/client",
   "version": "0.0.0",
   "private": true,
+  "description": "Multiplayer for static web games: rooms, invite links, presence, chat and saved state, through a small p3p2 server of your own",
+  "keywords": [
+    "multiplayer",
+    "websocket",
+    "browser-game",
+    "game-server",
+    "self-hosted",
+    "rooms",
+    "presence",
+    "relay"
+  ],
+  "homepage": "https://github.com/doublependu/p3p2#readme",
+  "bugs": "https://github.com/doublependu/p3p2/issues",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/doublependu/p3p2.git",
+    "directory": "client"
+  },
   "license": "MIT",
+  "author": "Man & Bot",
   "type": "module",
   "main": "./dist/p3p2.js",
   "module": "./dist/p3p2.js",
   "types": "./dist/types/index.d.ts",
+  "jsdelivr": "./dist/p3p2.iife.js",
+  "unpkg": "./dist/p3p2.iife.js",
   "exports": {
     ".": {
       "types": "./dist/types/index.d.ts",
@@ -20,21 +41,26 @@
       "types": "./dist/types/pack.d.ts",
       "default": "./dist/p3p2-pack.js"
     },
-    "./iife": "./dist/p3p2.iife.js"
+    "./iife": "./dist/p3p2.iife.js",
+    "./package.json": "./package.json"
   },
   "files": [
     "dist"
   ],
   "sideEffects": false,
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
   "scripts": {
-    "build": "vite build && vite build --mode iife && tsc -p tsconfig.types.json",
+    "build": "vite build && vite build --mode iife && tsc -p tsconfig.types.json && node scripts/types.ts",
     "dev": "vite build --watch",
     "typecheck": "tsc -p .",
     "test": "node --test \"test/**/*.test.ts\"",
     "size": "node scripts/size-check.ts"
   },
   "devDependencies": {
-    "@p3p2/protocol": "^0.0.0",
+    "@p3p2/protocol": "*",
     "lean-qr": "^2.7.4",
     "vite": "^8.3.3"
   }

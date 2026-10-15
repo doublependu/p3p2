@@ -1,5 +1,9 @@
 import { defineConfig } from 'vite'
 
+// The QR code is drawn by lean-qr, bundled in. Its licence asks for its notice in every copy, and a file of this
+// package may travel alone (the IIFE from a CDN), so the files that carry its code name it; LICENSE has the text.
+const LEAN_QR = '/*! Includes lean-qr, MIT License, Copyright (c) 2021-2025 David Evans, https://github.com/davidje13/lean-qr */'
+
 // Two builds: ESM, split into an entry and lazy chunks, and one IIFE file for games
 // without a bundler (an IIFE cannot load chunks, so it carries everything).
 export default defineConfig(({ mode }) => {
@@ -21,7 +25,10 @@ export default defineConfig(({ mode }) => {
         // Lets the code the entry shares with the lazy chunks live in the entry file, so a normal
         // visit is one small request. The cost: the entry gains a few exports with mangled names.
         preserveEntrySignatures: 'allow-extension',
-        output: iife ? { exports: 'default' } : { chunkFileNames: 'p3p2-[name].js' },
+        // postBanner: added after minification, which would drop it.
+        output: iife
+          ? { exports: 'default', postBanner: LEAN_QR }
+          : { chunkFileNames: 'p3p2-[name].js', postBanner: (chunk) => (chunk.name === 'qr' ? LEAN_QR : '') },
       },
     },
   }

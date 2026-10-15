@@ -1,6 +1,7 @@
-# Laid over deploy/docker-compose.yml for the browser tests behind a proxy (E2E_PROXY=1; see
-# setup.ts). It adds what the tests need and changes nothing else: the same server image, the
-# same Caddy, the same ports. Paths are relative to deploy/, where the first file is.
+# Laid over deploy/docker-compose.yml and deploy/docker-compose.build.yml for the browser tests
+# behind a proxy (E2E_PROXY=1; see setup.ts). It adds what the tests need and changes nothing else:
+# the server's image built from this checkout, the same Caddy, the same ports. Paths are relative
+# to deploy/, where the first file is.
 
 services:
   p3p2:

@@ -17,6 +17,7 @@ import {
   type NewRoomForm,
   publicRoomPage,
   roomPage,
+  type Server,
   setupNeededPage,
   setupPage,
 } from './pages.ts'
@@ -80,7 +81,7 @@ export function expiryText(invite: InviteRecord, now: number): string {
 export function portalRoutes(app: App): Hono<Env> {
   const portal = new Hono<Env>()
   const { store, hub, config } = app
-  const server = config.name
+  const server: Server = { name: config.name, source: config.sourceUrl }
   const secure = config.publicUrl.startsWith('https:')
 
   portal.get('/assets/portal.css', (c) => c.body(PORTAL_CSS, 200, { 'Content-Type': 'text/css; charset=utf-8' }))

@@ -20,6 +20,7 @@ import { WebSocket } from 'ws'
 import type { Config } from '../src/config.ts'
 import { DEFAULT_LIMITS, type Limits } from '../src/core/limits.ts'
 import { type Running, startServer } from '../src/server.ts'
+import { VERSION } from '../src/version.ts'
 import { untimed } from './helpers.ts'
 
 const GAME = 'https://game.example.com'
@@ -35,6 +36,7 @@ async function start(over: Partial<Config> = {}, limits: Partial<Limits> = {}): 
   const r = await startServer({
     publicUrl: 'https://p3p2.example.com',
     name: 'test server',
+    sourceUrl: 'https://source.example/a-changed-p3p2?v=1&x=<y>',
     port: 0,
     host: '127.0.0.1',
     dataDir: ':memory:',
@@ -199,6 +201,8 @@ test('health and server info', async () => {
   const info = (await res.json()) as ServerInfo
   assert.deepEqual(info.protocols, [1])
   assert.equal(info.name, 'test server')
+  assert.equal(info.source, 'https://source.example/a-changed-p3p2?v=1&x=<y>')
+  assert.equal(info.version, VERSION)
 })
 
 test('first run: the setup link sets the password once', async () => {
@@ -305,6 +309,10 @@ test('portal: someone who is not the owner sees only what to do with a room URL'
   const page = await (await visitor.get(`/room/${key}`)).text()
   assert.match(page, /paste it into the game/)
   assert.doesNotMatch(page, /Danger zone/)
+  // Every page says where the source is (the AGPL's offer), escaped like any other value.
+  const footer = `<footer>p3p2 ${VERSION} · <a href="https://source.example/a-changed-p3p2?v=1&amp;x=&lt;y&gt;">Source code</a></footer>`
+  assert.ok(page.includes(footer), page)
+  assert.ok((await (await visitor.get('/login')).text()).includes(footer))
   assert.equal((await visitor.get(`/room/${'0'.repeat(26)}`)).status, 404)
   assert.equal((await visitor.get(`/room/${key}/qr.svg`)).status, 404)
   assert.equal((await visitor.post(`/room/${key}/delete`)).headers.get('location'), '/login')

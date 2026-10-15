@@ -4,13 +4,27 @@ on:
   push:
     branches: [main]
   pull_request:
+  # The release workflow runs these same checks on the commit it releases.
+  workflow_call:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  # A newer push to a pull request makes the run before it pointless.
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+# Every action is pinned to the commit of a release, named in the comment.
 
 jobs:
   check:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: 24
           cache: npm
@@ -24,8 +38,10 @@ jobs:
   e2e:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: 24
           cache: npm
@@ -33,3 +49,81 @@ jobs:
       - run: npm run build
       # The tests drive the Chrome that the runner image already has.
       - run: npm run e2e
+
+  # The client as npm packs it, installed in an empty project: types, a Vite build, and both in Chrome.
+  pack:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+      - run: npm run test:pack
+
+  # The server's image for each machine it is published for, started and asked what it is. arm64 runs under
+  # emulation.
+  image:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: docker/setup-qemu-action@99012661954931238ded8c8b007157a8430204e1 # v4.4.0
+        with:
+          platforms: arm64
+      - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
+      - id: version
+        run: echo "version=$(jq -r .version server/package.json)" >> "$GITHUB_OUTPUT"
+      - name: Build for amd64
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
+        with:
+          context: .
+          file: deploy/Dockerfile
+          platforms: linux/amd64
+          build-args: |
+            VERSION=${{ steps.version.outputs.version }}
+            REVISION=${{ github.sha }}
+          tags: p3p2/p3p2:ci-amd64
+          load: true
+          cache-from: type=gha,scope=image-amd64
+          cache-to: type=gha,scope=image-amd64,mode=max
+      - name: Build for arm64
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
+        with:
+          context: .
+          file: deploy/Dockerfile
+          platforms: linux/arm64
+          build-args: |
+            VERSION=${{ steps.version.outputs.version }}
+            REVISION=${{ github.sha }}
+          tags: p3p2/p3p2:ci-arm64
+          load: true
+          cache-from: type=gha,scope=image-arm64
+          cache-to: type=gha,scope=image-arm64,mode=max
+      - name: Start each, and ask it what it is
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          set -euo pipefail
+          for arch in amd64 arm64; do
+            image="p3p2/p3p2:ci-$arch"
+            test "$(docker inspect -f '{{.Architecture}}' "$image")" = "$arch"
+            test "$(docker inspect -f '{{index .Config.Labels "org.opencontainers.image.version"}}' "$image")" = "$VERSION"
+            test "$(docker inspect -f '{{index .Config.Labels "org.opencontainers.image.revision"}}' "$image")" = "$GITHUB_SHA"
+            test "$(docker inspect -f '{{index .Config.Labels "org.opencontainers.image.licenses"}}' "$image")" = "AGPL-3.0-only"
+            docker run -d --name "smoke-$arch" --platform "linux/$arch" -p 127.0.0.1:8080:8080 \
+              -e P3P2_PUBLIC_URL=http://127.0.0.1:8080 "$image"
+            # Emulated, the server takes a few seconds longer to start.
+            for _ in $(seq 1 90); do curl -sf http://127.0.0.1:8080/healthz >/dev/null && break; sleep 1; done
+            if ! test "$(curl -sf http://127.0.0.1:8080/healthz)" = ok; then docker logs "smoke-$arch"; exit 1; fi
+            info="$(curl -sf http://127.0.0.1:8080/api/v1/info)"
+            echo "$arch: $info"
+            test "$(jq -r .version <<<"$info")" = "$VERSION"
+            test "$(jq -r .source <<<"$info")" = "https://github.com/doublependu/p3p2"
+            docker rm -f "smoke-$arch" >/dev/null
+          done

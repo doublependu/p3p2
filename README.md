@@ -123,10 +123,13 @@ server/     the server: core/ (room rules, no I/O), adapters/, store/, http/ (AP
 client/     @p3p2/client: entry, room client, <p3p2-panel>
 examples/   example pages (chat, host-ball, cards, turns) and a static server for them
 e2e/        browser tests of the examples (Playwright, using the installed Chrome), the client's
-            tests in Node, and tools/lag-proxy.ts
+            tests in Node, a test of the client as npm packs it (pack/), and tools/lag-proxy.ts
 bench/      load generator: traffic profiles, limit search, soak test; results/ holds its output
-deploy/     Dockerfile, docker-compose.yml (the server behind Caddy, with HTTPS), Caddyfiles
+deploy/     Dockerfile (the image p3p2/p3p2), docker-compose.yml (that image behind Caddy, with
+            HTTPS), docker-compose.build.yml (the image built from this checkout), Caddyfiles, and
+            DOCKERHUB.md (the image's page on Docker Hub)
 docs/       for game developers, for players and for whoever runs a server: see "The documents"
+.github/    the checks every push runs, and the release to npm and Docker Hub
 ```
 
 ## Checks
@@ -134,14 +137,18 @@ docs/       for game developers, for players and for whoever runs a server: see 
 ```sh
 npm run lint && npm run typecheck && npm test   # unit and integration tests
 npm run build && npm run size                   # client bundles, against their size budgets
+npm run test:pack                               # the client as npm packs it, in a game's own project
 npm run e2e                                     # host and guests in real browsers
 ```
 
 `npm test` includes the client's own tests (`e2e/node/`): its room code in Node, against a real
 server, with connections that are cut on purpose.
 
+`npm run test:pack` installs the packed client in an empty project, type-checks a page against it,
+builds that page with Vite, and loads it and the script-tag build in Chrome.
+
 `E2E_PROXY=1` runs the browser tests against the setup of `deploy/docker-compose.yml`: the
-server in its container behind Caddy, and every page over HTTPS. It needs Docker, and ports 80
+server in its container behind Caddy, built from this checkout, and every page over HTTPS. It needs Docker, and ports 80
 and 443 of this machine:
 
 ```sh
@@ -159,6 +166,7 @@ Environment variables, all optional:
 | `P3P2_DATA_DIR` | `data` | Where the SQLite database lives |
 | `P3P2_OWNER_PASSWORD` | | Sets the owner password instead of the one-time setup link |
 | `P3P2_NAME` | the public host name | Shown in the portal |
+| `P3P2_SOURCE_URL` | this repository | Where the server's source code is: every portal page links to it, and `/api/v1/info` gives it. Whoever runs a changed server points it at the changed source ([self-host.md](docs/self-host.md#if-you-change-the-server)). |
 | `P3P2_TRUST_PROXY` | off | Behind a reverse proxy: read the client address from `X-Forwarded-For`. `deploy/docker-compose.yml` sets it. |
 | `P3P2_LOG_LEVEL` | `info` | `debug`, `info`, `warn`, `error`, `silent` |
 | `P3P2_MAX_ROOMS` | `50` | |
@@ -175,6 +183,11 @@ Environment variables, all optional:
 | `P3P2_CONNECT_RATE` | `1` | WebSocket connects per second from one address, after a burst of 40 times that. Raise it when many players share an address. |
 | `P3P2_API_RATE` | `5` | REST calls per second from one address, after a burst of 8 times that |
 | `P3P2_STATS_TOKEN` | | 16 characters or more. Whoever sends it may read `/api/v1/stats`: CPU, memory, traffic. Without it there is no such endpoint. |
+
+## Contributing
+
+[CONTRIBUTING.md](CONTRIBUTING.md) says how, and which checks to run. A vulnerability is reported privately,
+as [SECURITY.md](SECURITY.md) says.
 
 ## License
 

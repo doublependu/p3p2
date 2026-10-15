@@ -1,5 +1,6 @@
-// E2E_PROXY=1: starts deploy/docker-compose.yml with the test sites laid over it, and takes it
-// down again when the tests are done. See playwright.config.ts.
+// E2E_PROXY=1: starts deploy/docker-compose.yml, with the server built from this checkout
+// (docker-compose.build.yml) and the test sites laid over it, and takes it down again when the tests
+// are done. See playwright.config.ts.
 
 import { execFileSync } from 'node:child_process'
 import { request } from 'node:https'
@@ -12,7 +13,7 @@ const ROOT = join(import.meta.dirname, '..', '..')
 function compose(...args: string[]): void {
   execFileSync(
     'docker',
-    ['compose', '--progress', 'quiet', '-p', 'p3p2-e2e', '-f', join(ROOT, 'deploy', 'docker-compose.yml'), '-f', join(ROOT, 'e2e', 'proxy', 'docker-compose.yml'), ...args],
+    ['compose', '--progress', 'quiet', '-p', 'p3p2-e2e', '-f', join(ROOT, 'deploy', 'docker-compose.yml'), '-f', join(ROOT, 'deploy', 'docker-compose.build.yml'), '-f', join(ROOT, 'e2e', 'proxy', 'docker-compose.yml'), ...args],
     {
       env: { ...process.env, P3P2_DOMAIN: new URL(SERVER).hostname, P3P2_CADDYFILE: '../e2e/proxy/Caddyfile', E2E_PASSWORD: PASSWORD },
       stdio: ['ignore', 'ignore', 'inherit'],

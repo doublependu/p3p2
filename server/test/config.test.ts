@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import { loadConfig } from '../src/config.ts'
+import { loadConfig, SOURCE_URL } from '../src/config.ts'
 import { DEFAULT_LIMITS } from '../src/core/limits.ts'
 
 const BASE = { P3P2_PUBLIC_URL: 'https://p3p2.example.com' }
@@ -30,4 +30,14 @@ test('config: a bad setting is named', () => {
   assert.throws(() => loadConfig({ ...BASE, P3P2_STATS_TOKEN: 'short' }), /P3P2_STATS_TOKEN/)
   assert.throws(() => loadConfig({ P3P2_PUBLIC_URL: 'ftp://p3p2.example.com' }), /P3P2_PUBLIC_URL/)
   assert.equal(loadConfig({ ...BASE, P3P2_STATS_TOKEN: 'long-enough-token' }).statsToken, 'long-enough-token')
+})
+
+test('config: the source link is this repository unless set, and an http(s) address', () => {
+  assert.equal(loadConfig(BASE).sourceUrl, 'https://github.com/doublependu/p3p2')
+  assert.equal(SOURCE_URL, 'https://github.com/doublependu/p3p2')
+  const changed = 'https://git.example.com/someone/p3p2-changed'
+  assert.equal(loadConfig({ ...BASE, P3P2_SOURCE_URL: changed }).sourceUrl, changed)
+  assert.throws(() => loadConfig({ ...BASE, P3P2_SOURCE_URL: 'javascript:alert(1)' }), /P3P2_SOURCE_URL/)
+  assert.throws(() => loadConfig({ ...BASE, P3P2_SOURCE_URL: 'my fork' }), /P3P2_SOURCE_URL/)
+  assert.throws(() => loadConfig({ ...BASE, P3P2_SOURCE_URL: `https://x.example/${'a'.repeat(400)}` }), /P3P2_SOURCE_URL/)
 })

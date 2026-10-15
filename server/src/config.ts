@@ -3,10 +3,18 @@ import { DEFAULT_LIMITS, type Limits } from './core/limits.ts'
 
 export type LogLevel = 'debug' | 'info' | 'warn' | 'error' | 'silent'
 
+/** Where this server's source code is, unless P3P2_SOURCE_URL says otherwise. */
+export const SOURCE_URL = 'https://github.com/doublependu/p3p2'
+
 export interface Config {
   /** How the outside world reaches this server. Room URLs are built from it. */
   publicUrl: string
   name: string
+  /**
+   * Where the source code of the server that runs is: linked from the portal and given in /info. The AGPL asks
+   * whoever runs a changed server to offer its users the changed source; this is where they say where it is.
+   */
+  sourceUrl: string
   port: number
   /** Address to listen on. */
   host: string
@@ -50,6 +58,16 @@ export function loadConfig(env: Env = process.env): Config {
   if (parsed.protocol !== 'https:' && parsed.protocol !== 'http:') {
     throw new Error(`P3P2_PUBLIC_URL must start with http:// or https://, got "${publicUrl}"`)
   }
+  const sourceUrl = env.P3P2_SOURCE_URL || SOURCE_URL
+  let source: URL | null = null
+  try {
+    source = new URL(sourceUrl)
+  } catch {
+    // Said below.
+  }
+  if (!source || (source.protocol !== 'https:' && source.protocol !== 'http:') || sourceUrl.length > 400) {
+    throw new Error(`P3P2_SOURCE_URL must be an http:// or https:// address of at most 400 characters, got "${sourceUrl}"`)
+  }
   const level = (env.P3P2_LOG_LEVEL || 'info') as LogLevel
   if (!['debug', 'info', 'warn', 'error', 'silent'].includes(level)) {
     throw new Error(`P3P2_LOG_LEVEL must be debug, info, warn, error or silent, got "${level}"`)
@@ -66,6 +84,7 @@ export function loadConfig(env: Env = process.env): Config {
   return {
     publicUrl,
     name: env.P3P2_NAME || parsed.host,
+    sourceUrl,
     port,
     host: env.P3P2_HOST || '0.0.0.0',
     dataDir: env.P3P2_DATA_DIR || 'data',

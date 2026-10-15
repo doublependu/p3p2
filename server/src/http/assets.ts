@@ -21,6 +21,7 @@ header { display: flex; align-items: center; gap: 12px; padding: 12px 16px; bord
 header .brand { font-weight: 700; color: var(--ink); text-decoration: none; }
 header .where { color: var(--soft); flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 main { max-width: 760px; margin: 0 auto; padding: 16px 16px 64px; }
+footer { max-width: 760px; margin: -48px auto 0; padding: 0 16px 24px; color: var(--soft); font-size: .875rem; }
 h1 { font-size: 1.5rem; margin: 16px 0 4px; overflow-wrap: anywhere; }
 h2 { font-size: 1.05rem; margin: 0 0 8px; }
 p { margin: 0 0 12px; }

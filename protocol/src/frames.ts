@@ -330,6 +330,8 @@ export interface ServerInfo {
   version: string
   protocols: number[]
   limits: { maxFrameBytes: number; msgRate: number; maxMembers: number }
+  /** Where the server's source code is. Added within protocol 1: an older server leaves it out. */
+  source?: string
 }
 
 export interface InviteGrant {

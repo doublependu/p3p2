@@ -35,7 +35,7 @@ are not used.
 
 | Method | Path | Bearer | Answer |
 |---|---|---|---|
-| GET | `/info` | none | `{name, version, protocols: [1], limits: {maxFrameBytes, msgRate, maxMembers}}` |
+| GET | `/info` | none | `{name, version, protocols: [1], limits: {maxFrameBytes, msgRate, maxMembers}, source}` |
 | GET | `/room` | room key | `{name, game: {url}, maxMembers, members, invite?: {code, expiresAt}}` |
 | POST | `/room/invite` | room key | `{code, expiresAt}`: the current invite, or a new one |
 | GET | `/invite` | invite code | `{room: {name}, hostName, members, maxMembers}` |
@@ -506,3 +506,4 @@ These need **protocol 2**, and a server that takes both numbers for a while:
 | 2026-10-13 | The time of a presence value: `at` in the client's `pres`, and a third element in each presence entry the server sends | Drawn by when it arrived, a car followed at speed went forward and back by a few tens of centimetres |
 | 2026-10-13 | A room held to its game: error code `game` | Another game on the same site read a room's log and values |
 | 2026-10-13 | `welcome.limits.maxLogBytes`, the room's log cap | A game that keeps "the newest so many things" learned the cap from a refusal |
+| 2026-10-15 | `source` in `/info`: where the server's source code is | The AGPL asks a server that runs changed code to offer its users that code |

@@ -15,6 +15,7 @@ const running = await startServer(config)
 console.log(`p3p2-server ${VERSION}`)
 console.log(`  Portal   ${config.publicUrl}/`)
 console.log(`  Local    http://localhost:${running.port}/`)
+console.log(`  Source   ${config.sourceUrl}`)
 if (running.setupUrl) {
   console.log('')
   console.log('  This server has no owner yet. Open this link once to choose the password:')
