@@ -21,21 +21,30 @@ Your game decides what being in the same room means.
 
 ## 1. Get the client into the game
 
-Build it in this repository, and install the packed file in the game:
-
 ```sh
-npm run build && npm pack --workspace @p3p2/client      # here: gives p3p2-client-0.0.0.tgz
-npm install ../p3p2/p3p2-client-0.0.0.tgz               # in the game
+npm install @p3p2/client
 ```
-
-A game without a bundler takes one file instead, `client/dist/p3p2.iife.js`, and finds the
-library at `window.P3P2`, `Smooth` at `P3P2.Smooth` and `pack` at `P3P2.pack`.
 
 With Vite, add this to `vite.config.js`, or the dev server hands the whole library to every
 visitor in one piece:
 
 ```js
 optimizeDeps: { exclude: ['@p3p2/client'] },
+```
+
+A game without a bundler takes one file instead, and finds the library at `window.P3P2`,
+`Smooth` at `P3P2.Smooth` and `pack` at `P3P2.pack`:
+
+```html
+<script src="https://cdn.jsdelivr.net/npm/@p3p2/client@0.1/dist/p3p2.iife.js"></script>
+```
+
+To try a change to the client that isn't released yet, build it in a checkout of this
+repository, and install the packed file in the game:
+
+```sh
+npm run build && npm pack --workspace @p3p2/client      # in the checkout: gives p3p2-client-0.1.0.tgz
+npm install ../p3p2/p3p2-client-0.1.0.tgz               # in the game
 ```
 
 ## 2. Join a room before the world is built

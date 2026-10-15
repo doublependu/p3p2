@@ -57,7 +57,7 @@ npm version X.Y.Z --workspaces --include-workspace-root --no-git-tag-version
 ```
 
 With a new minor version, also change `X.Y` in the image tag of `deploy/docker-compose.yml` and in the script
-tag of `client/README.md`. Commit, push, and once CI is green on `main`:
+tags of `client/README.md` and `docs/integrate.md`. Commit, push, and once CI is green on `main`:
 
 ```sh
 git tag vX.Y.Z && git push origin vX.Y.Z

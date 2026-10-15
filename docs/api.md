@@ -10,7 +10,7 @@ import { Smooth } from '@p3p2/client/smooth'
 import { pack, unpack } from '@p3p2/client/pack'
 ```
 
-A game without a bundler takes `client/dist/p3p2.iife.js`, and finds `P3P2` at `window.P3P2`, with `P3P2.Smooth`, `P3P2.pack` and `P3P2.unpack` on it.
+A game without a bundler takes the one-file build, `dist/p3p2.iife.js` in the package ([integrate.md](integrate.md#1-get-the-client-into-the-game) has its script tag), and finds `P3P2` at `window.P3P2`, with `P3P2.Smooth`, `P3P2.pack` and `P3P2.unpack` on it.
 
 ## `P3P2`
 
