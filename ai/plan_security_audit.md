@@ -28,7 +28,7 @@ audit finds is about code that people can already run. "Public already" below sa
 A finding written down and pushed is a finding disclosed, to everyone, before servers and games have the fix.
 
 - **`ai/findings_2.md` stays uncommitted** until every critical, high and medium finding in it is released or
-  accepted. Like `ai/plan_0_me.md`, it is left out of `git add`.
+  accepted. It is listed in `.git/info/exclude`, which is local and never committed, so `git add` skips it.
 - **A critical, high or medium fix** is committed with its test, and stays on this machine until the release
   that carries it. Then the fixes and the release commit of `0.1.x` are pushed together, and tagged once CI is
   green. The fix is visible for as long as CI takes, and no longer. Until then, the commit message says what
