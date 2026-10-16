@@ -69,8 +69,24 @@ git push origin main
 git tag v0.1.1 && git push origin v0.1.1
 ```
 
-Then I make the checks `ai/next_1.md` made for `0.1.0`, on `0.1.1`: npm and its provenance, jsDelivr's `@0.1`,
-Docker Hub's index and attestations, and the amd64 image run here.
+## What was checked after the release
+
+On 2026-10-16, the checks `ai/next_1.md` made for `0.1.0`:
+
+| | |
+|---|---|
+| The tag | `v0.1.1` on `8ac8785`, which is `main`. `ci` on it is green, and so is `release`: `ready`, `checks`, `image`, `npm` |
+| npm | `@p3p2/client@0.1.1`, `latest`. The tarball is byte for byte what `v0.1.1` packs here; beside `0.1.0`'s, only the version in `package.json` changed |
+| Provenance | SLSA v1, from `.github/workflows/release.yml` on `refs/tags/v0.1.1`, commit `8ac8785`; its digest is the tarball's |
+| In an empty folder | `npm install` works; `npm audit signatures`: 1 verified attestation; the 4 exports resolve; `pack` round-trips; `Smooth` and `P3P2` import |
+| jsDelivr | `@0.1.1` serves `dist/p3p2.iife.js` (49.6 KB), lean-qr's notice first. `@0.1` still served `0.1.0`'s, which is the same file: the CDN keeps a version range for up to 12 hours (`s-maxage=43200`) |
+| Docker Hub | `0.1.1`, `0.1` and `latest` are one index (`sha256:4cbb9443…`), amd64 and arm64, each with an attestation and an SBOM. `0.1.0` is still its own index |
+| The image's provenance | Release run `38846920777`, from `release.yml` on `refs/tags/v0.1.1`, commit `8ac8785` |
+| The labels | version `0.1.1`, revision `8ac8785`, `AGPL-3.0-only`, the source link |
+| amd64, run here | `/healthz` ok; `/api/v1/info` version `0.1.1`; the portal footer `p3p2 0.1.1 · Source code`; a 4 MB login form gets 413, and a small wrong one the login page again |
+| GitHub release | None yet when checked; its notes were drafted in the session, for you to publish |
+
+**Not checked**, as for `0.1.0`: the published arm64 image, which this machine can't start, and a VPS.
 
 ## Left open
 
