@@ -28,7 +28,7 @@ function describe(code: string, server: string): string {
     case 'rate':
       return 'Too many tries. Wait a moment and try again.'
     case 'proto':
-      return 'This game and this server speak different versions of p3p2.'
+      return `${host(server)} runs a p3p2 older than this game needs. Its owner can update it.`
     case 'player':
       return "The server didn't accept this browser's player id."
     case 'version':

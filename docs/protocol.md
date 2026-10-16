@@ -482,6 +482,17 @@ Defaults; all can be changed with `P3P2_*` environment variables.
 | **The host** | At most one at a time, named to everybody | That the host's page is running: see "Members and host" for when the role passes |
 | **The clock** | `now` and `ts` from one clock, the server's | Accuracy better than the network's round trip |
 
+## Old clients
+
+A game ships the client it was built with, and may never be built again. So **a server never stops taking what
+a released client sends**: protocol 1, and the REST calls under `/api/v1`. A protocol 2 would be taken beside
+protocol 1, by every server from then on, and `/info`'s `protocols` lists every number a server takes. A new
+limit, or a lower default, leaves room for everything a released client does on its own.
+
+The other way round is not promised: a game may be newer than the server it meets. A client that uses something
+added within protocol 1 looks for it in `welcome` or `/info` first, and a server that takes none of the client's
+protocols refuses it with `proto`, which the client tells the player is the server's to fix.
+
 ## Changes within protocol 1
 
 Protocol 1 is the number in `hello.proto` and in `/info`'s `protocols`. These may change **within** it, because
@@ -494,7 +505,7 @@ what is already there keeps working:
   count on it being honoured: the server says what it supports in `welcome` or `/info`.
 - **New error codes**, new `bye` reasons, new limits and their default values, and new settings.
 
-These need **protocol 2**, and a server that takes both numbers for a while:
+These need **protocol 2**, taken beside protocol 1 (see "Old clients"):
 
 - A new kind of frame from the client (a server that does not know it closes the connection), unless the client
   sends it only to a server that has said it takes it.

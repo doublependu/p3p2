@@ -39,6 +39,10 @@ A game without a bundler takes one file instead, and finds the library at `windo
 <script src="https://cdn.jsdelivr.net/npm/@p3p2/client@0.1/dist/p3p2.iife.js"></script>
 ```
 
+Either way, the game never has to update p3p2 to keep working: every newer server takes every
+client that was released ([Old clients](protocol.md#old-clients)). Updating brings the client's
+own fixes, which `@0.1` in the script tag picks up by itself.
+
 To try a change to the client that isn't released yet, build it in a checkout of this
 repository, and install the packed file in the game:
 
