@@ -43,8 +43,8 @@ To try a change to the client that isn't released yet, build it in a checkout of
 repository, and install the packed file in the game:
 
 ```sh
-npm run build && npm pack --workspace @p3p2/client      # in the checkout: gives p3p2-client-0.1.0.tgz
-npm install ../p3p2/p3p2-client-0.1.0.tgz               # in the game
+npm run build && npm pack --workspace @p3p2/client      # in the checkout: gives p3p2-client-0.1.1.tgz
+npm install ../p3p2/p3p2-client-0.1.1.tgz               # in the game
 ```
 
 ## 2. Join a room before the world is built
