@@ -56,4 +56,6 @@ other's. The server's log records joins and leaves, never what was sent.
 Per member: 90 frames a second (with a burst of 120) and 256 KB a second; a frame of at most 64 KB; presence of at
 most 1 KB. Per room: 256 KB of saved values, 1 MB of log, 64 KB of message tails, 16 members by default. Per
 address: one new connection a second with a burst of 40, and five portal or API calls a second. All of them are
-server settings ([README](../README.md#server-settings)).
+server settings ([README](../README.md#server-settings)). Two more are fixed: per address, five wrong portal
+passwords and then one every 12 seconds, counted before the password is checked; and a request body of at most
+64 KB, refused or ignored before it is read.

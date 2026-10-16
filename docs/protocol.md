@@ -48,6 +48,8 @@ are not used.
 - `page` and `param`: the game page's address and the game's parameter name, so the portal can
   show the same invite link and QR code. `page` is ignored unless its origin is one of the room's.
 
+A body larger than 64 KB is not read, and counts as an empty one.
+
 `expiresAt` is epoch milliseconds, or `null` while the room has members.
 
 Errors are `{error, message}` with one of these codes:

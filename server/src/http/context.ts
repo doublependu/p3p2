@@ -6,6 +6,9 @@ import { KeyedLimiter, type Limits } from '../core/limits.ts'
 import type { Log } from '../log.ts'
 import type { Store } from '../store/sqlite.ts'
 
+/** The largest request body the portal or the API reads. Every form and call it takes is far smaller. */
+export const MAX_BODY_BYTES = 64 * 1024
+
 /** Every origin some room accepts. Cached, because preflights and upgrades ask on every request. */
 export class Origins {
   private known = new Set<string>()

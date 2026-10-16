@@ -13,10 +13,11 @@ import {
   URL_PARAM_RE,
 } from '@p3p2/protocol'
 import { type Context, Hono } from 'hono'
+import { bodyLimit } from 'hono/body-limit'
 import { newInviteCode } from '../core/ids.ts'
 import type { InviteRecord, RoomRecord } from '../core/types.ts'
 import { VERSION } from '../version.ts'
-import { type App, clientIp } from './context.ts'
+import { type App, clientIp, MAX_BODY_BYTES } from './context.ts'
 
 function problem(c: Context, status: 400 | 401 | 403 | 404 | 429, error: string, message: string): Response {
   return c.json({ error, message } satisfies ApiError, status)
@@ -100,16 +101,9 @@ export function apiRoutes(app: App): Hono {
     return c.json(body)
   })
 
-  api.post('/room/invite', async (c) => {
+  function answerInvite(c: Context, body: Record<string, unknown>): Response {
     const room = roomFor(c)
     if (room instanceof Response) return room
-    let body: Record<string, unknown> = {}
-    try {
-      const parsed: unknown = await c.req.json()
-      if (typeof parsed === 'object' && parsed !== null) body = parsed as Record<string, unknown>
-    } catch {
-      // An empty body means "the current invite, or a new one".
-    }
     const invite = ensureInvite(app, room, body.renew === true)
     // Where the host's game page lives, so the portal can show the same link and QR code.
     const param = body.param === undefined ? 'room' : body.param
@@ -126,7 +120,24 @@ export function apiRoutes(app: App): Hono {
       }
     }
     return c.json(grant(invite))
-  })
+  }
+
+  api.post(
+    '/room/invite',
+    // A body this large is not read, and counts as an empty one: a page address that long would not be kept anyway,
+    // and the host still gets its invite.
+    bodyLimit({ maxSize: MAX_BODY_BYTES, onError: (c) => answerInvite(c, {}) }),
+    async (c) => {
+      let body: Record<string, unknown> = {}
+      try {
+        const parsed: unknown = await c.req.json()
+        if (typeof parsed === 'object' && parsed !== null) body = parsed as Record<string, unknown>
+      } catch {
+        // An empty body means "the current invite, or a new one".
+      }
+      return answerInvite(c, body)
+    },
+  )
 
   api.get('/invite', (c) => {
     const code = bearer(c).toLowerCase()

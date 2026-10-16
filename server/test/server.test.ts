@@ -267,6 +267,45 @@ test('portal: logging in correctly, however often, is never slowed down', async 
   for (let i = 0; i < 12; i++) assert.equal((await new Owner(base).post('/login', { password: PASSWORD })).status, 302)
 })
 
+test('portal: wrong passwords sent all at once use up the same five attempts as one after another', async () => {
+  const { base } = await start()
+  const statuses = await Promise.all(Array.from({ length: 20 }, async () => (await new Owner(base).post('/login', { password: 'nope' })).status))
+  // Each 401 is a password the server checked.
+  assert.equal(statuses.filter((s) => s === 401).length, 5)
+  assert.equal(statuses.filter((s) => s === 429).length, 15)
+})
+
+test('portal: a form larger than any the portal takes is refused before it is read', async () => {
+  const { base } = await start()
+  const post = async (body: string | ReadableStream<Uint8Array>) => {
+    const res = await fetch(`${base}/login`, {
+      method: 'POST',
+      headers: { origin: base, 'content-type': 'application/x-www-form-urlencoded' },
+      body,
+      duplex: 'half',
+      redirect: 'manual',
+    } as RequestInit)
+    await res.body?.cancel()
+    return res
+  }
+  // 4 MB: no field of any portal form comes near it.
+  const res = await post(`password=${'a'.repeat(4 * 1024 * 1024)}`)
+  assert.equal(res.status, 413)
+  assert.equal(res.headers.get('x-content-type-options'), 'nosniff')
+  // Sent in chunks, with no length announced: counted as it arrives.
+  const chunk = new TextEncoder().encode('a'.repeat(16 * 1024))
+  let sent = 0
+  const stream = new ReadableStream<Uint8Array>({
+    pull(controller) {
+      if (sent++ < 64) controller.enqueue(chunk)
+      else controller.close()
+    },
+  })
+  assert.equal((await post(stream)).status, 413)
+  // A form of an ordinary size is read as before.
+  assert.equal((await post(`password=${encodeURIComponent(PASSWORD)}`)).status, 302)
+})
+
 test('portal: creating rooms', async () => {
   const { base } = await start({}, { maxRooms: 3 })
   const owner = new Owner(base)
@@ -403,6 +442,22 @@ test('api: invites are created once, renewed on request, and describe the room t
   // A page on a site the room does not accept is ignored: the portal falls back to the game URL.
   await post({ renew: true, page: 'https://evil.example/', param: 'room' })
   assert.match(await (await owner.get(`/room/${key}`)).text(), /https:\/\/game\.example\.com\/\?room=p3p2\.example\.com\//)
+})
+
+test('api: a body larger than any game sends is not read, and the host still gets its invite', async () => {
+  const { base } = await start()
+  const owner = new Owner(base)
+  await owner.login()
+  const key = await owner.room('game.example.com')
+  const post = (token: string, body: unknown) => api(base, '/room/invite', token, GAME, { method: 'POST', body: JSON.stringify(body) })
+  const first = (await (await post(key, {})).json()) as InviteGrant
+
+  // A game page whose address carries 100 KB: it counts as an empty body, so the invite is the current one.
+  const long = await post(key, { renew: true, page: `${GAME}/#${'a'.repeat(100 * 1024)}`, param: 'room' })
+  assert.equal(long.status, 200)
+  assert.equal(((await long.json()) as InviteGrant).code, first.code)
+  // And without the room's key, it is refused as before.
+  assert.equal((await post('0'.repeat(26), { page: 'a'.repeat(100 * 1024) })).status, 401)
 })
 
 test('ws: a host and two guests chat', async () => {

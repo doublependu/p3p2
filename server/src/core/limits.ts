@@ -91,9 +91,10 @@ export class Bucket {
     return true
   }
 
-  /** Whether `take` would succeed, without taking. */
-  has(now: number, n: number = 1): boolean {
-    return Math.min(this.burst, this.tokens + (Math.max(0, now - this.last) / 1000) * this.rate) >= n
+  /** Gives back what `take` took, for a try that turned out not to count. */
+  give(now: number, n: number = 1): void {
+    this.tokens = Math.min(this.burst, this.tokens + (Math.max(0, now - this.last) / 1000) * this.rate + n)
+    this.last = now
   }
 
   /** True when the bucket has refilled, so forgetting it changes nothing. */
@@ -122,9 +123,9 @@ export class KeyedLimiter {
     return b.take(now)
   }
 
-  /** Whether `take` would succeed for this key, without taking. */
-  allows(key: string, now: number): boolean {
-    return this.buckets.get(key)?.has(now) ?? true
+  /** Gives back what `take` took for this key. */
+  give(key: string, now: number): void {
+    this.buckets.get(key)?.give(now)
   }
 
   sweep(now: number): void {

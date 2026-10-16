@@ -2,6 +2,7 @@
 
 import { cleanText, inviteUrl, roomUrl } from '@p3p2/protocol'
 import { type Context, Hono } from 'hono'
+import { bodyLimit } from 'hono/body-limit'
 import { deleteCookie, getCookie, setCookie } from 'hono/cookie'
 import { generate } from 'lean-qr'
 import { toSvgSource } from 'lean-qr/extras/svg'
@@ -9,7 +10,7 @@ import { newRoomKey, newToken, safeEqual, sha256 } from '../core/ids.ts'
 import { type InviteRecord, type RoomRecord, VERSION_POLICIES, type VersionPolicy } from '../core/types.ts'
 import { ensureInvite } from './api.ts'
 import { PORTAL_CSS, PORTAL_JS } from './assets.ts'
-import { type App, clientIp } from './context.ts'
+import { type App, clientIp, MAX_BODY_BYTES } from './context.ts'
 import {
   dashboardPage,
   loginPage,
@@ -119,6 +120,15 @@ export function portalRoutes(app: App): Hono<Env> {
     await next()
   })
 
+  // Refused before it is read, so that nobody can make the server hold a body of any size.
+  portal.use(
+    '*',
+    bodyLimit({
+      maxSize: MAX_BODY_BYTES,
+      onError: (c) => c.html(messagePage(server, c.get('owner') === true, 'Too large', 'This form was larger than any this server takes.'), 413),
+    }),
+  )
+
   function startSession(c: C): void {
     const token = newToken()
     const now = app.now()
@@ -168,17 +178,19 @@ export function portalRoutes(app: App): Hono<Env> {
   portal.post('/login', async (c) => {
     const hash = store.ownerHash()
     if (!hash) return c.html(setupNeededPage(server))
-    // Only wrong passwords use up attempts, so the owner is never locked out by logging in often.
+    // Each try takes an attempt before its password is checked, so tries sent all at once count as
+    // tries one after another do. The right password gives its attempt back: only wrong passwords
+    // use attempts up, and the owner is never locked out by logging in often.
     const ip = clientIp(c, app)
-    if (!app.limiters.login.allows(ip, app.now())) {
+    if (!app.limiters.login.take(ip, app.now())) {
       return c.html(loginPage(server, 'Too many attempts. Wait a minute and try again.'), 429)
     }
     const form = await c.req.parseBody()
     if (!(await verifyPassword(field(form, 'password'), hash))) {
-      app.limiters.login.take(ip, app.now())
       app.log('warn', 'login-failed', { ip })
       return c.html(loginPage(server, 'Wrong password.'), 401)
     }
+    app.limiters.login.give(ip, app.now())
     startSession(c)
     return c.redirect('/')
   })
