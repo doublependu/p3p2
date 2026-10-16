@@ -95,6 +95,17 @@ On 2026-10-16, the checks `ai/next_1.md` made for `0.1.0`:
   the Docker Hub token's scope and expiry; `npm logout` on this machine.
 - **The deferred findings.** None is critical. They wait for `ai/prompt_3.md`'s examples.
 
+## After the release: old clients
+
+Also on 2026-10-16, you decided that every newer server takes every released client, forever: a game ships the
+client it was built with and may never be built again, while a server is updated by whoever runs it. The client
+and the server keep one version number between them.
+
+- `docs/protocol.md` says so ("Old clients"), and no longer lets a protocol 2 server drop protocol 1 after a
+  while. `docs/integrate.md` tells game developers they never have to update p3p2 to keep a game working.
+- The client's `proto` message names the server as the part to update. It ships with the next release.
+- `ai/prompt_3.md` runs the example specs against every released client, not only the newest.
+
 ## What comes next
 
 - **`ai/prompt_3.md`**: example games inside p3p2 whose tests reach what real games reach, run against old and new
