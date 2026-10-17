@@ -114,7 +114,9 @@ async function room(browser: Browser, server: TestServer, name: string, players:
  * 256 KB a second on a server with the default settings, and what comes faster is dropped.
  */
 async function buildMany(page: Page, count: number, scattered: boolean, perRound = 20_000, pause = 1500): Promise<void> {
-  await world(page, (w, scattered) => ((window as unknown as { plan: number[][] }).plan = w.ground(scattered)), scattered)
+  // The plan stays in the page. Handed back, it keeps the page busy for seconds on a slow machine, and a host that
+  // says nothing for 3 s is a host no more.
+  await world(page, (w, scattered) => { (window as unknown as { plan: number[][] }).plan = w.ground(scattered) }, scattered)
   for (let from = 0; from < count; from += perRound) {
     await page.evaluate(
       ([from, to]) => (window as unknown as { example: World; plan: number[][] }).example.build((window as unknown as { plan: number[][] }).plan.slice(from, to)),
@@ -251,6 +253,7 @@ test('two people host an empty room at the same moment and end up in one world; 
 })
 
 test('Chrome, Firefox and WebKit raise the same world from one seed, tile by tile, and play it alike', async ({ browser, server }) => {
+  test.setTimeout(90_000)
   const engines = await otherEngines()
   const owner = await createRoom(browser, server, 'Three engines', WORLD)
   const ada = await visit(browser)
@@ -651,6 +654,7 @@ test.describe('on a server that keeps its data on disk, three months on', () => 
 })
 
 test('on an iPhone, by WebKit: in by the link, a tap walks, and the panel fits', async ({ browser, server }) => {
+  test.setTimeout(90_000)
   const engines = await otherEngines()
   const safari = engines.find((e) => e.name === 'webkit')!.browser
   const { defaultBrowserType: _, ...iphone } = devices['iPhone 15']!

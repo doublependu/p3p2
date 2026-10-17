@@ -302,6 +302,7 @@ test('two players whose server is far away, and drops them: they come back to th
 })
 
 test('Chrome, Firefox and WebKit in one arena: the same round, each other where they are, and the same bots', async ({ browser, server }) => {
+  test.setTimeout(90_000)
   const engines = await otherEngines()
   const owner = await createRoom(browser, server, 'Three engines', ARENA)
   const ada = await visit(browser)

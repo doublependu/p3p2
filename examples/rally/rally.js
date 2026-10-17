@@ -395,6 +395,10 @@ window.example = {
   get ball() {
     return flight && ballAt(flight, clock())
   },
+  /** Where this page has the ball at `t` on this machine's clock (`Date.now()`): for pages asked one after another. */
+  ballAtTime(t) {
+    return flight && ballAt(flight, t + clock() - Date.now())
+  },
   get score() {
     return flight?.score ?? [0, 0]
   },

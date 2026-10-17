@@ -138,7 +138,9 @@ let engines: Promise<Engine[]> | null = null
  * Firefox and WebKit (Safari's engine), next to the Chrome every test gets: for checks that all
  * three build the same thing from the same numbers. The run's setup (`setup.ts`) has made sure
  * both start on this machine, so an engine that does not is a failure, not a reason to leave it
- * out. Close them with `closeEngines()` when the file's tests are done.
+ * out. Close them with `closeEngines()` when the file's tests are done. Each worker starts its
+ * own pair in the first test that asks, on a runner it shares with the other workers: a test
+ * with all three engines gives itself 90 s.
  */
 export function otherEngines(): Promise<Engine[]> {
   engines ??= Promise.all([

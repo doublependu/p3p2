@@ -26,6 +26,7 @@ interface Rally {
   sides: (string | null)[]
   flight: Flight | null
   ball: [number, number] | null
+  ballAtTime(t: number): [number, number] | null
   score: number[]
   paddle: number
   theirs: number | null
@@ -90,13 +91,16 @@ const close = async (pages: Page[], owner?: { close(): Promise<void> }) => {
   await owner?.close()
 }
 
-/** Where every page draws the ball at about the same moment: the same, to within what the ball moves in a frame or two. */
+/**
+ * Where every page has the ball at one moment: the same, to within what the ball moves in a frame or two. Each page is
+ * asked about the same moment: on a busy machine one answers 100 ms after another, and a fast ball goes 100 units in
+ * that time.
+ */
 async function sameBall(pages: Page[]): Promise<boolean> {
-  const balls = await Promise.all(pages.map((p) => rally(p, (r) => [r.ball, Date.now()] as const)))
-  return balls.every(([b, t]) => {
-    const [a, ta] = balls[0]!
-    return b && a && Math.abs(t - ta) < 40 && Math.hypot(b[0] - a[0], b[1] - a[1]) < 40
-  })
+  const at = Date.now()
+  const balls = await Promise.all(pages.map((p) => rally(p, (r, at) => r.ballAtTime(at), at)))
+  const [a] = balls
+  return balls.every((b) => b && a && Math.hypot(b[0] - a[0], b[1] - a[1]) < 40)
 }
 
 /** Has every page seen this many flights go by: the ball has been returned or missed so often. */
@@ -339,6 +343,7 @@ test('through a server far away that drops: the menu shows each round trip, at l
 })
 
 test('Chrome against Firefox and WebKit: the same ball', async ({ browser, server }) => {
+  test.setTimeout(90_000)
   for (const { name, browser: other } of await otherEngines()) {
     const owner = await createRoom(browser, server, `Rally ${name}`, RALLY)
     const ada = await visit(browser)

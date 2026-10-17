@@ -87,7 +87,8 @@ Chrome, Firefox and WebKit build different numbers from the same code now and th
 [sharing-state.md](sharing-state.md#the-traps)). `otherEngines()` starts Firefox and WebKit beside the tests'
 Chrome, so that all three can be in one room; compare what each built, a fingerprint of the world or its tiles one
 by one. The tests' setup starts both once before the first test, and installs one that will not start (with what
-it needs from the system, in CI); one that still will not start fails the run.
+it needs from the system, in CI); one that still will not start fails the run. Each worker starts its own pair in
+the first test that asks for them, so a test with all three engines gives itself 90 s.
 
 ## Phones
 
@@ -150,6 +151,9 @@ parts always run, and the command fails if either did.
 | `e2e:measure` | This checkout's | This checkout's | Here, before a release |
 | `e2e:clients` | Each released one: `npm view @p3p2/client versions`, those whose files are the same in one run | This checkout's | Here, before a release |
 | `e2e:image` | This checkout's | `p3p2/p3p2:latest`, pulled at the start | Here, before a release |
+
+When CI's `e2e` job fails, what each failed test left, a trace and a screenshot, is the run's `e2e-results`
+artifact, kept for 14 days. `npx playwright show-trace <its trace.zip>` opens a trace.
 
 The clients run holds a promise: every newer server takes every client that was released
 ([Old clients](protocol.md#old-clients)). A new release joins it by itself. `E2E_CLIENT=<tarball>` runs the main

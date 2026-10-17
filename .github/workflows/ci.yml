@@ -51,6 +51,14 @@ jobs:
       # the tests' setup installs with what they need from the system. The measurements, every released client and
       # the published image run on a maintainer's machine before a tag (CONTRIBUTING.md, "Releasing").
       - run: npm run e2e
+      # What a failed test left: its trace and a screenshot, for `npx playwright show-trace`.
+      - if: failure()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: e2e-results
+          path: e2e/test-results
+          if-no-files-found: ignore
+          retention-days: 14
 
   # The client as npm packs it, installed in an empty project: types, a Vite build, and both in Chrome.
   pack:

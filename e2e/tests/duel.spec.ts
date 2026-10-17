@@ -320,6 +320,7 @@ test.describe('on a server whose log is small', () => {
 })
 
 test('Chrome, Firefox and WebKit at one table: the same game on every page', async ({ browser, server }) => {
+  test.setTimeout(90_000)
   const engines = await otherEngines()
   const owner = await createRoom(browser, server, 'Three engines', DUEL)
   const ada = await visit(await profile(browser))
