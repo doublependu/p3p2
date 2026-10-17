@@ -1,0 +1,27 @@
+{
+  "name": "duel",
+  "players": 2,
+  "seconds": 13.9,
+  "perPlayer": {
+    "frames": 1.5,
+    "bytes": 74.5,
+    "kinds": {
+      "op": {
+        "frames": 0.8,
+        "bytes": 46.6
+      },
+      "other": {
+        "frames": 0.7,
+        "bytes": 17.7
+      }
+    }
+  },
+  "toPlayer": {
+    "frames": 1.8,
+    "bytes": 169.7
+  },
+  "rateDropped": 0,
+  "volatileDropped": 0,
+  "writes": 1.7,
+  "loopMaxMs": 0.789
+}

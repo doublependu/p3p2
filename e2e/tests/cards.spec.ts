@@ -1,9 +1,10 @@
 // The cards example: a host deals each player a card in one message (`room.sendEach`), and no page
 // gets anybody else's card until it is shown.
 
-import { expect, type Page, test } from '@playwright/test'
+import type { Page } from '@playwright/test'
 import { GAME } from '../playwright.config.ts'
 import { createRoom, host, join, player } from './helpers.ts'
+import { expect, test } from './fixtures.ts'
 
 const CARDS = `${GAME}/cards.html`
 
@@ -19,8 +20,8 @@ const counting = (page: Page) =>
   })
 const counted = (page: Page) => page.evaluate(() => (window as unknown as { cards: number }).cards)
 
-test('the host deals each player a card nobody else sees, in one message, until it is shown', async ({ browser }) => {
-  const owner = await createRoom(browser, 'Card table', CARDS)
+test('the host deals each player a card nobody else sees, in one message, until it is shown', async ({ browser, server }) => {
+  const owner = await createRoom(browser, server, 'Card table', CARDS)
   const ada = await player(browser, CARDS)
   const invite = await host(ada.page, owner.roomUrl, 'Ada')
   await ada.page.locator('p3p2-panel').getByRole('button', { name: 'Close' }).click()

@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>p3p2 rally example</title>
+<style>
+  :root { color-scheme: light dark; font: 16px/1.5 system-ui, sans-serif; }
+  body { max-width: 48rem; margin: 0 auto; padding: 1rem 1rem 2rem; }
+  h1 { font-size: 1.4rem; margin: .5rem 0; }
+  button, input { font: inherit; }
+  button { padding: .3rem .8rem; }
+  input { padding: .3rem .5rem; min-width: 0; }
+  #menu { display: grid; gap: .5rem; padding: .75rem; border: 1px solid #8886; border-radius: .5rem; margin-bottom: 1rem; }
+  #menu label { display: flex; gap: .5rem; align-items: center; }
+  #menu label input { flex: 1; }
+  #members { list-style: none; padding: 0; margin: 0; }
+  #members li { display: flex; gap: .5rem; align-items: center; }
+  #menu [hidden] { display: none; }
+  #problem { color: #c0392b; margin: 0; }
+  #problem:empty { display: none; }
+  canvas { display: block; width: 100%; aspect-ratio: 8 / 5; background: #1d2b36; border-radius: .5rem; touch-action: none; }
+  .soft { opacity: .7; }
+</style>
+</head>
+<body>
+<h1>Rally</h1>
+<!-- The game's own menu: ui: false, so the client's panel is never loaded. -->
+<section id="menu" aria-label="Multiplayer">
+  <label>Your name <input id="name" maxlength="40" autocomplete="nickname"></label>
+  <div id="hosting">
+    <label>Room URL <input id="room-url" inputmode="url" placeholder="https://your-server/room/…" autocomplete="off"></label>
+    <p><button id="host" type="button">Host a game</button></p>
+  </div>
+  <div id="asking" hidden>
+    <p id="ask"></p>
+    <p><button id="join" type="button">Join</button> <button id="alone" type="button">Play alone</button></p>
+  </div>
+  <div id="inroom" hidden>
+    <p id="where"></p>
+    <label id="invite-row">Invite <input id="invite" readonly aria-label="Invite"> <button id="copy" type="button">Copy</button></label>
+    <ul id="members" aria-label="Players"></ul>
+    <p><button id="play" type="button">Play</button> <button id="leave" type="button">Leave</button> <button id="end" type="button" hidden>End for everyone</button></p>
+  </div>
+  <p id="problem" role="alert"></p>
+</section>
+<p id="state">Starting…</p>
+<canvas id="court" width="800" height="500" aria-label="The court. Move your paddle with the mouse, a finger, or the arrow keys."></canvas>
+<p class="soft">This page stands in for a game with a menu of its own: it uses the client without its panel. The
+ball's flight is where and when it left, and how fast, on the room's clock: every page draws the same ball from
+it. The page of the player the ball is heading to decides whether it was returned, and sends the next flight
+from where and when the ball met the paddle. The first two to press Play take the sides; whoever comes later
+watches.</p>
+<script type="module" src="./rally.js"></script>
+</body>
+</html>

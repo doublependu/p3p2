@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>p3p2 arena example</title>
+<style>
+  :root { color-scheme: light dark; font: 16px/1.5 system-ui, sans-serif; }
+  body { max-width: 48rem; margin: 0 auto; padding: 1rem 1rem 2rem; }
+  h1 { font-size: 1.4rem; }
+  /* As wide as the page, and never taller than the screen: a phone on its side has little height. */
+  canvas { display: block; width: min(100%, calc((100dvh - 6rem) * 1.5)); aspect-ratio: 3 / 2; margin: 0 auto; border-radius: .5rem; touch-action: none; }
+  .soft { opacity: .7; }
+  @media (max-height: 500px) { h1, .soft { display: none; } body { padding-top: .25rem; } #state { margin: 0 0 .25rem; font-size: .85rem; } }
+</style>
+</head>
+<body>
+<h1>Arena</h1>
+<p id="state">Starting…</p>
+<canvas id="field" width="900" height="600" aria-label="The arena. Arrow keys or WASD move you, Space kicks the ball; on a phone, a thumb on the left half moves you and a tap on the right half kicks."></canvas>
+<p id="who" class="soft"></p>
+<p class="soft">This page stands in for a game where one page runs things for everybody. You move your own figure,
+and say where it is in your presence. The host's page runs the bots and the ball, and ten times a second tells
+each player, in one message, only what that player can see. The bots go only for players who are here: a player
+whose page is in the background is nobody's target. The round is a value the room keeps, which the host writes:
+whoever comes into a running round starts from it, and when the host goes, the next carries on from what it last
+saw.</p>
+<script type="module" src="./arena.js"></script>
+</body>
+</html>

@@ -3,7 +3,7 @@ import { join as path } from 'node:path'
 import type { ServerStats } from '@p3p2/protocol'
 import { type Browser, type BrowserContext, devices, expect, firefox, type Locator, type Page, webkit } from '@playwright/test'
 import jsQR from 'jsqr'
-import { GAME, PASSWORD, PROXY, SERVER, STATS_TOKEN } from '../playwright.config.ts'
+import { GAME, PASSWORD, PROXY, STATS_TOKEN } from '../playwright.config.ts'
 
 export const CHAT = `${GAME}/chat.html`
 
@@ -12,23 +12,30 @@ export function inInvite(server: string): string {
   return server.replace(/^https:\/\//, '')
 }
 
+/** A server, as the helpers need it: where it is. The test's own (`fixtures.ts`), or any other. */
+export interface Server {
+  url: string
+}
+
 /**
- * The owner's side: logs in to the portal and creates a room for a game: the chat example, on
- * the tests' server, unless told otherwise.
+ * The owner's side: logs in to the portal of the server and creates a room for a game: the chat example unless
+ * told otherwise. `players`: how many may join, where the server's default is not wanted.
  */
 export async function createRoom(
   browser: Browser,
+  server: Server,
   name: string,
   game: string = CHAT,
-  server: string = SERVER,
+  options: { players?: number } = {},
 ): Promise<{ portal: Page; roomUrl: string; close: () => Promise<void> }> {
   const context = await browser.newContext()
   const portal = await context.newPage()
-  await portal.goto(`${server}/`)
+  await portal.goto(`${server.url}/`)
   await portal.getByLabel('Password').fill(PASSWORD)
   await portal.getByRole('button', { name: 'Log in' }).click()
   await portal.getByLabel('Game URL').fill(game)
   await portal.getByLabel('Room name').fill(name)
+  if (options.players !== undefined) await portal.getByLabel('Most players').fill(String(options.players))
   await portal.getByRole('button', { name: 'Create room' }).click()
   await expect(portal.getByRole('heading', { name })).toBeVisible()
   const roomUrl = await portal.getByLabel('Room URL').inputValue()
@@ -129,31 +136,16 @@ let engines: Promise<Engine[]> | null = null
 
 /**
  * Firefox and WebKit (Safari's engine), next to the Chrome every test gets: for checks that all
- * three build the same thing from the same numbers. An engine this machine cannot start is left
- * out; `npx playwright install firefox webkit` gets them, and says which system libraries are
- * missing. Close them with `closeEngines()` when the file's tests are done.
+ * three build the same thing from the same numbers. The run's setup (`setup.ts`) has made sure
+ * both start on this machine, so an engine that does not is a failure, not a reason to leave it
+ * out. Close them with `closeEngines()` when the file's tests are done.
  */
 export function otherEngines(): Promise<Engine[]> {
-  engines ??= (async () => {
-    const found: Engine[] = []
-    const all = [
-      // The test runner hands its own launch options (Chrome's channel, and its switches) to every launch. Not these two.
-      { name: 'firefox' as const, start: () => firefox.launch({ channel: '', args: [], firefoxUserPrefs: { 'webgl.force-enabled': true } }) },
-      { name: 'webkit' as const, start: () => webkit.launch({ channel: '', args: [] }) },
-    ]
-    for (const { name, start } of all) {
-      try {
-        found.push({ name, browser: await start() })
-      } catch (err) {
-        const text = String((err as Error).message)
-        const why = /missing dependencies/.test(text)
-          ? 'system libraries are missing; `sudo npx playwright install-deps` installs them'
-          : (text.split('\n').find((line) => line.trim()) ?? '').trim().slice(0, 160)
-        console.warn(`[engines] ${name} cannot be started on this machine, and is left out: ${why}`)
-      }
-    }
-    return found
-  })()
+  engines ??= Promise.all([
+    // The test runner hands its own launch options (Chrome's channel, and its switches) to every launch. Not these two.
+    firefox.launch({ channel: '', args: [] }).then((browser) => ({ name: 'firefox' as const, browser })),
+    webkit.launch({ channel: '', args: [] }).then((browser) => ({ name: 'webkit' as const, browser })),
+  ])
   return engines
 }
 
@@ -201,7 +193,8 @@ export async function fingers(page: Page): Promise<Fingers> {
 // ---- what a game costs the server ----
 
 export interface Traffic {
-  game: string
+  /** What was measured: an example, and what it was doing. */
+  name: string
   players: number
   seconds: number
   /** What one player sent, a second: frames and bytes, in all and by kind of frame. */
@@ -217,8 +210,8 @@ export interface Traffic {
   loopMaxMs: number
 }
 
-async function stats(reset: boolean): Promise<ServerStats> {
-  const res = await fetch(`${SERVER}/api/v1/stats${reset ? '?reset=1' : ''}`, { headers: { authorization: `Bearer ${STATS_TOKEN}` } })
+async function stats(server: Server, reset: boolean): Promise<ServerStats> {
+  const res = await fetch(`${server.url}/api/v1/stats${reset ? '?reset=1' : ''}`, { headers: { authorization: `Bearer ${STATS_TOKEN}` } })
   if (!res.ok) throw new Error(`The server's stats answered ${res.status}`)
   return (await res.json()) as ServerStats
 }
@@ -228,13 +221,14 @@ export const CAN_MEASURE = !PROXY
 
 /**
  * Counts what the players of one room send and get while `play` runs, from the server's own
- * counters. Nothing else may be using the tests' server meanwhile. The result is also written
- * to bench/results/games/<game>.json.
+ * counters. Nothing else may be using the server meanwhile: the test's own is, alone. With
+ * E2E_RECORD=1 the result is also written to bench/results/examples/<name>.json; an ordinary
+ * run changes no file of the checkout.
  */
-export async function measure(game: string, players: number, play: () => Promise<void>): Promise<Traffic> {
-  const before = await stats(true)
+export async function measure(server: Server, name: string, players: number, play: () => Promise<void>): Promise<Traffic> {
+  const before = await stats(server, true)
   await play()
-  const after = await stats(false)
+  const after = await stats(server, false)
   const seconds = after.uptime - before.uptime
   const rate = (a: number, b: number, per: number = players) => Math.round(((a - b) / seconds / per) * 10) / 10
   const kinds: Traffic['perPlayer']['kinds'] = {}
@@ -243,7 +237,7 @@ export async function measure(game: string, players: number, play: () => Promise
     if (now.frames > was.frames) kinds[kind] = { frames: rate(now.frames, was.frames), bytes: rate(now.bytes, was.bytes) }
   }
   const traffic: Traffic = {
-    game,
+    name,
     players,
     seconds: Math.round(seconds * 10) / 10,
     perPlayer: { frames: rate(after.framesIn, before.framesIn), bytes: rate(after.bytesIn, before.bytesIn), kinds },
@@ -253,8 +247,10 @@ export async function measure(game: string, players: number, play: () => Promise
     writes: rate(after.writes, before.writes, 1),
     loopMaxMs: after.loop.max,
   }
-  const dir = path(import.meta.dirname, '..', '..', 'bench', 'results', 'games')
-  mkdirSync(dir, { recursive: true })
-  writeFileSync(path(dir, `${game}.json`), `${JSON.stringify(traffic, null, 2)}\n`)
+  if (process.env.E2E_RECORD === '1') {
+    const dir = path(import.meta.dirname, '..', '..', 'bench', 'results', 'examples')
+    mkdirSync(dir, { recursive: true })
+    writeFileSync(path(dir, `${name}.json`), `${JSON.stringify(traffic, null, 2)}\n`)
+  }
   return traffic
 }

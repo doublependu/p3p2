@@ -43,6 +43,9 @@ Either way, the game never has to update p3p2 to keep working: every newer serve
 client that was released ([Old clients](protocol.md#old-clients)). Updating brings the client's
 own fixes, which `@0.1` in the script tag picks up by itself.
 
+[`examples/world/`](../examples/world/) is a Vite project set up this way, and
+[`examples/duel/`](../examples/duel/index.html) a page with the script tag and one classic script.
+
 To try a change to the client that isn't released yet, build it in a checkout of this
 repository, and install the packed file in the game:
 
@@ -90,10 +93,13 @@ p3p2.on('room', async (room) => {
 - After the reload, `p3p2.start()` puts the page back in the room, and `room.retained('world')`
   has the world to build.
 - A room keeps its world when everybody has left. Whoever opens it next week gets it.
+- [`examples/world/`](../examples/world/world.js) offers its seed this way, and raises the room's world in place of
+  its own; a page does not have to reload for it.
 
 A clock goes the same way. Save what your clock read and `room.now()` at that moment, and
 everybody reads the time as `then + (room.now() - at)`. `room.now()` is the server's clock,
-which is the same for all players.
+which is the same for all players. In [`examples/rally/`](../examples/rally/rally.js) a ball's flight is a start on
+that clock, and every page draws the same ball from it.
 
 ## 4. Show the players to each other
 
@@ -127,6 +133,8 @@ const at = friends.get(member.id)                 // [x, z, yaw], or null
 - **What arrives is somebody else's data.** Check that it is the numbers you expect before you
   put a camera or a mesh there.
 - `member.pid` is the same for the same person on every visit. Take a player's colour from it.
+- [`examples/arena/`](../examples/arena/arena.js) draws the others' figures this way: a test there checks that a
+  figure moving at an even speed is drawn going steadily, never back.
 
 ## 5. Let the room remember
 
@@ -149,7 +157,8 @@ room.log.submit({ coin: 12 })                 // takes effect when it comes back
 ```
 
 Change the state only in `apply`, and two players who reach for the same coin are told the same
-thing about who had it.
+thing about who had it. [`examples/world/`](../examples/world/world.js) keeps where each player stood as a player
+value, and the stones taken and the walls built in the log.
 
 ## 6. One player runs what has to run once
 
@@ -190,6 +199,8 @@ room.on('host-change', () => {
 // The host, ten times a second: what each guest can see, as bytes made for that guest.
 room.sendEach('view', guests.map((m) => [m, world.viewFor(m)]), { volatile: true })
 ```
+
+- **Something for several players at once**, but not all: `to: [ids]`. One message, however many it is for.
 - **Each player's own character stays their own page's.** The host is told where it is
   (presence), and tells its owner when something hits it. Something the others can dodge, a
   round in flight, is better flown on every page and judged on the page whose player it
@@ -208,6 +219,12 @@ const targets = room.members.filter((m) => m !== room.self && m.state === 'here'
 - **A host that reloads comes back as a guest.** What its page held of the game went with the
   page, so the role has passed on by then. The new host carries on from what it was shown.
 - **Friends can cheat.** The host's game is the referee, and the host is one of the friends.
+
+[`examples/arena/`](../examples/arena/arena.js) is all of this in one page: the host runs the bots and a ball,
+tells each player what it can see with `sendEach`, tells the players a bot caught with `to: [ids]`, goes only for
+members who are `here`, and keeps the round as a room value that the next host carries on from. For a game in turns
+with something hidden, where no page is the referee, see [`examples/duel/`](../examples/duel/duel.js): each
+player's secret stays in that player's browser, with a promise about it in the log.
 
 ## When the state is large
 
@@ -229,6 +246,9 @@ const world = await unpack(await room.offer('world', await pack(mine)))
   everybody has to learn of now is an op, or a room value.
 - **Many small changes in one go are one op**: put them in a list and submit that. A player may
   send 90 messages a second.
+- **A room's caps are in `room.limits`.** [`examples/world/`](../examples/world/world.js) keeps the newest walls
+  whose packed snapshot fits them: it snapshots those, and then tells every page in the room, with an op, to keep as
+  many.
 
 ## The version
 
@@ -243,7 +263,7 @@ define: { BUILD_ID: JSON.stringify(Date.now().toString(36)) },
 
 The cost: after a deploy, players on the old build cannot join a room that people on the new one
 are in, until they reload. A version is at most 32 characters, without spaces; a whole commit
-hash is 40.
+hash is 40. [`examples/arena/`](../examples/arena/vite.config.js) takes its version from its build this way.
 
 ## A game across several pages
 
@@ -265,6 +285,9 @@ page: one room holds them all.
 - **Every page load passes the host role on**, since a closing page gives it up. That is quick, and
   nothing is lost, but a game that keeps something in the host's page only loses it at each change.
 
+[`examples/world/`](../examples/world/) is a yard and a cellar under it, two pages of one room: the cellar's
+creature is moved by whoever has been in the room longest of those down there.
+
 ## Try it
 
 1. Start the server and create a room in its portal. As the game URL give the address you will
@@ -281,14 +304,19 @@ page: one room holds them all.
   `Math.random` a number of times the browser decides will do it: `sort` with a random
   comparison is the classic. Test with Chrome and Firefox in one room, and compare a fingerprint
   of what each built. A game had this for months, and its tests, in one browser, never saw it.
+  [`examples/world/`](../examples/world/world.js) shuffles with a fixed number of draws, and its test compares
+  the world tile by tile in Chrome, Firefox and WebKit.
 - **The page builds its own world and then learns of the room's.** Wait for `p3p2.start()` first.
 - **There is no corner to spare for 👥.** `ui: { button: false }` leaves it out, and
-  `p3p2.open()` opens the panel from a button of your own.
+  `p3p2.open()` opens the panel from a button of your own, as [`examples/duel/`](../examples/duel/duel.js) does.
+  A game with a whole menu of its own takes `ui: false` and the API alone:
+  [`examples/rally/`](../examples/rally/rally.js).
 - **Your own touch handling eats the panel's taps.** A listener that cancels touches for the whole
   page, in the capturing phase, also cancels the ones on 👥. Leave touches on `p3p2-panel` alone.
 - **A key your game uses types into the chat, or the other way round.** Keys typed in the panel
   do not reach the game. `P3P2.isTyping` says when, for a game that listens in the capturing
-  phase. Enter opens the chat; `ui: { chatKey: false }` turns that off.
+  phase. Enter opens the chat; `ui: { chatKey: false }` turns that off, and `ui: { chatKey: 't' }`
+  moves it, as in [`examples/world/`](../examples/world/world.js), where Enter builds.
 - **A friend is "another player" after a reload.** They are not: a reload comes back as the same
   member. Somebody who closes the page keeps their place for 30 seconds.
 

@@ -18,6 +18,16 @@
     until it is shown</li>
   <li><a href="turns.html">Turns</a>: noughts and crosses, kept entirely in the room's log: seats, moves, the next
     game, and a game that waits while a player is away</li>
+  <li><a href="world/">A shared world</a>: a world raised from a seed the room keeps, stones and walls through the
+    log, snapshots packed to fit the server, where each player stood, and a second page in the same room</li>
+  <li><a href="arena/">Arena</a>: one page runs the bots and a ball, and tells each player only what it can see;
+    the others' figures drawn smoothly; the round outlives its host</li>
+  <li><a href="duel/">Duel</a>: hidden boards and probes in turns, with a promise in the log about what each player
+    hid; one page, one script tag, no bundler</li>
+  <li><a href="rally/">Rally</a>: one ball on the room's clock, decided by the page it is heading to, and a menu of
+    the game's own in place of the panel</li>
 </ul>
+<p>World, arena and rally are Vite projects: <code>npm run examples</code> builds them with this checkout's client
+before it serves this page. The duel takes the released client from jsDelivr.</p>
 </body>
 </html>

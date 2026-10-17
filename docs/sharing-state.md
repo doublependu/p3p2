@@ -36,7 +36,14 @@ times a second.
 Every one of them also uses what every game does: joining, the members, messages. The examples show some of these
 without a game around them: [`turns.html`](../examples/turns.html) a game in turns, [`cards.html`](../examples/cards.html)
 cards dealt face down, and [`host-ball/`](../examples/host-ball/index.html) a ball run by the host with a wall kept in
-the log.
+the log. Four more are bare games, tested the way real games of these kinds were:
+
+| Example | Of the kinds above |
+|---|---|
+| [`world/`](../examples/world/world.js) | Walking one world together, and building in it: a seed the room keeps, where each player stood, the log with packed snapshots, two pages in one room |
+| [`arena/`](../examples/arena/arena.js) | The shooter and the match: the host runs the bots and a ball, tells each player what it can see, and goes only for who is here |
+| [`duel/`](../examples/duel/duel.js) | A game in turns with a secret: the log alone, each secret in its own browser and a promise about it in the log |
+| [`rally/`](../examples/rally/rally.js) | A race on one clock: a ball's flight is a start on the room's clock, and the page it is heading to decides |
 
 ## What the world is built from
 

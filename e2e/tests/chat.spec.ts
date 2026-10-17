@@ -1,6 +1,7 @@
-import { expect, test, type WebSocketRoute } from '@playwright/test'
-import { GAME, OTHER_SITE, SERVER } from '../playwright.config.ts'
+import type { WebSocketRoute } from '@playwright/test'
+import { GAME, OTHER_SITE } from '../playwright.config.ts'
 import { accept, CHAT, createRoom, host, inInvite, join, player, scan, selfId } from './helpers.ts'
+import { expect, test } from './fixtures.ts'
 
 test('a normal visit loads only the entry file', async ({ browser }) => {
   const context = await browser.newContext()
@@ -21,11 +22,11 @@ test('a normal visit loads only the entry file', async ({ browser }) => {
   await context.close()
 })
 
-test('a host and two guests chat, and share a world', async ({ browser }) => {
-  const owner = await createRoom(browser, 'Friday games')
+test('a host and two guests chat, and share a world', async ({ browser, server }) => {
+  const owner = await createRoom(browser, server, 'Friday games')
   const ada = await player(browser)
   const invite = await host(ada.page, owner.roomUrl, 'Ada')
-  expect(invite).toMatch(new RegExp(`^${CHAT}\\?room=${inInvite(SERVER)}/[0-9a-z]{10}$`))
+  expect(invite).toMatch(new RegExp(`^${CHAT}\\?room=${inInvite(server.url)}/[0-9a-z]{10}$`))
   await expect(ada.page.locator('#state')).toHaveText('In "Friday games" as Ada (the host), 1 here.')
 
   const grace = await join(browser, invite, 'Grace')
@@ -69,8 +70,8 @@ test('a host and two guests chat, and share a world', async ({ browser }) => {
 })
 
 for (const colorScheme of ['light', 'dark'] as const) {
-  test(`the QR codes scan to the invite link (${colorScheme})`, async ({ browser }) => {
-    const owner = await createRoom(browser, `QR room ${colorScheme}`)
+  test(`the QR codes scan to the invite link (${colorScheme})`, async ({ browser, server }) => {
+    const owner = await createRoom(browser, server, `QR room ${colorScheme}`)
     const context = await browser.newContext({ colorScheme })
     const page = await context.newPage()
     await page.goto(CHAT)
@@ -98,8 +99,8 @@ for (const colorScheme of ['light', 'dark'] as const) {
   })
 }
 
-test('a room only works from its own game site', async ({ browser }) => {
-  const owner = await createRoom(browser, 'Bound room')
+test('a room only works from its own game site', async ({ browser, server }) => {
+  const owner = await createRoom(browser, server, 'Bound room')
   const ada = await player(browser)
   const invite = await host(ada.page, owner.roomUrl, 'Ada')
 
@@ -122,8 +123,8 @@ test('a room only works from its own game site', async ({ browser }) => {
   await owner.close()
 })
 
-test('a room is for the game first played in it: another game on the same site is turned away, until the owner lets it in', async ({ browser }) => {
-  const owner = await createRoom(browser, 'One game room')
+test('a room is for the game first played in it: another game on the same site is turned away, until the owner lets it in', async ({ browser, server }) => {
+  const owner = await createRoom(browser, server, 'One game room')
   const ada = await player(browser)
   const invite = await host(ada.page, owner.roomUrl, 'Ada')
 
@@ -150,8 +151,8 @@ test('a room is for the game first played in it: another game on the same site i
   await owner.close()
 })
 
-test('Share hands the invite to the system share sheet, where there is one', async ({ browser }) => {
-  const owner = await createRoom(browser, 'Shared room')
+test('Share hands the invite to the system share sheet, where there is one', async ({ browser, server }) => {
+  const owner = await createRoom(browser, server, 'Shared room')
   const context = await browser.newContext()
   // Desktop Chrome has no share sheet; a phone's would get this.
   await context.addInitScript(() => {
@@ -172,8 +173,8 @@ test('Share hands the invite to the system share sheet, where there is one', asy
   await owner.close()
 })
 
-test('an invite that was replaced is refused; the new one works', async ({ browser }) => {
-  const owner = await createRoom(browser, 'Renewed room')
+test('an invite that was replaced is refused; the new one works', async ({ browser, server }) => {
+  const owner = await createRoom(browser, server, 'Renewed room')
   const ada = await player(browser)
   const old = await host(ada.page, owner.roomUrl, 'Ada')
 
@@ -194,8 +195,8 @@ test('an invite that was replaced is refused; the new one works', async ({ brows
   await owner.close()
 })
 
-test('a reload keeps the membership, for guest and host, and passes the host role on', async ({ browser }) => {
-  const owner = await createRoom(browser, 'Reload room')
+test('a reload keeps the membership, for guest and host, and passes the host role on', async ({ browser, server }) => {
+  const owner = await createRoom(browser, server, 'Reload room')
   const ada = await player(browser)
   const invite = await host(ada.page, owner.roomUrl, 'Ada')
   const grace = await join(browser, invite, 'Grace')
@@ -227,8 +228,8 @@ test('a reload keeps the membership, for guest and host, and passes the host rol
   await owner.close()
 })
 
-test('leave, kick, and end for everyone', async ({ browser }) => {
-  const owner = await createRoom(browser, 'Bouncer room')
+test('leave, kick, and end for everyone', async ({ browser, server }) => {
+  const owner = await createRoom(browser, server, 'Bouncer room')
   const ada = await player(browser)
   const invite = await host(ada.page, owner.roomUrl, 'Ada')
   const grace = await join(browser, invite, 'Grace')
@@ -259,8 +260,8 @@ test('leave, kick, and end for everyone', async ({ browser }) => {
   await owner.close()
 })
 
-test('the host role moves on when the host leaves', async ({ browser }) => {
-  const owner = await createRoom(browser, 'Handover room')
+test('the host role moves on when the host leaves', async ({ browser, server }) => {
+  const owner = await createRoom(browser, server, 'Handover room')
   const ada = await player(browser)
   const invite = await host(ada.page, owner.roomUrl, 'Ada')
   const grace = await join(browser, invite, 'Grace')
@@ -274,8 +275,8 @@ test('the host role moves on when the host leaves', async ({ browser }) => {
   await owner.close()
 })
 
-test('typing in the panel does not reach the game, but key releases do', async ({ browser }) => {
-  const owner = await createRoom(browser, 'Keys room')
+test('typing in the panel does not reach the game, but key releases do', async ({ browser, server }) => {
+  const owner = await createRoom(browser, server, 'Keys room')
   const ada = await player(browser)
   await host(ada.page, owner.roomUrl, 'Ada')
   await ada.page.evaluate(() => {
@@ -316,8 +317,8 @@ test('typing in the panel does not reach the game, but key releases do', async (
   await owner.close()
 })
 
-test('the panel fits a phone', async ({ browser }) => {
-  const owner = await createRoom(browser, 'Phone room')
+test('the panel fits a phone', async ({ browser, server }) => {
+  const owner = await createRoom(browser, server, 'Phone room')
   const context = await browser.newContext({ viewport: { width: 360, height: 640 }, hasTouch: true, isMobile: true })
   const page = await context.newPage()
   await page.goto(CHAT)
@@ -355,8 +356,8 @@ test('the panel fits a phone', async ({ browser }) => {
   await owner.close()
 })
 
-test('a dropped connection comes back by itself, as the same member', async ({ browser }) => {
-  const owner = await createRoom(browser, 'Blip room')
+test('a dropped connection comes back by itself, as the same member', async ({ browser, server }) => {
+  const owner = await createRoom(browser, server, 'Blip room')
   const ada = await player(browser)
   const invite = await host(ada.page, owner.roomUrl, 'Ada')
 
@@ -395,8 +396,8 @@ test('a dropped connection comes back by itself, as the same member', async ({ b
   await owner.close()
 })
 
-test('the invite link can be copied', async ({ browser }) => {
-  const owner = await createRoom(browser, 'Copy room')
+test('the invite link can be copied', async ({ browser, server }) => {
+  const owner = await createRoom(browser, server, 'Copy room')
   const ada = await player(browser)
   const invite = await host(ada.page, owner.roomUrl, 'Ada')
   await ada.page.getByRole('button', { name: 'Copy' }).click()
@@ -409,8 +410,8 @@ test('the invite link can be copied', async ({ browser }) => {
   await owner.close()
 })
 
-test('the single-file build works without a bundler or modules', async ({ browser }) => {
-  const owner = await createRoom(browser, 'Script tag room')
+test('the single-file build works without a bundler or modules', async ({ browser, server }) => {
+  const owner = await createRoom(browser, server, 'Script tag room')
   const context = await browser.newContext()
   const page = await context.newPage()
   const scripts: string[] = []
@@ -431,7 +432,7 @@ test('the single-file build works without a bundler or modules', async ({ browse
   expect(result.parsed).toEqual({ server: 'https://p3p2.example.com', code: '789xyz0abc' })
   expect(result.name).toBe('Ida')
   expect(result.isHost).toBe(true)
-  expect(result.invite).toMatch(new RegExp(`^${GAME}/index.html\\?room=${inInvite(SERVER)}/[0-9a-z]{10}$`))
+  expect(result.invite).toMatch(new RegExp(`^${GAME}/index.html\\?room=${inInvite(server.url)}/[0-9a-z]{10}$`))
   await expect(page.getByLabel('Invite link', { exact: true })).toHaveValue(result.invite)
   expect(scripts).toEqual(['/dist/p3p2.iife.js'])
   await context.close()

@@ -47,7 +47,9 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run build
-      # The tests drive the Chrome that the runner image already has.
+      # The main run: the examples in the Chrome that the runner image already has, and in Firefox and WebKit, which
+      # the tests' setup installs with what they need from the system. The measurements, every released client and
+      # the published image run on a maintainer's machine before a tag (CONTRIBUTING.md, "Releasing").
       - run: npm run e2e
 
   # The client as npm packs it, installed in an empty project: types, a Vite build, and both in Chrome.

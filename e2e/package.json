@@ -5,7 +5,11 @@
   "license": "AGPL-3.0-only",
   "type": "module",
   "scripts": {
-    "e2e": "playwright test",
+    "e2e": "node tools/run.ts main",
+    "e2e:measure": "node tools/run.ts measure",
+    "e2e:clients": "node tools/run.ts clients",
+    "e2e:image": "node tools/run.ts image",
+    "e2e:all": "node tools/run.ts all",
     "test": "node --test \"node/**/*.test.ts\"",
     "typecheck": "tsc -p .",
     "test:pack": "node --test \"pack/**/*.test.ts\""

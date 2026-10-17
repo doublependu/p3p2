@@ -53,7 +53,7 @@ place (enemies, a ball), and the role passes on by itself when that page goes.
 | [security.md](docs/security.md) | What the room key, the invite and the site check protect, and what not |
 | [design-philosophy.md](docs/design-philosophy.md) | How p3p2 stays generic, and the kinds of game it is not for |
 | [comparison.md](docs/comparison.md) | Other projects like p3p2, and where each parts from it |
-| [`examples/`](examples) | A chat page, a small game with a host and a log, cards dealt face down, and a game in turns |
+| [`examples/`](examples) | A chat page, a small game with a host and a log, cards dealt face down, a game in turns, and four bare games that do what real games do: [a shared world](examples/world/), [an arena](examples/arena/) one page runs, [a duel](examples/duel/) with hidden boards, and [a rally](examples/rally/) with a menu of its own |
 
 **For players, and for whoever runs a server**
 
@@ -72,7 +72,7 @@ Needs Node.js 24.
 npm install
 npm run build            # the client library, into client/dist
 npm run dev              # the server, on port 8080 (prints a setup link the first time)
-npm run examples         # in a second terminal: the example pages, on port 5180
+npm run examples         # in a second terminal: builds world, arena and rally, and serves the examples on port 5180
 ```
 
 1. Open the setup link the server printed and choose the owner password.
@@ -121,9 +121,11 @@ What the numbers mean, and the ones measured so far, are in
 protocol/   message types and validators, shared by server and client
 server/     the server: core/ (room rules, no I/O), adapters/, store/, http/ (API + portal)
 client/     @p3p2/client: entry, room client, <p3p2-panel>
-examples/   example pages (chat, host-ball, cards, turns) and a static server for them
-e2e/        browser tests of the examples (Playwright, using the installed Chrome), the client's
-            tests in Node, a test of the client as npm packs it (pack/), and tools/lag-proxy.ts
+examples/   example pages (chat, host-ball, cards, turns), four bare games (world/, arena/ and rally/,
+            built by Vite, and duel/, from a script tag), a static server for them, and their build
+e2e/        browser tests of the examples (Playwright: the installed Chrome, and Firefox and WebKit), the
+            client's tests in Node, a test of the client as npm packs it (pack/), and tools/: a server
+            for each test, the runs, and lag-proxy.ts
 bench/      load generator: traffic profiles, limit search, soak test; results/ holds its output
 deploy/     Dockerfile (the image p3p2/p3p2), docker-compose.yml (that image behind Caddy, with
             HTTPS), docker-compose.build.yml (the image built from this checkout), Caddyfiles, and
@@ -139,6 +141,7 @@ npm run lint && npm run typecheck && npm test   # unit and integration tests
 npm run build && npm run size                   # client bundles, against their size budgets
 npm run test:pack                               # the client as npm packs it, in a game's own project
 npm run e2e                                     # host and guests in real browsers
+npm run e2e:all                                 # that, the measurements, every released client, the published image
 ```
 
 `npm test` includes the client's own tests (`e2e/node/`): its room code in Node, against a real
@@ -146,6 +149,11 @@ server, with connections that are cut on purpose.
 
 `npm run test:pack` installs the packed client in an empty project, type-checks a page against it,
 builds that page with Vite, and loads it and the script-tag build in Chrome.
+
+`npm run e2e` is what CI runs. `npm run e2e:all` adds what runs before a release: what the examples cost the server,
+every client released on npm against this checkout's server, and this checkout's client against the published
+image, with an upgrade of that image's data. [testing.md](docs/testing.md#running-them) has the runs, and how a test
+is tagged for them.
 
 `E2E_PROXY=1` runs the browser tests against the setup of `deploy/docker-compose.yml`: the
 server in its container behind Caddy, built from this checkout, and every page over HTTPS. It needs Docker, and ports 80

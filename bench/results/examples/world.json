@@ -1,0 +1,35 @@
+{
+  "name": "world",
+  "players": 4,
+  "seconds": 10.5,
+  "perPlayer": {
+    "frames": 5.2,
+    "bytes": 440.7,
+    "kinds": {
+      "msg": {
+        "frames": 0.3,
+        "bytes": 19.8
+      },
+      "pres": {
+        "frames": 4.7,
+        "bytes": 326.5
+      },
+      "op": {
+        "frames": 0.1,
+        "bytes": 58.9
+      },
+      "other": {
+        "frames": 0.1,
+        "bytes": 3
+      }
+    }
+  },
+  "toPlayer": {
+    "frames": 7.1,
+    "bytes": 1218.6
+  },
+  "rateDropped": 0,
+  "volatileDropped": 0,
+  "writes": 1.7,
+  "loopMaxMs": 0.805
+}

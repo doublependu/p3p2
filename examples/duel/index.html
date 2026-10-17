@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>p3p2 duel example</title>
+<style>
+  :root { color-scheme: light dark; font: 16px/1.5 system-ui, sans-serif; }
+  body { max-width: 44rem; margin: 0 auto; padding: 1rem 1rem 2rem; }
+  header { display: flex; align-items: center; gap: 1rem; }
+  h1 { font-size: 1.4rem; flex: 1; margin: .5rem 0; }
+  button { font: inherit; padding: .4rem .9rem; }
+  #boards { display: flex; flex-wrap: wrap; gap: 1.5rem; margin: 1rem 0; }
+  .board { display: grid; grid-template-columns: repeat(6, 2.6rem); gap: .2rem; }
+  .board button { height: 2.6rem; padding: 0; font: 700 1.1rem system-ui, sans-serif; }
+  .board button.hidden { outline: 3px solid #d9a400; }
+  .board button.picked { outline: 3px dashed #2f6f3e; }
+  .board button.hit { background: #c0392b; color: #fff; }
+  .board button.miss { background: #8886; }
+  h2 { font-size: 1rem; margin: 0 0 .3rem; }
+  .soft { opacity: .7; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Duel</h1>
+  <!-- The game's own button for the panel: no corner of this page is free for the 👥 one. -->
+  <button id="friends" type="button">Friends</button>
+</header>
+<p id="state">Starting…</p>
+<p><button id="ready" type="button" hidden>Ready</button> <button id="next" type="button" hidden>Next game</button></p>
+<section id="boards"></section>
+<ol id="history" class="soft"></ol>
+<p class="soft">This page stands in for a game in turns with something hidden. Two take the seats, and each hides five
+squares on their own board. The squares stay in that player's browser: the room's log gets only a promise about
+them, a hash of the squares and a salt. Pick a square on the other board, and pick it again to probe it; the other
+player's page answers by itself, whenever it is open, today or another day. At the end both reveal their squares,
+and every page checks them against the promise and against every answer. Anybody else in the room watches, and sees
+nothing hidden until the end. No bundler and no modules: the client comes from one script tag.</p>
+
+<script src="https://cdn.jsdelivr.net/npm/@p3p2/client@0.1/dist/p3p2.iife.js"></script>
+<script src="duel.js"></script>
+</body>
+</html>

@@ -1,17 +1,18 @@
 // The turns example: noughts and crosses kept in the room's log alone. Two take the seats, a third watches, an op
 // against the rules changes nothing anywhere, and a game waits for a player who left.
 
-import { expect, type Page, test } from '@playwright/test'
+import type { Page } from '@playwright/test'
 import { GAME } from '../playwright.config.ts'
 import { createRoom, host, join, player } from './helpers.ts'
+import { expect, test } from './fixtures.ts'
 
 const TURNS = `${GAME}/turns.html`
 
 const cells = (page: Page) => page.locator('#board button').allTextContents()
 const cell = (page: Page, i: number) => page.getByRole('button', { name: `Cell ${i + 1}`, exact: true })
 
-test('two players take turns, a third watches, and every page has the same board', async ({ browser }) => {
-  const owner = await createRoom(browser, 'Noughts', TURNS)
+test('two players take turns, a third watches, and every page has the same board', async ({ browser, server }) => {
+  const owner = await createRoom(browser, server, 'Noughts', TURNS)
   const ada = await player(browser, TURNS)
   const invite = await host(ada.page, owner.roomUrl, 'Ada')
   await ada.page.locator('p3p2-panel').getByRole('button', { name: 'Close' }).click()

@@ -5,7 +5,7 @@
 import { execFileSync } from 'node:child_process'
 import { request } from 'node:https'
 import { join } from 'node:path'
-import { PASSWORD, SERVER } from '../playwright.config.ts'
+import { PASSWORD, PROXY_SERVER as SERVER } from '../playwright.config.ts'
 
 const ROOT = join(import.meta.dirname, '..', '..')
 

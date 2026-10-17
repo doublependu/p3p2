@@ -28,8 +28,17 @@ npm run test:pack                               # the client as npm packs it
 npm run e2e                                     # host and guests in real browsers
 ```
 
-The browser tests drive the Chrome installed on the machine. CI runs the same checks, and also builds the
-server's image for amd64 and arm64 and starts each one.
+The browser tests drive the Chrome installed on the machine, and Firefox and WebKit, which their setup installs.
+CI runs the same checks, and also builds the server's image for amd64 and arm64 and starts each one.
+
+A change to the server, to the protocol, or to what the server keeps in `/data` can break a game whose client is
+older than the change, the published server, or the upgrade of its data. For such a change, also run
+
+```sh
+npm run e2e:all     # the measurements, every released client, and the published image with its data
+```
+
+It needs Docker, and takes a quarter of an hour. CI does not run it.
 
 Some changes bring a document along, and a test sees to most of them:
 
@@ -57,11 +66,16 @@ npm version X.Y.Z --workspaces --include-workspace-root --no-git-tag-version
 ```
 
 With a new minor version, also change `X.Y` in the image tag of `deploy/docker-compose.yml` and in the script
-tags of `client/README.md` and `docs/integrate.md`. Commit, push, and once CI is green on `main`:
+tags of `client/README.md`, `docs/integrate.md` and `examples/duel/index.html`. Commit, push, and once CI is green
+on `main`:
 
 ```sh
+npm run build && npm run e2e:all        # what CI does not run: see "The checks"
 git tag vX.Y.Z && git push origin vX.Y.Z
 ```
+
+A release runs CI's checks only. `npm run e2e:all` is the one run that holds every released client and the
+published server against the commit being released.
 
 The [release workflow](.github/workflows/release.yml) then:
 

@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>p3p2 world example: the cellar</title>
+<style>
+  :root { color-scheme: light dark; font: 16px/1.5 system-ui, sans-serif; }
+  body { max-width: 42rem; margin: 0 auto; padding: 4rem 1rem 2rem; }
+  h1 { font-size: 1.4rem; }
+  canvas { display: block; width: 100%; image-rendering: pixelated; border-radius: .5rem; touch-action: none; }
+  .soft { opacity: .7; }
+</style>
+</head>
+<body>
+<h1>A shared world: the cellar</h1>
+<p id="state">Starting…</p>
+<p id="note" aria-live="polite"></p>
+<canvas id="view" width="640" height="384" aria-label="The cellar around you. Arrow keys or WASD walk, Enter builds a wall in front of you or takes it down; a tap steps toward it."></canvas>
+<p id="count" class="soft"></p>
+<p id="who" class="soft"></p>
+<p class="soft">The second page of the world example, under the yard: the same game id, so the same room, and you
+are the same member in it, without being asked again. Stones taken here are ops in the same log as the yard's,
+saying which part they are about. The red thing wanders the cellar: the page that has been in the room longest of
+those down here moves it for everybody, and when that page goes, the next carries on from where it last saw it.
+The dark tile is the way back up.</p>
+<script type="module">
+  import { play } from './world.js'
+
+  play('cellar')
+</script>
+</body>
+</html>

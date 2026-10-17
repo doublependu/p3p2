@@ -1,10 +1,14 @@
 // Game data on the chat pipe: presence, saved values per player, binary data, the version gate,
 // the log, a room of one, and all of it through a connection that is slow and drops.
 
-import { expect, type Page, test } from '@playwright/test'
-import { GAME, HOST, SERVER, SERVER_PORT, serverAt } from '../playwright.config.ts'
+import type { Page } from '@playwright/test'
+import { GAME, HOST, serverAt } from '../playwright.config.ts'
 import { startLagProxy } from '../tools/lag-proxy.ts'
 import { accept, createRoom, host, inInvite, join, player, selfId } from './helpers.ts'
+import { expect, test } from './fixtures.ts'
+
+// A log this small is full after a few dozen ops, so the tests see what happens then.
+test.use({ settings: { P3P2_MAX_LOG_BYTES: '16384' } })
 
 interface Member {
   id: number
@@ -57,8 +61,8 @@ async function inRoom<T, A = undefined>(page: Page, fn: (room: TestRoom, arg: A)
   }
 }
 
-test('presence, saved player values and binary data reach the other players', async ({ browser }) => {
-  const owner = await createRoom(browser, 'Game data room')
+test('presence, saved player values and binary data reach the other players', async ({ browser, server }) => {
+  const owner = await createRoom(browser, server, 'Game data room')
   const ada = await player(browser)
   const invite = await host(ada.page, owner.roomUrl, 'Ada')
   const grace = await join(browser, invite, 'Grace')
@@ -142,15 +146,15 @@ test('presence, saved player values and binary data reach the other players', as
   await owner.close()
 })
 
-test('through a slow connection that drops, everything still arrives and everyone comes back', async ({ browser }) => {
+test('through a slow connection that drops, everything still arrives and everyone comes back', async ({ browser, server }) => {
   const latency = 120
-  const proxy = await startLagProxy({ listen: 0, host: HOST, to: { host: '127.0.0.1', port: SERVER_PORT }, latency, jitter: 40 })
-  const far = serverAt(proxy.port)
+  const proxy = await startLagProxy({ listen: 0, host: HOST, to: { host: '127.0.0.1', port: server.port }, latency, jitter: 40 })
+  const far = serverAt(server.url, proxy.port)
   try {
-    const owner = await createRoom(browser, 'Far away')
+    const owner = await createRoom(browser, server, 'Far away')
     const ada = await player(browser)
     // The host pastes the room URL with the proxy's address. The invite carries it to the guests.
-    const invite = await host(ada.page, owner.roomUrl.replace(SERVER, far), 'Ada')
+    const invite = await host(ada.page, owner.roomUrl.replace(server.url, far), 'Ada')
     expect(invite).toContain(`room=${inInvite(far)}/`)
     const grace = await join(browser, invite, 'Grace')
     const ids = [await selfId(ada.page), await selfId(grace.page)]
@@ -230,11 +234,11 @@ function follow(page: Page): Promise<void> {
 
 const followed = (page: Page) => page.evaluate(() => (window as unknown as Notes).log)
 
-test('the log: the same ops in the same order for everyone, also for who was cut off or comes late', async ({ browser }) => {
+test('the log: the same ops in the same order for everyone, also for who was cut off or comes late', async ({ browser, server }) => {
   // Grace reaches the server the long way round, so that she alone can be cut off, and stays away a moment.
-  const proxy = await startLagProxy({ listen: 0, host: HOST, to: { host: '127.0.0.1', port: SERVER_PORT }, latency: 400, jitter: 0 })
+  const proxy = await startLagProxy({ listen: 0, host: HOST, to: { host: '127.0.0.1', port: server.port }, latency: 400, jitter: 0 })
   try {
-    const owner = await createRoom(browser, 'Log room')
+    const owner = await createRoom(browser, server, 'Log room')
     const ada = await player(browser)
     const invite = await host(ada.page, owner.roomUrl, 'Ada')
     await follow(ada.page)
@@ -242,7 +246,7 @@ test('the log: the same ops in the same order for everyone, also for who was cut
     await expect.poll(() => followed(ada.page)).toEqual([['load', null], [1, 'one', false, 'Ada']])
 
     // Who joins later is handed the saved ops first. They are marked, and their sender may be long gone.
-    const grace = await join(browser, invite.replace(inInvite(SERVER), inInvite(serverAt(proxy.port))), 'Grace')
+    const grace = await join(browser, invite.replace(inInvite(server.url), inInvite(serverAt(server.url, proxy.port))), 'Grace')
     await follow(grace.page)
     expect(await followed(grace.page)).toEqual([['load', null], [1, 'one', true, null]])
     await inRoom(grace.page, (room) => room.log.submit({ n: 2 }))
@@ -319,8 +323,8 @@ test('the log: the same ops in the same order for everyone, also for who was cut
   }
 })
 
-test('a player on another version of the game is kept out, until the owner allows it', async ({ browser }) => {
-  const owner = await createRoom(browser, 'Version room')
+test('a player on another version of the game is kept out, until the owner allows it', async ({ browser, server }) => {
+  const owner = await createRoom(browser, server, 'Version room')
   const ada = await player(browser)
   const invite = await host(ada.page, owner.roomUrl, 'Ada')
 

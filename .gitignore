@@ -7,3 +7,5 @@ data/
 test-results/
 playwright-report/
 .env
+# The examples take the newest 0.1 from npm; the tests decide which client they are built with.
+examples/*/package-lock.json

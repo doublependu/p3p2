@@ -1,0 +1,31 @@
+{
+  "name": "rally",
+  "players": 2,
+  "seconds": 10,
+  "perPlayer": {
+    "frames": 6.7,
+    "bytes": 441.4,
+    "kinds": {
+      "msg": {
+        "frames": 0.2,
+        "bytes": 45.1
+      },
+      "pres": {
+        "frames": 6,
+        "bytes": 342
+      },
+      "other": {
+        "frames": 0.4,
+        "bytes": 12.1
+      }
+    }
+  },
+  "toPlayer": {
+    "frames": 6.7,
+    "bytes": 479.4
+  },
+  "rateDropped": 0,
+  "volatileDropped": 0,
+  "writes": 0.5,
+  "loopMaxMs": 0.936
+}

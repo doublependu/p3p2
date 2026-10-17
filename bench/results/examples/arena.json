@@ -1,0 +1,35 @@
+{
+  "name": "arena",
+  "players": 3,
+  "seconds": 10.2,
+  "perPlayer": {
+    "frames": 22.8,
+    "bytes": 1637,
+    "kinds": {
+      "msg": {
+        "frames": 0.5,
+        "bytes": 63.9
+      },
+      "bin": {
+        "frames": 3,
+        "bytes": 351.7
+      },
+      "pres": {
+        "frames": 19.2,
+        "bytes": 1077.7
+      },
+      "other": {
+        "frames": 0.1,
+        "bytes": 3.3
+      }
+    }
+  },
+  "toPlayer": {
+    "frames": 26.6,
+    "bytes": 2515.9
+  },
+  "rateDropped": 0,
+  "volatileDropped": 0,
+  "writes": 0.5,
+  "loopMaxMs": 1.198
+}

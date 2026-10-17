@@ -25,6 +25,10 @@
     "lag": "node e2e/tools/lag-proxy.ts",
     "bench": "node bench/src/main.ts",
     "e2e": "npm run e2e -w e2e",
+    "e2e:measure": "npm run e2e:measure -w e2e",
+    "e2e:clients": "npm run e2e:clients -w e2e",
+    "e2e:image": "npm run e2e:image -w e2e",
+    "e2e:all": "npm run e2e:all -w e2e",
     "test:pack": "npm run test:pack -w e2e"
   },
   "devDependencies": {

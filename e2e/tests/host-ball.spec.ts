@@ -1,9 +1,13 @@
 // A game with one player in charge, on the room's log: the host moves a ball and knocks bricks out
 // of a wall. The role passes on when the host goes, and the wall outlives everyone.
 
-import { type Browser, expect, type Page, test } from '@playwright/test'
+import type { Browser, Page } from '@playwright/test'
 import { GAME } from '../playwright.config.ts'
-import { createRoom, host, join, player } from './helpers.ts'
+import { createRoom, host, join, player, type Server } from './helpers.ts'
+import { expect, test } from './fixtures.ts'
+
+// A log this small is full after a few dozen ops: the host's snapshots are what keep the wall.
+test.use({ settings: { P3P2_MAX_LOG_BYTES: '16384' } })
 
 // Four times the speed: a brick about every second.
 const BALL = `${GAME}/host-ball/?speed=4`
@@ -90,8 +94,8 @@ async function leave(page: Page): Promise<void> {
   await expect(page.locator('#state')).toContainText('Playing alone')
 }
 
-async function trio(browser: Browser, name: string) {
-  const owner = await createRoom(browser, name, BALL)
+async function trio(browser: Browser, server: Server, name: string) {
+  const owner = await createRoom(browser, server, name, BALL)
   const ada = await player(browser, BALL)
   const invite = await host(ada.page, owner.roomUrl, 'Ada')
   const grace = await join(browser, invite, 'Grace')
@@ -120,9 +124,9 @@ test('alone, the same game plays in a room of one', async ({ browser }) => {
   await context.close()
 })
 
-test('the host moves the ball for everyone; when its page closes, the next player carries on with the same wall', async ({ browser }) => {
+test('the host moves the ball for everyone; when its page closes, the next player carries on with the same wall', async ({ browser, server }) => {
   test.setTimeout(120_000)
-  const { owner, invite, ada, grace, edsger } = await trio(browser, 'Ball room')
+  const { owner, invite, ada, grace, edsger } = await trio(browser, server, 'Ball room')
   expect([await look(ada.page), await look(grace.page), await look(edsger.page)].map((s) => s.host)).toEqual([true, false, false])
 
   // The guests see the ball go where the host moves it, and can send it somewhere.
@@ -181,8 +185,8 @@ test('the host moves the ball for everyone; when its page closes, the next playe
   await owner.close()
 })
 
-test('a host whose page stops, connected and in front, hands the role on; everybody sees who is not here', async ({ browser }) => {
-  const { owner, ada, grace, edsger } = await trio(browser, 'Frozen room')
+test('a host whose page stops, connected and in front, hands the role on; everybody sees who is not here', { tag: '@alone' }, async ({ browser, server }) => {
+  const { owner, ada, grace, edsger } = await trio(browser, server, 'Frozen room')
   await expect(grace.page.locator('#who')).toHaveText('Ada: here · Grace: here · Edsger: here')
 
   // Edsger's tab goes to the background: the others see it, and he stays in the room.
@@ -216,8 +220,8 @@ test('a host whose page stops, connected and in front, hands the role on; everyb
   await owner.close()
 })
 
-test('a host whose tab goes to the background hands the role on', async ({ browser }) => {
-  const { owner, ada, grace, edsger } = await trio(browser, 'Tab room')
+test('a host whose tab goes to the background hands the role on', { tag: '@alone' }, async ({ browser, server }) => {
+  const { owner, ada, grace, edsger } = await trio(browser, server, 'Tab room')
 
   // Edsger looks away first: he is passed over.
   await background(edsger.page, true)

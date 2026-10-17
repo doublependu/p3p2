@@ -10,7 +10,11 @@ import { Smooth } from '@p3p2/client/smooth'
 import { pack, unpack } from '@p3p2/client/pack'
 ```
 
-A game without a bundler takes the one-file build, `dist/p3p2.iife.js` in the package ([integrate.md](integrate.md#1-get-the-client-into-the-game) has its script tag), and finds `P3P2` at `window.P3P2`, with `P3P2.Smooth`, `P3P2.pack` and `P3P2.unpack` on it.
+A game without a bundler takes the one-file build, `dist/p3p2.iife.js` in the package ([integrate.md](integrate.md#1-get-the-client-into-the-game) has its script tag), and finds `P3P2` at `window.P3P2`, with `P3P2.Smooth`, `P3P2.pack` and `P3P2.unpack` on it, as [`examples/duel/`](../examples/duel/index.html) does.
+
+Four bare games in `examples/` use these calls as real games did, and are tested for it:
+[`world/`](../examples/world/world.js), [`arena/`](../examples/arena/arena.js), [`duel/`](../examples/duel/duel.js) and
+[`rally/`](../examples/rally/rally.js). The rows below link to them.
 
 ## `P3P2`
 
@@ -23,10 +27,10 @@ const p3p2 = new P3P2({ game: { id: 'my-game', version: '1.4.0' } })
 | | |
 |---|---|
 | `game` | `{ id, version }`. `id`: 1 to 64 letters, digits, `_ . -`. `version`: 1 to 32 characters without spaces. The server keeps players on different versions apart, by the room's rule. |
-| `ui` | The built-in panel (`UiOptions`), or `false` for a game that brings its own menu and uses the API alone. |
+| `ui` | The built-in panel (`UiOptions`), or `false` for a game that brings its own menu and uses the API alone ([rally](../examples/rally/rally.js)). |
 | `ui.corner` | Where the panel sits: `'top-right'` (the default), `'top-left'`, `'bottom-right'`, `'bottom-left'`. |
-| `ui.button` | `false`: no 👥 button. The game opens the panel with `p3p2.open()` from a button of its own. |
-| `ui.chatKey` | The key that opens chat while a room is open; `'Enter'` by default, `false` for none. |
+| `ui.button` | `false`: no 👥 button. The game opens the panel with `p3p2.open()` from a button of its own ([duel](../examples/duel/duel.js)). |
+| `ui.chatKey` | The key that opens chat while a room is open; `'Enter'` by default, `false` for none ([world](../examples/world/world.js): `'t'`). |
 | `urlParam` | The query parameter that carries the invite: `room` by default. |
 
 **Joining, hosting, leaving**
@@ -36,7 +40,7 @@ const p3p2 = new P3P2({ game: { id: 'my-game', version: '1.4.0' } })
 | `p3p2.start()` | Call once when the game starts. Back into the room after a reload; "Join?" for a page opened from an invite. On an ordinary visit it resolves to `null` at once and loads nothing. Resolves to the `Room`, or `null`. |
 | `p3p2.resume()` | The first half of `start()`: back into this tab's room after a reload, without asking. |
 | `p3p2.invite` | The invite in the page's address (`{ server, code }`), or `null`. No network. |
-| `p3p2.peek(invite)` | Who is behind an invite, without joining: `{ roomName, hostName, members, maxMembers }`. For a game that asks "Join?" in its own words. |
+| `p3p2.peek(invite)` | Who is behind an invite, without joining: `{ roomName, hostName, members, maxMembers }`. For a game that asks "Join?" in its own words ([rally](../examples/rally/rally.js)). |
 | `p3p2.join(invite, options)` | Joins through an invite. `options.ask`: ask the player in the panel first (default: when the panel is on). `options.name`: the player's name. Resolves to `null` if the player chose to play alone. |
 | `p3p2.host(roomUrl, options)` | Hosts in the room behind a room URL from the portal, and creates the invite link. `options.name`: the player's name. |
 | `p3p2.open()` | Opens the panel. |
@@ -50,7 +54,8 @@ const p3p2 = new P3P2({ game: { id: 'my-game', version: '1.4.0' } })
 
 Errors that these reject with carry a `code` next to the message (`P3P2Error`): `unreachable`, `mixed` (an https
 page and an http server), `origin` (the room does not allow this site), `room-url`, `room`, `auth` (the invite
-expired), `full`, `rate`, `proto`, `player`, `version`.
+expired), `full`, `rate`, `proto`, `player`, `version`. [`examples/rally/`](../examples/rally/rally.js) says each in
+its own words.
 
 ## `Room`
 
@@ -76,8 +81,8 @@ expired), `full`, `rate`, `proto`, `player`, `version`.
 | `member.id` | Unique in the room for as long as the member stays, reloads included. |
 | `member.pid` | The player's id on this server: the same on every visit from the same browser. |
 | `member.name` | As they gave it. |
-| `member.order` | The order of joining. |
-| `member.rtt` | Round trip to the server in ms, or `null` until measured; updated every 5 s. |
+| `member.order` | The order of joining. ([world](../examples/world/world.js): who moves the cellar's creature.) |
+| `member.rtt` | Round trip to the server in ms, or `null` until measured; updated every 5 s ([rally](../examples/rally/rally.js)'s menu shows it). |
 | `member.state` | `'here'`, `'away'` (the page is in the background) or `'lost'` (the connection is down, or nothing came from it for 3 s). Your own is always `here`. |
 
 **Messages**
@@ -85,15 +90,15 @@ expired), `full`, `rate`, `proto`, `player`, `version`.
 | | |
 |---|---|
 | `room.send(channel, data, options)` | Sends JSON, or binary data (an `ArrayBuffer` or a typed array, which arrives as a `Uint8Array`: a view into the message as it came, so read it from its `byteOffset`). False if it could not be sent. A channel is a short name of letters, digits and `_ . : -`. |
-| `options.to` | `'others'` (the default), `'all'` (the sender too), `'host'`, a member id, or a list of them. |
+| `options.to` | `'others'` (the default), `'all'` (the sender too), `'host'`, a member id, or a list of them ([arena](../examples/arena/arena.js): a bot tells the players it caught). |
 | `options.retain` | `'room'`: the server keeps the last value of the channel for the room, and gives it to whoever comes later. `'player'`: one value per player, kept under the player's id. `'tail'`: the last 50 messages, while the room is open. Saved values go to everybody, the sender included; `null` clears one. |
 | `options.first` | With `retain: 'room'` or `'player'`: save only if there is no value yet. |
 | `options.volatile` | May be dropped for a member whose connection is behind: positions and the like. |
-| `room.sendEach(channel, parts, options)` | Sends each member binary data of its own, in one message: `parts` is a list of `[member or id, bytes]`. Each member gets its part as an ordinary binary message from this player. It counts once against this player's rate. `options.volatile` as above. |
+| `room.sendEach(channel, parts, options)` ([arena](../examples/arena/arena.js)) | Sends each member binary data of its own, in one message: `parts` is a list of `[member or id, bytes]`. Each member gets its part as an ordinary binary message from this player. It counts once against this player's rate. `options.volatile` as above. |
 | `room.on(channel, (data, from, meta) => …)` | Listens to a channel. `from` is the sender (`null` for a room value saved before), `meta` is `{ ts, retained }`: the server's time, and whether it set a saved value. Returns a function that stops listening. |
 | `room.retained(channel, of)` | The room's saved value on a channel, or with `{ player: pid }` that player's; `undefined` when there is none. |
-| `room.offer(channel, data)` | Saves `data` as the room's value unless there is one, and resolves to the value the room then has. Two players who offer at the same moment get the same answer. |
-| `room.now()` | The server's clock, epoch ms: the same for everybody, give or take the network. |
+| `room.offer(channel, data)` | Saves `data` as the room's value unless there is one, and resolves to the value the room then has. Two players who offer at the same moment get the same answer ([world](../examples/world/world.js): its seed; [rally](../examples/rally/rally.js): the sides). |
+| `room.now()` | The server's clock, epoch ms: the same for everybody, give or take the network ([rally](../examples/rally/rally.js): a ball's flight). |
 
 **The room's own events** (`room.on(event, …)`)
 
@@ -106,7 +111,7 @@ expired), `full`, `rate`, `proto`, `player`, `version`.
 | `'latency'` | `()`: the members' `rtt` were updated. |
 | `'status'` | `(status)` |
 | `'error'` | `({ code, message })`: the server refused something, and the room stays open. `too-big` (a value or an op over its cap), `rate`, `forbidden`, `seq`. |
-| `'close'` | `(reason)`, as `p3p2.on('leave')`. |
+| `'close'` | `(reason)`, as `p3p2.on('leave')` ([rally](../examples/rally/rally.js) says why). |
 
 **Leaving and moderation**
 
@@ -158,7 +163,7 @@ that was saved before this page got it).
 ## `Smooth`
 
 Things that report where they are a few times a second, drawn at sixty: each is drawn a little in the past, between
-two reports.
+two reports. [`examples/arena/`](../examples/arena/arena.js) draws the others' figures with it.
 
 | | |
 |---|---|
@@ -168,6 +173,8 @@ two reports.
 | `smooth.has(key)`, `smooth.delete(key)`, `smooth.clear()` | |
 
 ## `pack` and `unpack`
+
+[`examples/world/`](../examples/world/world.js) packs its snapshots, and keeps the newest walls that fit.
 
 | | |
 |---|---|

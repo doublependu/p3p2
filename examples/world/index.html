@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>p3p2 world example: the yard</title>
+<style>
+  :root { color-scheme: light dark; font: 16px/1.5 system-ui, sans-serif; }
+  body { max-width: 42rem; margin: 0 auto; padding: 4rem 1rem 2rem; }
+  h1 { font-size: 1.4rem; }
+  canvas { display: block; width: 100%; image-rendering: pixelated; border-radius: .5rem; touch-action: none; }
+  .soft { opacity: .7; }
+</style>
+</head>
+<body>
+<h1>A shared world: the yard</h1>
+<p id="state">Starting…</p>
+<p id="note" aria-live="polite"></p>
+<canvas id="view" width="640" height="384" aria-label="The yard around you. Arrow keys or WASD walk, Enter builds a wall in front of you or takes it down; a tap steps toward it."></canvas>
+<p id="count" class="soft"></p>
+<p id="who" class="soft"></p>
+<p class="soft">This page stands in for a game whose world outlives everybody in it. The world is raised from a
+seed that the first player to host offers the room. Every stone taken and every wall built is an op in the room's
+log, so the first to reach a stone has it on every screen, and the host packs the world into snapshots that fit the
+server. Where you stood is a value of your own that the room keeps. The dark tile is a door to the cellar, another
+page of the same game in the same room. T opens the chat, since Enter builds.</p>
+<script type="module">
+  import { play } from './world.js'
+
+  play('yard')
+</script>
+</body>
+</html>
