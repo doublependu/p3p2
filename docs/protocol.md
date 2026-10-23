@@ -73,7 +73,7 @@ It is what the load generator in `bench/` reads.
 
 ```jsonc
 {"now": 1760000000000, "uptime": 3600.5,          // server clock, epoch ms; seconds since the start
- "version": "0.1.1", "node": "v24.18.0",
+ "version": "0.1.2", "node": "v24.18.0",
  "cpu": {"user": 41250, "system": 9800},          // CPU time used so far, ms
  "memory": {"rss": 99123200, "heapUsed": 15728640, "heapTotal": 20971520, "external": 2097152},  // bytes
  "loop": {"p50": 0.1, "p99": 1.2, "max": 8.4},    // how late the event loop ran, ms

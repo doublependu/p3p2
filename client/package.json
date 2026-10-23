@@ -1,6 +1,6 @@
 {
   "name": "@p3p2/client",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Multiplayer for static web games: rooms, invite links, presence, chat and saved state, through a small p3p2 server of your own",
   "keywords": [
     "multiplayer",
