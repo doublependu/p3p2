@@ -19,6 +19,13 @@ test('config: a rate brings its burst along', () => {
   assert.deepEqual([limits.apiRate, limits.apiBurst], [10, 80])
 })
 
+test('config: the byte burst takes at least one frame as large as the server takes', () => {
+  const MB = 1024 * 1024
+  assert.equal(loadConfig(BASE).limits.bytesBurst, 512 * 1024)
+  assert.equal(loadConfig({ ...BASE, P3P2_MAX_FRAME_BYTES: String(MB) }).limits.bytesBurst, MB)
+  assert.equal(loadConfig({ ...BASE, P3P2_MAX_FRAME_BYTES: String(MB), P3P2_BYTES_RATE: String(MB) }).limits.bytesBurst, 2 * MB)
+})
+
 test('config: the log cap, the host grace period, and how long a member may go unheard are settings', () => {
   const { limits } = loadConfig({ ...BASE, P3P2_MAX_LOG_BYTES: '4194304', P3P2_HOST_GRACE_SECONDS: '0', P3P2_QUIET_SECONDS: '10' })
   assert.deepEqual([limits.maxLogBytes, limits.hostGraceMs, limits.quietMs], [4194304, 0, 10_000])

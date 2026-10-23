@@ -179,8 +179,8 @@ Environment variables, all optional:
 | `P3P2_LOG_LEVEL` | `info` | `debug`, `info`, `warn`, `error`, `silent` |
 | `P3P2_MAX_ROOMS` | `50` | |
 | `P3P2_MAX_MEMBERS` | `16` | Default players per room (the owner can set up to 64 per room) |
-| `P3P2_MAX_FRAME_BYTES` | `65536` | Largest message |
-| `P3P2_MSG_RATE`, `P3P2_BYTES_RATE` | `90`, `262144` | Per player, per second |
+| `P3P2_MAX_FRAME_BYTES` | `65536` | Largest message. Before 0.1.2, keep it at most twice `P3P2_BYTES_RATE`: a server from before refuses a larger message as over the rate, every time. |
+| `P3P2_MSG_RATE`, `P3P2_BYTES_RATE` | `90`, `262144` | Per player, per second, after a burst of 4/3 times the messages, and twice the bytes or one largest message, whichever is more |
 | `P3P2_MAX_RETAINED_BYTES` | `262144` | Saved values, per room |
 | `P3P2_MAX_LOG_BYTES` | `1048576` | The log (snapshot and ops), per room |
 | `P3P2_PRESENCE_HZ` | `20` | How often changed presence is passed on, per second |

@@ -194,8 +194,9 @@ export interface Log {
   readonly seq: number
   /**
    * Sends an op. It takes effect when it comes back through `apply`. While the connection is coming back the op
-   * waits, and is sent when it is, in order. False if it never will be: the room is closed, the op is too big, or
-   * 256 are waiting already.
+   * waits, and is sent when it is, in order: at most 60 at once, then 45 a second. False if it never will be: the
+   * room is closed, the op is too big, or 256 are waiting already. An op on its way to the server when the
+   * connection drops may be lost, and nothing says so; one the server took always comes back through `apply`.
    */
   submit(op: unknown): boolean
   /**

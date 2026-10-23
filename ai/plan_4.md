@@ -20,6 +20,9 @@ without answers means the recommendations.
 - 2026-10-23: keep plan 4 small. Fix bug 2, test bug 3 before doing anything about it, and set bug 1 aside with
   a sentence in `docs/api.md`. The reason: none of the three has shown up in real games, and bug 1's fix is most
   of the work and most of the risk.
+- 2026-10-23: decisions 1 to 3 as recommended: 0.1.2; bug 2 raises the burst; if bug 3's test fails, the client
+  paces the ops that waited.
+- 2026-10-23: bug 3 is real. Its test, against today's code, saw 118 of the 256 ops arrive.
 
 ## The three bugs
 

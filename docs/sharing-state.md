@@ -87,8 +87,9 @@ ignores one that breaks them (a move out of turn, a second move for the same tur
 without a host to referee, and the room keeps it, so a game can be played over days.
 [examples/turns.html](../examples/turns.html) is that in 100 lines.
 
-- An op made while the connection is coming back waits in the client, and goes when it is back, in order. A game
-  needs no list of its own for them.
+- An op made while the connection is coming back waits in the client, and goes when it is back, in order, at a pace
+  the server takes. A game needs no list of its own for them. An op already on its way when the connection drops
+  may be lost, though: one the server took always comes back through `apply`.
 - An op comes back in about a round trip. Show the change at once on the page that made it where you can, and
   skip that op when it returns (`entry.from` is yourself, and `entry.replayed` is false).
 - A room's log has a size cap, 1 MB by default, which `room.limits.maxLogBytes` says. A snapshot over it is refused

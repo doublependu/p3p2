@@ -144,7 +144,7 @@ them, saves them, and gives them to everybody in the same order, the sender incl
 | `reader.load(state)` | The state to start from: the last snapshot, or `undefined`. May return a promise; no op is handed over until it settles. Called again if the log has to be read from the start after a long gap. |
 | `reader.apply(op, entry)` | Every op after that state, in order. `entry` is a `LogEntry`. |
 | `reader.save()` | The state as it is now, as JSON, for a snapshot. Called on the host when the server asks for one. May return a promise. |
-| `log.submit(op)` | Sends an op. It takes effect when it comes back through `apply`. While the connection is coming back the op waits, and goes when it is, in order. False if it never will: the room is closed, the op is too big, or 256 are waiting. |
+| `log.submit(op)` | Sends an op. It takes effect when it comes back through `apply`. While the connection is coming back the op waits, and goes when it is, in order: at most 60 at once, then 45 a second, which a server with the default settings takes, and ops submitted meanwhile go after them. False if it never will: the room is closed, the op is too big, or 256 are waiting. An op on its way to the server when the connection drops may be lost, and nothing says so; one the server took always comes back through `apply`. |
 | `log.snapshot(state)` | For the host: saves `state` (or what `save()` returns) in place of the ops so far. |
 | `log.seq` | The number of the last op handed to `apply`. |
 

@@ -449,6 +449,38 @@ test('an op on its way to the server when the connection drops is not lost', asy
   }
 })
 
+test('every op submitted while the connection is down arrives', { tag: '@this-client' }, async ({ browser, server }) => {
+  const proxy = await startLagProxy({ listen: 0, host: HOST, to: { host: '127.0.0.1', port: server.port }, latency: 50, jitter: 0 })
+  try {
+    const owner = await createRoom(browser, server, 'Many waiting', WORLD)
+    const ada = await visit(browser)
+    const invite = await open(ada, owner.roomUrl.replace(server.url, serverAt(server.url, proxy.port)), 'Ada')
+    const grace = await guest(browser, invite, 'Grace')
+    // The moment Grace's connection is lost, she builds 256 walls, an op each: more than the server takes at once.
+    // In the same turn of the page's code, so every one of them waits for the connection.
+    await world(grace, (w) => {
+      type Room = { on(event: string, handler: (status: string) => void): () => void }
+      const page = window as unknown as { p3p2: { room: Room }; built?: Promise<number> }
+      page.built = new Promise((resolve) => {
+        const off = page.p3p2.room.on('status', (status) => {
+          if (status !== 'reconnecting') return
+          off()
+          let sent = 0
+          for (const wall of w.ground().slice(0, 256)) sent += w.build([wall])
+          resolve(sent)
+        })
+      })
+    })
+    expect(proxy.drop()).toBeGreaterThanOrEqual(2)
+    expect(await grace.evaluate(() => (window as unknown as { built: Promise<number> }).built)).toBe(256)
+    await expect.poll(() => world(ada, (w) => w.wallCount), { timeout: 20_000 }).toBe(256)
+    await agree([ada, grace])
+    await close([ada, grace], owner)
+  } finally {
+    await proxy.close()
+  }
+})
+
 test('through the door: the cellar is the same room, as the same member, without a question; its thing is moved by whoever has been in the room longest, and the next carries on', async ({ browser, server }) => {
   const { owner, pages } = await room(browser, server, 'Two pages', ['Ada', 'Grace', 'Edsger'])
   const [ada, grace, edsger] = pages as [Page, Page, Page]
@@ -608,8 +640,7 @@ for (const frames of [64, 1024]) {
 test.describe('on a server with 1 MB messages and its byte rate as it comes', () => {
   test.use({ settings: { P3P2_MAX_FRAME_BYTES: String(1024 * 1024) } })
 
-  test('an op as large as a message may be arrives', async ({ browser, server }) => {
-    test.fail(true, 'P3P2_MAX_FRAME_BYTES may be set above twice P3P2_BYTES_RATE, and a frame larger than that is then always dropped as over the rate')
+  test('an op as large as a message may be arrives', { tag: '@this-server' }, async ({ browser, server }) => {
     const { owner, pages } = await room(browser, server, 'Large ops', ['Ada', 'Grace'])
     const [ada, grace] = pages as [Page, Page]
     // One op of 50,000 walls: about 600 KB, under the 1 MB the server takes in one message.

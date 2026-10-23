@@ -42,6 +42,12 @@ const CHAT_KEPT = 100
 const PING_MS = 10_000
 /** At most this many ops wait for a connection that is coming back. */
 const OPS_WAITING = 256
+/**
+ * Once it is back, they go this many at once, then this many a second: half of what a server with the default
+ * settings takes from a member at once (120 frames) and each second (90), which leaves room for the rest.
+ */
+const OPS_AT_ONCE = 60
+const OPS_PER_SECOND = 45
 
 /** Presence is sent at most this often. The server passes it on in batches at about this rate anyway. */
 const PRESENCE_MS = 50
@@ -118,9 +124,10 @@ export class RoomClient implements Room {
   /** When the server got each of those values, on this page's `performance.now()` clock. */
   private readonly presenceAt = new Map<number, number>()
   private readonly presenceHandlers = new Set<PresenceHandler>()
-  /** This member's own presence (undefined until first set), and the JSON of what the server has. */
-  /** Ops the game submitted while the connection was coming back, as frames, in order. */
+  /** Ops the game submitted while the connection was coming back, as frames, in order, and the timer for the next few. */
   private readonly opsWaiting: string[] = []
+  private opsTimer: ReturnType<typeof setTimeout> | undefined
+  /** This member's own presence (undefined until first set), and the JSON of what the server has. */
   private mine: unknown
   /** When the game set it, on the server's clock. */
   private mineAt = 0
@@ -391,9 +398,18 @@ export class RoomClient implements Room {
     return true
   }
 
-  /** The ops that waited for the connection. One that cannot go now waits again, with those after it. */
-  private sendWaiting(): void {
-    while (this.opsWaiting.length && this.raw(this.opsWaiting[0]!)) this.opsWaiting.shift()
+  /**
+   * The ops that waited for the connection, a few at a time, so that the server takes them all. One that cannot go
+   * now waits again, with those after it.
+   */
+  private sendWaiting(count = OPS_AT_ONCE): void {
+    clearTimeout(this.opsTimer)
+    let sent = 0
+    while (sent < count && this.opsWaiting.length && this.raw(this.opsWaiting[0]!)) {
+      this.opsWaiting.shift()
+      sent++
+    }
+    if (sent === count && this.opsWaiting.length) this.opsTimer = setTimeout(() => this.sendWaiting(OPS_PER_SECOND), 1000)
   }
 
   // ---- the log ----
@@ -523,6 +539,7 @@ export class RoomClient implements Room {
 
   private dropped(): void {
     this.ws = null
+    clearTimeout(this.opsTimer)
     clearInterval(this.pinger)
     clearInterval(this.herer)
     if (this.status === 'closed') return
@@ -551,6 +568,7 @@ export class RoomClient implements Room {
     if (this.status === 'closed') return
     this.status = 'closed'
     this.opsWaiting.length = 0
+    clearTimeout(this.opsTimer)
     clearTimeout(this.retry)
     clearTimeout(this.presenceTimer)
     clearTimeout(this.awayTimer)

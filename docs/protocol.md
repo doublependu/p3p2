@@ -459,7 +459,7 @@ Defaults; all can be changed with `P3P2_*` environment variables.
 | Members per room | 16 (the owner sets it per room, up to 64) |
 | Frame size | 64 KB |
 | Frames per member | 90 per second, bursts of 120 |
-| Bytes per member | 256 KB per second, bursts of 512 KB |
+| Bytes per member | 256 KB per second, bursts of 512 KB, or of one largest frame if that is more |
 | Saved values per room (room and player values together) | 256 KB |
 | Log per room (snapshot and ops together) | 1 MB |
 | Message tails per room | 64 KB, 50 messages per channel |

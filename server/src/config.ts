@@ -78,6 +78,7 @@ export function loadConfig(env: Env = process.env): Config {
   }
   const msgRate = number(env, 'MSG_RATE', d.msgRate, 1, 10_000)
   const bytesRate = number(env, 'BYTES_RATE', d.bytesRate, 1024, 1 << 30)
+  const maxFrameBytes = number(env, 'MAX_FRAME_BYTES', d.maxFrameBytes, 1024, 16 * 1024 * 1024)
   const connectRate = number(env, 'CONNECT_RATE', d.connectRate, 0.01, 100_000)
   const apiRate = number(env, 'API_RATE', d.apiRate, 0.01, 100_000)
   const maxMembersCap = d.maxMembersCap
@@ -94,11 +95,12 @@ export function loadConfig(env: Env = process.env): Config {
     statsToken,
     limits: {
       ...d,
-      maxFrameBytes: number(env, 'MAX_FRAME_BYTES', d.maxFrameBytes, 1024, 16 * 1024 * 1024),
+      maxFrameBytes,
       msgRate,
       msgBurst: Math.ceil((msgRate * d.msgBurst) / d.msgRate),
       bytesRate,
-      bytesBurst: bytesRate * 2,
+      // At least one frame as large as the server takes: a smaller burst would refuse such a frame every time.
+      bytesBurst: Math.max(bytesRate * 2, maxFrameBytes),
       maxMembers: number(env, 'MAX_MEMBERS', d.maxMembers, 1, maxMembersCap),
       maxRooms: number(env, 'MAX_ROOMS', d.maxRooms, 1, 100_000),
       graceMs: number(env, 'GRACE_SECONDS', d.graceMs / 1000, 0, 3600) * 1000,
