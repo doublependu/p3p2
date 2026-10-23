@@ -1,8 +1,10 @@
 
 
 
+
 # Features
 
+0. Check the commit on "update logo" introduced from a different claude session and make sure that it hasn't changed any function of p3p2 apart from the logo design. 
 1. make the invite link available on the front page of a p3p2 server without login
     - so that player 1's friends can navigate to the p3p2 server of player 1 and go to these game rooms
     - perhaps protecting a room by hiding a few characters in the shared invite link
