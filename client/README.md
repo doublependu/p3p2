@@ -50,7 +50,7 @@ on by itself.
 | | gzip | |
 |---|---|---|
 | `@p3p2/client` | under 2 KB | On every visit. An ordinary visit asks no server anything. |
-| The room client and the 👥 panel | under 15 KB | Loaded when a room is opened |
+| The room client and the panel | under 15 KB | Loaded when a room is opened |
 | `@p3p2/client/smooth` | 1.4 KB | Drawing remote things smoothly, only if imported |
 | `@p3p2/client/pack` | 0.5 KB | Packing large values, only if imported |
 | `dist/p3p2.iife.js` | under 20 KB | All of it, in one file |

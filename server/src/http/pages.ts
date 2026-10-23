@@ -1,10 +1,11 @@
-// Server-rendered portal pages. `html` escapes every interpolated value.
+// Server-rendered portal pages. `html` escapes every interpolated value, except the mark, a constant.
 
-import { html } from 'hono/html'
+import { html, raw } from 'hono/html'
 import type { HtmlEscapedString } from 'hono/utils/html'
 import type { LiveInfo } from '../core/hub.ts'
 import type { InviteRecord, RoomRecord, VersionPolicy } from '../core/types.ts'
 import { VERSION } from '../version.ts'
+import { MARK } from './assets.ts'
 import { PASSWORD_MIN } from './password.ts'
 
 export type Page = HtmlEscapedString | Promise<HtmlEscapedString>
@@ -29,12 +30,13 @@ function layout(f: Frame, body: Page): Page {
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex">
 <title>${f.title} · p3p2</title>
+<link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="/assets/portal.css">
 <script src="/assets/portal.js" defer></script>
 </head>
 <body>
 <header>
-  <a class="brand" href="/">p3p2</a>
+  <a class="brand" href="/">${raw(MARK)}p3p2</a>
   <span class="where">${f.server.name}</span>
   ${f.owner ? html`<form method="post" action="/logout"><button class="link" type="submit">Log out</button></form>` : ''}
 </header>

@@ -9,7 +9,7 @@ import { toSvgSource } from 'lean-qr/extras/svg'
 import { newRoomKey, newToken, safeEqual, sha256 } from '../core/ids.ts'
 import { type InviteRecord, type RoomRecord, VERSION_POLICIES, type VersionPolicy } from '../core/types.ts'
 import { ensureInvite } from './api.ts'
-import { PORTAL_CSS, PORTAL_JS } from './assets.ts'
+import { FAVICON, PORTAL_CSS, PORTAL_JS } from './assets.ts'
 import { type App, clientIp, MAX_BODY_BYTES } from './context.ts'
 import {
   dashboardPage,
@@ -89,6 +89,7 @@ export function portalRoutes(app: App): Hono<Env> {
   portal.get('/assets/portal.js', (c) =>
     c.body(PORTAL_JS, 200, { 'Content-Type': 'text/javascript; charset=utf-8' }),
   )
+  portal.get('/assets/favicon.svg', (c) => c.body(FAVICON, 200, { 'Content-Type': 'image/svg+xml' }))
 
   portal.use('*', async (c, next) => {
     c.header(

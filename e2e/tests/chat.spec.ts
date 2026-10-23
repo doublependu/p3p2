@@ -448,7 +448,7 @@ test('a game with a button of its own: the panel shows none, and opens when the 
     const w = window as unknown as { P3P2: new (o: object) => { open(): Promise<void> }; p3p2: { open(): Promise<void> } }
     w.p3p2 = new w.P3P2({ game: { id: 'own-button', version: '1.0.0' }, ui: { button: false } })
   })
-  // The 👥 button, and not the one in the panel whose words happen to contain its name.
+  // The multiplayer button, and not the one in the panel whose words happen to contain its name.
   const button = page.getByRole('button', { name: 'Multiplayer', exact: true })
   await expect(button).toHaveCount(0)
 

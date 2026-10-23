@@ -2,6 +2,7 @@
 
 import { inviteFromUrl } from '@p3p2/protocol/links'
 import type { Controller } from './core.ts'
+import { logo } from './logo.ts'
 import type {
   CloseReason,
   Invite,
@@ -156,9 +157,9 @@ export class P3P2 {
     // The game has a button of its own, and calls open().
     if (!withButton) return
     const button = document.createElement('button')
-    button.textContent = '👥'
+    button.append(logo())
     button.title = 'Multiplayer'
-    // Without this, assistive technology would read out the emoji.
+    // The mark has no words: this is the button's name.
     button.setAttribute('aria-label', 'Multiplayer')
     button.style.cssText =
       'font:16px/1 system-ui;padding:8px 12px;border-radius:99px;border:1px solid #8888;background:#1f201ccc;color:#fff;cursor:pointer'

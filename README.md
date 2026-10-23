@@ -11,7 +11,7 @@ Multiplayer for static web games, through a small server of your own.
 
 ## In two minutes
 
-**A player** opens a game, presses 👥 (or a button of the game's own), pastes a room URL from the
+**A player** opens a game, presses the multiplayer button (or a button of the game's own), pastes a room URL from the
 server's portal, and sends the invite link it gives them. Whoever opens the link is asked *Join?*,
 and is in the same game. A reload, a dropped connection, or a phone switching networks comes back
 by itself.
@@ -78,7 +78,7 @@ npm run examples         # in a second terminal: builds world, arena and rally, 
 1. Open the setup link the server printed and choose the owner password.
 2. In the portal, create a room. As the game URL enter the address you will open the example at,
    for instance `http://192.168.1.118:5180/chat.html`. Copy the room URL.
-3. Open that example address, open the 👥 panel, paste the room URL, and press *Create a
+3. Open that example address, open the multiplayer panel, paste the room URL, and press *Create a
    multiplayer game room for my friends*.
 4. Open the invite link in another browser profile or a private window, or scan the QR code with
    a phone on the same Wi-Fi.

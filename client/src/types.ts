@@ -9,7 +9,7 @@ export interface UiOptions {
   chatKey?: string | false
   /**
    * `false` for a game that has a button of its own for this, and no corner to spare: the
-   * panel then shows no 👥 button, and opens when the game calls `p3p2.open()`.
+   * panel then shows no multiplayer button, and opens when the game calls `p3p2.open()`.
    */
   button?: boolean
 }

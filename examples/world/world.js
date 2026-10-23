@@ -453,7 +453,7 @@ export async function play(here) {
     if (!land) return
     const taken = state[here].taken.size
     const where = here === 'yard' ? 'in the yard' : 'in the cellar'
-    if (!room) $('state').textContent = `Playing alone, ${where} of a world of your own. Open 👥 to play it with friends.`
+    if (!room) $('state').textContent = `Playing alone, ${where} of a world of your own. Open the multiplayer panel to play it with friends.`
     else {
       const role = room.isHost ? 'the host' : `hosted by ${room.host?.name ?? 'nobody'}`
       $('state').textContent = `In "${room.name}" as ${room.self.name} (${role}), ${room.members.length} here, ${where}.`

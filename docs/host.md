@@ -17,7 +17,8 @@ and what happens when players' versions of the game differ.
 
 ## Inviting
 
-1. Open the game, and its multiplayer window: the 👥 button, or the game's own (FRIENDS, say).
+1. Open the game, and its multiplayer window: the button with three players on it, in a corner, or the game's
+   own (FRIENDS, say).
 2. Paste the room URL, type your name, and press **Create a multiplayer game room for my friends**.
 3. You get the **invite link**, with a QR code. Send the link (Copy, or Share on a phone), or let a friend
    next to you scan the code.

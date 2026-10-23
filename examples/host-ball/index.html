@@ -14,7 +14,7 @@
 </head>
 <body>
 <h1>Ball and bricks</h1>
-<p id="state">Playing alone. Open the 👥 panel in the corner and paste a room URL to host.</p>
+<p id="state">Playing alone. Open the multiplayer panel in the corner and paste a room URL to host.</p>
 <canvas id="field" width="800" height="600" aria-label="A ball bouncing under a wall of bricks. Click to send the ball that way."></canvas>
 <p id="score" class="soft"></p>
 <p id="who" class="soft"></p>
@@ -143,7 +143,7 @@ ball. Let everyone leave, and the wall is as you left it when somebody comes bac
       const role = room.isHost ? 'the host' : `hosted by ${room.host?.name ?? 'nobody'}`
       $('state').textContent = room.server
         ? `In "${room.name}" as ${room.self.name} (${role}), ${room.members.length} here.`
-        : 'Playing alone. Open the 👥 panel in the corner and paste a room URL to host.'
+        : 'Playing alone. Open the multiplayer panel in the corner and paste a room URL to host.'
       $('score').textContent = `Wall ${world.wall}: ${world.gone.length} of ${BRICKS} bricks down, ${world.hits} since the beginning.`
       // Who can be counted on right now: a page in the background, or one the server has not
       // heard from (its connection is down, or it froze), keeps its place but is not here.

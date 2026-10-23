@@ -360,7 +360,7 @@ document.addEventListener('touchend', (e) => {
 
 function describe() {
   if (!room) {
-    $('state').textContent = 'Playing alone against the bots. Open 👥 to play with friends.'
+    $('state').textContent = 'Playing alone against the bots. Open the multiplayer panel to play with friends.'
     $('who').textContent = ''
     return
   }

@@ -18,7 +18,8 @@ export const PORTAL_CSS: string = `
 body { margin: 0; background: var(--bg); color: var(--ink); }
 a { color: var(--accent); }
 header { display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-bottom: 1px solid var(--line); }
-header .brand { font-weight: 700; color: var(--ink); text-decoration: none; }
+header .brand { display: inline-flex; align-items: center; gap: 8px; font-weight: 700; color: var(--ink); text-decoration: none; }
+header .brand svg { width: 20px; height: 20px; }
 header .where { color: var(--soft); flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 main { max-width: 760px; margin: 0 auto; padding: 16px 16px 64px; }
 footer { max-width: 760px; margin: -48px auto 0; padding: 0 16px 24px; color: var(--soft); font-size: .875rem; }
@@ -87,4 +88,22 @@ document.addEventListener('submit', (e) => {
 document.addEventListener('focusin', (e) => {
   if (e.target.matches('input[readonly]')) e.target.select();
 });
+`
+
+// The p3p2 mark: three players, me in front, player 2 and player 3 behind. The same shapes as the
+// client's button (client/src/logo.ts).
+const MARK_PATHS = '<path opacity=".55" d="M.6 7.2a1.9 1.9 0 0 0 3.8 0a1.9 1.9 0 0 0-3.8 0M11.6 7.2a1.9 1.9 0 0 0 3.8 0a1.9 1.9 0 0 0-3.8 0M-.8 13.2A3.3 3.3 0 0 1 5.12 11.2A5.6 5.6 0 0 0 3.15 13.2zM16.8 13.2A3.3 3.3 0 0 0 10.88 11.2A5.6 5.6 0 0 1 12.85 13.2z"/><path d="M5.4 7.7a2.6 2.6 0 0 0 5.2 0a2.6 2.6 0 0 0-5.2 0M3.4 16a4.6 4.6 0 0 1 9.2 0z"/>'
+
+/** The mark in the text's colour, for the header. */
+export const MARK: string = `<svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">${MARK_PATHS}</svg>`
+
+/** The favicon: the mark on a tile, in p3p2's teal. */
+export const FAVICON: string = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16">
+<style>
+.bg { fill: #0d7d6e; } .fg { fill: #fff; }
+@media (prefers-color-scheme: dark) { .bg { fill: #2cc7b1; } .fg { fill: #04201c; } }
+</style>
+<rect class="bg" width="16" height="16" rx="3.6"/>
+<svg class="fg" x="2" y="2" width="12" height="12" viewBox="0 0 16 16">${MARK_PATHS}</svg>
+</svg>
 `

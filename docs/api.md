@@ -29,7 +29,7 @@ const p3p2 = new P3P2({ game: { id: 'my-game', version: '1.4.0' } })
 | `game` | `{ id, version }`. `id`: 1 to 64 letters, digits, `_ . -`. `version`: 1 to 32 characters without spaces. The server keeps players on different versions apart, by the room's rule. |
 | `ui` | The built-in panel (`UiOptions`), or `false` for a game that brings its own menu and uses the API alone ([rally](../examples/rally/rally.js)). |
 | `ui.corner` | Where the panel sits: `'top-right'` (the default), `'top-left'`, `'bottom-right'`, `'bottom-left'`. |
-| `ui.button` | `false`: no 👥 button. The game opens the panel with `p3p2.open()` from a button of its own ([duel](../examples/duel/duel.js)). |
+| `ui.button` | `false`: no multiplayer button. The game opens the panel with `p3p2.open()` from a button of its own ([duel](../examples/duel/duel.js)). |
 | `ui.chatKey` | The key that opens chat while a room is open; `'Enter'` by default, `false` for none ([world](../examples/world/world.js): `'t'`). |
 | `urlParam` | The query parameter that carries the invite: `room` by default. |
 

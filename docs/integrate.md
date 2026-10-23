@@ -10,7 +10,7 @@ runs on your own machine: [Try it on one machine](../README.md#try-it-on-one-mac
 
 ## What the player gets
 
-A 👥 button in a corner of your game. Behind it:
+A multiplayer button in a corner of your game, with the p3p2 mark on it: three players. Behind it:
 
 1. a field to paste a **room URL** into, which the owner of a p3p2 server gives out;
 2. a button that turns that into an **invite link**, with a QR code;
@@ -292,7 +292,7 @@ creature is moved by whoever has been in the room longest of those down there.
 
 1. Start the server and create a room in its portal. As the game URL give the address you will
    open the game at, with this machine's LAN address and never `localhost`.
-2. Open the game there, open 👥, paste the room URL, and create the invite.
+2. Open the game there, open the multiplayer panel, paste the room URL, and create the invite.
 3. Open the invite in **another browser**, not another tab: a tab of the same browser is the
    same player. Then scan the QR code with a phone on the same Wi-Fi.
 4. `npm run lag` puts 150 ms and a connection that drops in front of the server:
@@ -307,12 +307,12 @@ creature is moved by whoever has been in the room longest of those down there.
   [`examples/world/`](../examples/world/world.js) shuffles with a fixed number of draws, and its test compares
   the world tile by tile in Chrome, Firefox and WebKit.
 - **The page builds its own world and then learns of the room's.** Wait for `p3p2.start()` first.
-- **There is no corner to spare for 👥.** `ui: { button: false }` leaves it out, and
+- **There is no corner to spare for the multiplayer button.** `ui: { button: false }` leaves it out, and
   `p3p2.open()` opens the panel from a button of your own, as [`examples/duel/`](../examples/duel/duel.js) does.
   A game with a whole menu of its own takes `ui: false` and the API alone:
   [`examples/rally/`](../examples/rally/rally.js).
 - **Your own touch handling eats the panel's taps.** A listener that cancels touches for the whole
-  page, in the capturing phase, also cancels the ones on 👥. Leave touches on `p3p2-panel` alone.
+  page, in the capturing phase, also cancels the ones on the multiplayer button. Leave touches on `p3p2-panel` alone.
 - **A key your game uses types into the chat, or the other way round.** Keys typed in the panel
   do not reach the game. `P3P2.isTyping` says when, for a game that listens in the capturing
   phase. Enter opens the chat; `ui: { chatKey: false }` turns that off, and `ui: { chatKey: 't' }`
@@ -333,6 +333,6 @@ creature is moved by whoever has been in the room longest of those down there.
 | A reload | Of a guest, and of whoever opened the room |
 | Everybody leaves and comes back | What the room should remember is there |
 | Two browser engines in one room | The same world |
-| A phone | Playable, and 👥 is not under a control of yours |
+| A phone | Playable, and the multiplayer button is not under a control of yours |
 
 [testing.md](testing.md) says how each of these is tested on one machine.

@@ -4,6 +4,7 @@
 import { NAME_MAX } from '@p3p2/protocol'
 import type { Controller } from '../core.ts'
 import type { Bridge } from '../index.ts'
+import { logo } from '../logo.ts'
 import { CHAT_MAX, type RoomClient, SYNC } from '../room.ts'
 import type { ChatMessage, CloseReason, Invite, Room } from '../types.ts'
 import { STYLE } from './style.ts'
@@ -67,7 +68,7 @@ export class PanelElement extends HTMLElement {
     this.root = this.attachShadow({ mode: 'open' })
     this.count = h('span')
     this.dot = h('span', { class: 'dot', hidden: true })
-    this.pill = h('button', { class: 'pill', type: 'button', 'aria-label': 'Multiplayer', title: 'Multiplayer' }, '👥', this.count, this.dot)
+    this.pill = h('button', { class: 'pill', type: 'button', 'aria-label': 'Multiplayer', title: 'Multiplayer' }, logo(), this.count, this.dot)
     this.title_ = h('b', {}, 'Multiplayer')
     const close = h('button', { type: 'button', 'aria-label': 'Close', title: 'Close' }, '×')
     this.body = h('div', { class: 'body' })

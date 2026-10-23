@@ -99,7 +99,7 @@ the first start.
    `game.example.com`. The room only works from that site.
 2. Copy the room URL, `https://p3p2.example.com/room/…`. It is the key to the room: whoever has
    it can host there.
-3. Open the game, open its 👥 panel, paste the room URL, and press *Create a multiplayer game
+3. Open the game, open its multiplayer panel, paste the room URL, and press *Create a multiplayer game
    room for my friends*. Send them the link it shows, or let them scan the QR code.
 
 ## Settings

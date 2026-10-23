@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import { formatInvite, inviteFromUrl, inviteUrl, parseInvite, parseRoomUrl, roomUrl } from '../src/links.ts'
+import { inviteFromUrl, parseInvite } from '../src/links.ts'
+import { formatInvite, inviteUrl, parseRoomUrl, roomUrl } from '../src/room-links.ts'
 
 const CODE = '789xyz0abc'
 const KEY = '0123456789abcdefghjkmnpqrs'

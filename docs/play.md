@@ -10,8 +10,8 @@ A friend wants to play a game with you, and sent you a link to it. This is what 
 3. You are in. What being in the same room means depends on the game: the same field to walk in, the same road
    to drive, the same match.
 
-The window is behind the 👥 button, or behind a button of the game's own (FRIENDS, say): open it again to see
-who is there, and to chat.
+The window is behind the button with three players on it, in a corner of the game, or behind a button of the
+game's own (FRIENDS, say): open it again to see who is there, and to chat.
 
 On a phone it is the same. A computer and a phone can play together, and so can different browsers.
 
