@@ -16,11 +16,7 @@
             - and allow users to click on it to open the game in the new tab
 2. By default, smooth should only interpolate but not extrapolate
     - confirm that this is by setting coast to 0 by default
-3. p3p2 needs a proper logo that applies everywhere
-    - multiplayer button
-    - p3p2.me
-    - favicon
-4. when there's unread chat message, there should be a red dot on the p3p2 logo, showing the number of unread messages
+3. when there's unread chat message, there should be a red dot on the p3p2 logo, showing the number of unread messages
 
 
 
