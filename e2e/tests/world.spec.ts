@@ -640,7 +640,7 @@ for (const frames of [64, 1024]) {
 test.describe('on a server with 1 MB messages and its byte rate as it comes', () => {
   test.use({ settings: { P3P2_MAX_FRAME_BYTES: String(1024 * 1024) } })
 
-  test('an op as large as a message may be arrives', { tag: '@this-server' }, async ({ browser, server }) => {
+  test('an op as large as a message may be arrives', async ({ browser, server }) => {
     const { owner, pages } = await room(browser, server, 'Large ops', ['Ada', 'Grace'])
     const [ada, grace] = pages as [Page, Page]
     // One op of 50,000 walls: about 600 KB, under the 1 MB the server takes in one message.
