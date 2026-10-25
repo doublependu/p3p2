@@ -105,7 +105,6 @@ export class RoomClient implements Room {
   self: Member
   members: Member[] = []
   host: Member | null = null
-  isMod: boolean = false
   readonly server: string
   readonly inviteUrl: string | null
   limits = { maxFrameBytes: Number.POSITIVE_INFINITY, maxLogBytes: Number.POSITIVE_INFINITY }
@@ -314,14 +313,6 @@ export class RoomClient implements Room {
   leave(): void {
     this.write({ t: 'leave' })
     this.finish('left')
-  }
-
-  kick(memberId: number): void {
-    this.write({ t: 'kick', id: memberId })
-  }
-
-  end(): void {
-    this.write({ t: 'end' })
   }
 
   // ---- connection ----
@@ -728,7 +719,6 @@ export class RoomClient implements Room {
       m.state = state
       if (before.get(m.id) === m) restated.push(m)
     }
-    this.isMod = f.self.mod === true
     this.name = cleanText(f.room.name, 60) || 'Room'
     this.host = this.byId.get(f.host) ?? null
     this.sort()

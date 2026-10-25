@@ -1,6 +1,6 @@
 // The owner's portal: setup, login, rooms. Only the owner ever logs in here.
 
-import { cleanText, inviteUrl, roomUrl } from '@p3p2/protocol'
+import { cleanText, inviteUrl, URL_PARAM_RE } from '@p3p2/protocol'
 import { type Context, Hono } from 'hono'
 import { bodyLimit } from 'hono/body-limit'
 import { deleteCookie, getCookie, setCookie } from 'hono/cookie'
@@ -308,7 +308,6 @@ export function portalRoutes(app: App): Hono<Env> {
     return c.html(
       roomPage(server, {
         room,
-        roomUrl: roomUrl({ server: config.publicUrl, key: room.key }),
         invite,
         inviteLink: invite ? inviteLinkFor(room, invite) : '',
         expiry: invite ? expiryText(invite, now) : '',
@@ -320,9 +319,13 @@ export function portalRoutes(app: App): Hono<Env> {
     )
   }
 
-  /** The link friends open: on the game's own site, naming this server and the invite code. */
+  /**
+   * The link everybody opens, the owner too: on the game's own site, naming this server and the invite code. A 0.1
+   * game that hosted with the room URL said which page it is on, and its parameter; otherwise the room's settings
+   * say.
+   */
   function inviteLinkFor(room: RoomRecord, invite: InviteRecord): string {
-    return inviteUrl(invite.page ?? room.gameUrl, { server: config.publicUrl, code: invite.code }, invite.param ?? 'room')
+    return inviteUrl(invite.page ?? room.gameUrl, { server: config.publicUrl, code: invite.code }, invite.param ?? room.param ?? 'room')
   }
 
   portal.get('/room/:key', (c) => {
@@ -386,7 +389,12 @@ export function portalRoutes(app: App): Hono<Env> {
     const versionPolicy = VERSION_POLICIES.includes(versions) ? versions : room.versionPolicy
     const shown = field(form, 'front')
     const front = shown === 'off' ? null : (FRONT_HIDDEN.find((n) => String(n) === shown) ?? room.front)
-    store.updateRoom(room.id, { name: roomName(field(form, 'name'), room.name), origins, maxMembers, versionPolicy, front })
+    const asked = typeof form.param === 'string' ? form.param.trim() : null
+    if (asked && !URL_PARAM_RE.test(asked)) {
+      return showRoom(c, room, `"${asked}" can't be the invite parameter: a letter, then up to 31 letters, digits, "_" or "-".`, 400)
+    }
+    const param = asked === null ? room.param : asked === '' || asked === 'room' ? null : asked
+    store.updateRoom(room.id, { name: roomName(field(form, 'name'), room.name), origins, maxMembers, versionPolicy, front, param })
     app.origins.refresh()
     // Hiding more of the link, or taking the room off the front page, makes a new invite: what is hidden now was
     // public until now, and would be easier to guess than the setting says. Showing more keeps the invite, and the

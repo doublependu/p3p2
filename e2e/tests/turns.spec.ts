@@ -14,7 +14,7 @@ const cell = (page: Page, i: number) => page.getByRole('button', { name: `Cell $
 test('two players take turns, a third watches, and every page has the same board', async ({ browser, server }) => {
   const owner = await createRoom(browser, server, 'Noughts', TURNS)
   const ada = await player(browser, TURNS)
-  const invite = await host(ada.page, owner.roomUrl, 'Ada')
+  const invite = await host(ada.page, owner.invite, 'Ada')
   await ada.page.locator('p3p2-panel').getByRole('button', { name: 'Close' }).click()
   await expect(ada.page.locator('#state')).toContainText('playing X')
   const grace = await join(browser, invite, 'Grace')

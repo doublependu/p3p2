@@ -6,6 +6,7 @@ import {
   decodeBinary,
   encodeBinary,
   isChannel,
+  nameKey,
   parseBinaryHeader,
   parseBinaryOutHeader,
   parseClientFrame,
@@ -148,9 +149,25 @@ test('names are cleaned', () => {
   assert.equal(cleanName('  Ada   Lovelace '), 'Ada Lovelace')
   assert.equal(cleanName('a\u0000b‮c​d\n'), 'abcd')
   assert.equal(cleanName('x'.repeat(40)), 'x'.repeat(24))
-  assert.equal(Array.from(cleanName('🌽'.repeat(40))).length, 24)
+  assert.equal(cleanName('é'.repeat(40)), 'é'.repeat(24))
   assert.equal(cleanName('‮​  '), '')
   assert.equal(cleanName(42), '')
+})
+
+test("names keep letters and digits of any language, spaces and . - _ ', and are compared without case or width", () => {
+  assert.equal(cleanName("Ada-Love_2 Jr. O'Neil"), "Ada-Love_2 Jr. O'Neil")
+  assert.equal(cleanName('José Ελένη 李小龍 नमस्ते'), 'José Ελένη 李小龍 नमस्ते')
+  assert.equal(cleanName('Ğül ٣'), 'Ğül ٣')
+  // Emoji and symbols go, and the spaces they leave close up.
+  assert.equal(cleanName('Ada 🎮 <b>&</b> ★ x'), 'Ada bb x')
+  assert.equal(cleanName('🎮🎮'), '')
+  // A name needs a letter or a digit.
+  assert.equal(cleanName('... --'), '')
+  // Characters that go do not count against the 24.
+  assert.equal(cleanName(`${'🌽'.repeat(30)}${'x'.repeat(30)}`), 'x'.repeat(24))
+  assert.equal(nameKey('ADA'), nameKey('Ada'))
+  assert.equal(nameKey('ａｄａ'), nameKey('Ada'))
+  assert.notEqual(nameKey('Аda'), nameKey('Ada'))
 })
 
 test('server frames: envelopes are checked, unknown frames dropped', () => {

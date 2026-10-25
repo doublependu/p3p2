@@ -68,7 +68,7 @@ test('the published image\'s data, opened by this checkout\'s server: worlds, a 
   // A world: stones taken, walls built, a snapshot, ops after it, and where each player stood.
   const kept = await createRoom(browser, server, 'Kept world', WORLD)
   const ada = await opened(adas, WORLD)
-  const worldInvite = await host(ada, kept.roomUrl, 'Ada')
+  const worldInvite = await host(ada, kept.invite, 'Ada')
   await ready(ada)
   const grace = await opened(graces, worldInvite, 'Grace')
   await ready(grace)
@@ -92,13 +92,8 @@ test('the published image\'s data, opened by this checkout\'s server: worlds, a 
 
   // A duel in progress: seats, two hidden boards, a probe and its answer.
   const duelRoom = await createRoom(browser, server, 'Kept duel', DUEL)
-  const edsger = await opened(edsgers, DUEL)
-  await edsger.getByRole('button', { name: 'Friends' }).click()
-  await edsger.getByLabel('Your name').fill('Edsger')
-  await edsger.getByLabel('Room URL').fill(duelRoom.roomUrl)
-  await expect(edsger.getByRole('status')).toContainText('✓')
-  await edsger.getByRole('button', { name: 'Create a multiplayer game room for my friends' }).click()
-  const duelInvite = await edsger.getByLabel('Invite link', { exact: true }).inputValue()
+  const duelInvite = duelRoom.invite
+  const edsger = await opened(edsgers, duelInvite, 'Edsger')
   const barbara = await opened(barbaras, duelInvite, 'Barbara')
   for (const page of [edsger, barbara]) await ready(page)
   await expect.poll(() => duel(edsger, (d) => d.table.seats.every(Boolean))).toBe(true)
@@ -126,9 +121,8 @@ test('the published image\'s data, opened by this checkout\'s server: worlds, a 
   expect(await pid(graceBack)).toBe(gracePid)
   expect(await print(graceBack)).toBe(before)
   expect(await world(graceBack, (w) => w.where)).toEqual(stood)
-  // The host pastes the room URL: the same room.
-  const adaBack = await opened(adas, WORLD)
-  await host(adaBack, kept.roomUrl, 'Ada')
+  // Ada comes back by the same invite: the same room.
+  const adaBack = await opened(adas, worldInvite, 'Ada')
   await ready(adaBack)
   await expect(adaBack.locator('#state')).toContainText('In "Kept world" as Ada')
   expect(await print(adaBack)).toBe(before)

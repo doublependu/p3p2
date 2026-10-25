@@ -39,6 +39,37 @@ test('names are cleaned; an empty name gets a default', () => {
   assert.equal(b.conn.of('welcome')[0]!.self.name, 'Player 2')
 })
 
+test('a name the room has is refused, whatever its case or width; the same player keeps its own; a name is free once its member has gone', () => {
+  const w = new World()
+  const room = w.room()
+  const a = w.join({ key: room.key }, { name: 'Ada' })
+  a.conn.clear()
+  for (const name of ['Ada', 'ADA', ' ada ', 'ａｄａ', 'Ada 🎮']) {
+    const p = w.join({ key: room.key }, { name })
+    assert.deepEqual([p.id, p.conn.of('error')[0]?.code, p.conn.closed], [0, 'name', true], name)
+  }
+  // Nobody heard of the tries.
+  assert.deepEqual(a.conn.frames, [])
+  // The same player, from another tab, is not refused its own name.
+  assert.equal(w.join({ key: room.key }, { pid: a.pid, name: 'Ada' }).id, a.id)
+  // Members in their grace period keep their names; then they are free.
+  const b = w.join({ key: room.key }, { name: 'Grace' })
+  w.drop(b)
+  assert.equal(w.join({ key: room.key }, { name: 'grace' }).conn.of('error')[0]?.code, 'name')
+  w.advance(w.limits.graceMs)
+  assert.ok(w.join({ key: room.key }, { name: 'grace' }).id)
+})
+
+test('an empty name is the first free "Player n"', () => {
+  const w = new World()
+  const room = w.room()
+  w.join({ key: room.key }, { name: 'Player 2' })
+  const b = w.join({ key: room.key }, { name: '🎮' })
+  assert.equal(b.conn.of('welcome')[0]!.self.name, 'Player 3')
+  const c = w.join({ key: room.key }, { name: '' })
+  assert.equal(c.conn.of('welcome')[0]!.self.name, 'Player 4')
+})
+
 test('refusals: unknown key, unknown invite, wrong origin, wrong protocol', () => {
   const w = new World()
   const room = w.room()
@@ -84,9 +115,9 @@ test('a player id is bound to its secret on first use', () => {
   assert.equal(a.id, 1)
   const thief = w.join({ key: room.key }, { pid: 'p'.repeat(20), secret: 'x'.repeat(20) })
   assert.equal(thief.conn.of('error')[0]?.code, 'player')
-  // The same player in a second tab is a second member.
+  // The same player in a second tab is the same member.
   const again = w.join({ key: room.key }, { pid: 'p'.repeat(20), secret: 's'.repeat(20) })
-  assert.equal(again.id, 2)
+  assert.equal(again.id, 1)
 })
 
 test('a full room refuses the next member, but a member in its grace period keeps its slot', () => {
@@ -859,16 +890,75 @@ test('resume replaces a connection that is still open', () => {
   assert.equal(w.hub.memberCount(room.id), 2)
 })
 
-test('resume with a wrong token, another player id, or after the grace period joins as a new member', () => {
+test('resume with another player id, or after the grace period, joins as a new member; with a wrong token, the player takes its place', () => {
   const w = new World()
   const room = w.room()
   const a = w.join({ key: room.key })
   const b = w.join({ key: room.key })
-  assert.equal(w.join({ key: room.key }, { pid: a.pid, resume: { member: a.id, token: 'wrong' } }).id, 3)
-  assert.equal(w.join({ key: room.key }, { resume: { member: a.id, token: a.token } }).id, 4)
+  assert.equal(w.join({ key: room.key }, { resume: { member: a.id, token: a.token } }).id, 3)
   w.drop(b)
   w.advance(w.limits.graceMs)
-  assert.equal(w.join({ key: room.key }, { pid: b.pid, resume: { member: b.id, token: b.token } }).id, 5)
+  assert.equal(w.join({ key: room.key }, { pid: b.pid, resume: { member: b.id, token: b.token } }).id, 4)
+  // The token is not what makes the player: its secret is.
+  assert.equal(w.join({ key: room.key }, { pid: a.pid, resume: { member: a.id, token: 'wrong' } }).id, a.id)
+})
+
+test('the same player from another tab takes its place: the older tab is told, and nobody else hears of it', () => {
+  const w = new World()
+  const room = w.room({ maxMembers: 2 })
+  const code = w.invite(room)
+  const a = w.join({ invite: code }, { name: 'Ada' })
+  const b = w.join({ invite: code }, { name: 'Grace' })
+  a.conn.clear()
+  b.conn.clear()
+  // Another tab: no token, the same player id and secret. The room is full, and the place is the player's own.
+  const tab = w.join({ invite: code }, { pid: b.pid, name: 'Grace' })
+  const welcome = tab.conn.of('welcome')[0]!
+  assert.deepEqual([welcome.self.id, welcome.self.name, welcome.self.order], [b.id, 'Grace', 2])
+  assert.deepEqual(b.conn.last(), { t: 'bye', reason: 'replaced' })
+  assert.equal(b.conn.closed, true)
+  assert.equal(a.conn.of('member+').length, 0)
+  assert.equal(a.conn.of('member-').length, 0)
+  assert.equal(w.hub.memberCount(room.id), 2)
+  // The older tab's socket closing afterwards changes nothing.
+  w.drop(b)
+  w.advance(w.limits.graceMs)
+  assert.equal(a.conn.of('member-').length, 0)
+  w.send(a, { t: 'msg', ch: 'x', data: 1 })
+  assert.equal(tab.conn.of('msg').length, 1)
+})
+
+test("another tab that takes the host's place hands the role on, as a page that reloads does; alone, it keeps it", () => {
+  const w = new World()
+  const room = w.room()
+  const a = w.join({ key: room.key }, { name: 'Ada' })
+  const b = w.join({ key: room.key }, { name: 'Grace' })
+  const tab = w.join({ key: room.key }, { pid: a.pid, name: 'Ada' })
+  // It has none of the older page's game: the next who is here carries on.
+  assert.deepEqual(b.conn.of('host'), [{ t: 'host', id: b.id }])
+  assert.equal(tab.conn.of('welcome')[0]!.host, b.id)
+
+  const w2 = new World()
+  const alone = w2.room()
+  const c = w2.join({ key: alone.key })
+  const again = w2.join({ key: alone.key }, { pid: c.pid })
+  assert.equal(again.conn.of('welcome')[0]!.host, c.id)
+})
+
+test("the same player is a member of each room it is in; the place it takes over follows the new connection's way in", () => {
+  const w = new World()
+  const one = w.room()
+  const two = w.room()
+  const a = w.join({ key: one.key })
+  const there = w.join({ key: two.key }, { pid: a.pid })
+  assert.equal(a.conn.closed, false)
+  assert.equal(there.conn.of('welcome')[0]!.self.id, 1)
+  // From the room key to an invite: no longer a mod.
+  assert.equal(a.conn.of('welcome')[0]!.self.mod, true)
+  const guest = w.join({ invite: w.invite(one) }, { pid: a.pid })
+  assert.deepEqual([guest.id, guest.conn.of('welcome')[0]!.self.mod], [a.id, false])
+  w.send(guest, { t: 'end' })
+  assert.equal(guest.conn.of('error')[0]?.code, 'forbidden')
 })
 
 test('kick and end are for key holders', () => {

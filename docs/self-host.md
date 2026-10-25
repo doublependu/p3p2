@@ -1,7 +1,8 @@
 # Hosting a server
 
 How to put a p3p2 server on a rented machine, with HTTPS, so that friends anywhere can
-join your rooms. It takes a VPS and a few commands.
+join your rooms. It takes a VPS and a few commands. [p3p2.me](https://p3p2.me/) explains how to get
+a p3p2 server; this page is how to run one yourself.
 
 A game on an `https://` site can only talk to a server that has HTTPS too. That is what this
 setup is for: [Caddy](https://caddyserver.com) sits in front of the server, gets a certificate
@@ -98,10 +99,10 @@ the first start.
 
 1. In the portal, create a room. As the game URL give the address of the game, for instance
    `game.example.com`. The room only works from that site.
-2. Copy the room URL, `https://p3p2.example.com/room/…`. It is the key to the room: whoever has
-   it can host there.
-3. Open the game, open its multiplayer panel, paste the room URL, and press *Create a multiplayer game
-   room for my friends*. Send them the link it shows, or let them scan the QR code.
+2. On the room's page, press **Open**: the game opens with the room's invite link, and asks *Join?*.
+   Send your friends the same link, or let them scan the QR code.
+3. Keep the room page's own address, `https://p3p2.example.com/room/…`, to yourself: it holds the
+   room's key, and a game made with p3p2 0.1 can host with it.
 
 ## Settings
 
@@ -166,7 +167,7 @@ gives out only so many certificates for a name in a week.
 ## Moving to another machine
 
 A backup, as above, on the old machine; on the new one, the backup brought back as above, and the name pointed
-at the new address. The room URLs and invite links stay as they were,
+at the new address. The rooms' pages and invite links stay as they were,
 because they carry the name, not the machine. Players who are in a room when the old machine stops come back by
 themselves once the name points at the new one and their browsers learn it.
 
@@ -198,10 +199,10 @@ P3P2_DOMAIN=203.0.113.7          # the VPS's public IPv4 address
 P3P2_CADDYFILE=Caddyfile.ip
 ```
 
-Room URLs and invite links then carry the address: `https://203.0.113.7/room/…`. These
+Invite links and the rooms' pages then carry the address: `https://203.0.113.7/room/…`. These
 certificates last six days and Caddy renews them every few days, so the server depends on
 Let's Encrypt being reachable more than with a name. If the VPS gets another address, every
-room URL and invite link changes with it.
+invite link and room page changes with it.
 
 This has not been tried on a public address.
 
@@ -234,7 +235,7 @@ The server's image runs alone as well: the `docker run` line at the top of
   `P3P2_TRUST_PROXY=1` is set.
 
 Set `P3P2_PUBLIC_URL` to the address players use. And keep the proxy's access log off,
-or out of reach: a room URL has the room's key in its path.
+or out of reach: a room's page has the room's key in its path.
 
 ## Building from a checkout
 

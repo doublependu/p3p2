@@ -9,7 +9,7 @@ test.use({ onDisk: true })
 test('the server restarts: everyone comes back by themselves, to the same room and its saved world', async ({ browser, server }) => {
   const owner = await createRoom(browser, server, 'Restart room', CHAT)
   const ada = await player(browser)
-  const invite = await host(ada.page, owner.roomUrl, 'Ada')
+  const invite = await host(ada.page, owner.invite, 'Ada')
   const grace = await join(browser, invite, 'Grace')
   await expect(ada.page.locator('#state')).toContainText('2 here')
   const world = await ada.page.locator('#world').textContent()

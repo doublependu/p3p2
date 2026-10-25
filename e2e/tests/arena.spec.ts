@@ -7,7 +7,7 @@ import type { Browser, BrowserContext, Page, WebSocketRoute } from '@playwright/
 import { GAME, HOST, PROXY, serverAt } from '../playwright.config.ts'
 import { startLagProxy } from '../tools/lag-proxy.ts'
 import { expect, type TestServer, test } from './fixtures.ts'
-import { accept, closeEngines, createRoom, fingers, host, measure, otherEngines, phoneContext } from './helpers.ts'
+import { accept, closeEngines, createRoom, fingers, host, measure, otherEngines, phoneContext, through } from './helpers.ts'
 
 const ARENA = `${GAME}/arena/`
 const NEXT = `${GAME}/arena-next/`
@@ -61,7 +61,7 @@ async function guest(browser: Browser | BrowserContext, invite: string, name: st
 async function crew(browser: Browser, server: TestServer, name: string, players: string[], url: string = ARENA) {
   const owner = await createRoom(browser, server, name, url)
   const first = await visit(browser, url)
-  const invite = await host(first, owner.roomUrl, players[0]!)
+  const invite = await host(first, owner.invite, players[0]!)
   await first.locator('p3p2-panel').getByRole('button', { name: 'Close' }).click()
   await inRoom(first)
   const pages = [first]
@@ -286,7 +286,7 @@ test('two players whose server is far away, and drops them: they come back to th
   try {
     const owner = await createRoom(browser, server, 'Far arena', ARENA)
     const ada = await visit(browser)
-    const invite = await host(ada, owner.roomUrl.replace(server.url, serverAt(server.url, proxy.port)), 'Ada')
+    const invite = await host(ada, through(owner.invite, server, serverAt(server.url, proxy.port)), 'Ada')
     await ada.locator('p3p2-panel').getByRole('button', { name: 'Close' }).click()
     const grace = await guest(browser, invite, 'Grace')
     await place(grace, 400, 300, [ada], 'Grace')
@@ -306,7 +306,7 @@ test('Chrome, Firefox and WebKit in one arena: the same round, each other where 
   const engines = await otherEngines()
   const owner = await createRoom(browser, server, 'Three engines', ARENA)
   const ada = await visit(browser)
-  const invite = await host(ada, owner.roomUrl, 'Ada')
+  const invite = await host(ada, owner.invite, 'Ada')
   await ada.locator('p3p2-panel').getByRole('button', { name: 'Close' }).click()
   const pages = [ada]
   for (const { name, browser: other } of engines) pages.push(await guest(other, invite, name))
@@ -348,7 +348,7 @@ for (const latency of [0, 150]) {
     try {
       const owner = await createRoom(browser, server, 'Steady', ARENA)
       const ada = await visit(browser)
-      const invite = await host(ada, proxy ? owner.roomUrl.replace(server.url, serverAt(server.url, proxy.port)) : owner.roomUrl, 'Ada')
+      const invite = await host(ada, proxy ? through(owner.invite, server, serverAt(server.url, proxy.port)) : owner.invite, 'Ada')
       await ada.locator('p3p2-panel').getByRole('button', { name: 'Close' }).click()
       const grace = await guest(browser, invite, 'Grace')
       await place(ada, 40, 400, [grace], 'Ada')

@@ -173,8 +173,8 @@ function enter(r) {
       // Why the room closed for this player, in this game's words.
       const why = {
         left: 'You left the game.',
-        kicked: 'The host took you out of the game.',
-        ended: 'The host ended the game for everybody.',
+        kicked: "The room's owner took you out of the game.",
+        ended: "The room's owner ended the game for everybody.",
         replaced: 'This game is open in another tab now.',
         lost: 'The connection to the game was lost, and did not come back.',
       }
@@ -204,11 +204,10 @@ const WORDS = {
   unreachable: 'No answer from that server. Is it running, and is the address right?',
   mixed: 'This game is on https, and that server is on plain http: the browser will not let the two talk.',
   origin: 'That room is not set up for this site.',
-  'room-url': "That is not a room URL. Copy it whole from the server's portal.",
-  room: 'There is no such room on that server.',
   auth: 'That invite has run out, or was replaced by a new one.',
   hidden: 'That link leaves out the last characters of its invite. Ask whoever sent it for the whole link.',
   full: 'That game is full.',
+  name: 'Somebody in that game already has that name. Choose another.',
   rate: 'Too many tries from here just now. Wait a little, and try again.',
   proto: 'That server is too old for this game. Its owner has to update it.',
   player: "That server knows this browser's player by another key.",
@@ -230,15 +229,6 @@ $('name').onchange = () => {
     localStorage.setItem('rally-example:name', name())
   } catch {
     // Not kept.
-  }
-}
-
-$('host').onclick = async () => {
-  say(null)
-  try {
-    await p3p2.host($('room-url').value, { name: name() })
-  } catch (err) {
-    say(err)
   }
 }
 
@@ -284,20 +274,18 @@ $('copy').onclick = async () => {
 }
 $('play').onclick = () => void play()
 $('leave').onclick = () => room?.leave()
-$('end').onclick = () => room?.end()
 
 function menu() {
   $('inroom').hidden = !room
   $('asking').hidden = !!room || !invite
   $('hosting').hidden = !!room || !!invite
   if (!room) {
-    $('state').textContent = 'Playing alone against the computer. Host a game, or open an invite, to play somebody.'
+    $('state').textContent = 'Playing alone against the computer. Open an invite to play somebody.'
     return
   }
   $('where').textContent = `In "${room.name}" on ${new URL(room.server).host}${room.status === 'reconnecting' ? ', reconnecting…' : ''}.`
   $('invite-row').hidden = !room.inviteUrl
   $('invite').value = room.inviteUrl ?? ''
-  $('end').hidden = !room.isMod
   $('play').hidden = mySide() !== -1 || sides.every((pid) => pid && present(pid))
   $('members').replaceChildren(
     ...room.members.map((m) => {
@@ -306,13 +294,6 @@ function menu() {
       const text = document.createElement('span')
       text.textContent = `${m.name}${m === room.self ? ' (you)' : ''}${side === -1 ? ', watching' : `, side ${side + 1}`} · ${m.rtt === null ? '…' : `${m.rtt} ms`}`
       li.append(text)
-      if (room.isMod && m !== room.self) {
-        const remove = document.createElement('button')
-        remove.type = 'button'
-        remove.textContent = `Remove ${m.name}`
-        remove.onclick = () => room.kick(m.id)
-        li.append(remove)
-      }
       return li
     }),
   )

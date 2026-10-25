@@ -19,7 +19,10 @@ export interface P3P2Options {
   game: { id: string; version: string }
   /** The built-in panel. `false` if the game brings its own menu and uses the API alone. */
   ui?: UiOptions | false
-  /** The query parameter that carries the invite. Default: `room`. */
+  /**
+   * The query parameter that carries the invite. Default: `room`. With another, the room's owner sets the same one as
+   * the room's Invite parameter in the server's portal, for the links it shows.
+   */
   urlParam?: string
 }
 
@@ -236,8 +239,6 @@ export interface Room {
   readonly members: readonly Member[]
   readonly host: Member | null
   readonly isHost: boolean
-  /** True for players who joined with the room URL: they can kick and end the session. */
-  readonly isMod: boolean
   /** The link to share, or null when this player has none. */
   readonly inviteUrl: string | null
   /**
@@ -284,10 +285,6 @@ export interface Room {
   /** The server's clock, epoch ms: the same for every member, give or take the network. */
   now(): number
   leave(): void
-  /** For mods. */
-  kick(memberId: number): void
-  /** For mods: disconnects everyone and closes the invite. */
-  end(): void
 }
 
 /** What an invite leads to, for a "Join?" prompt. */
@@ -310,7 +307,7 @@ export interface P3P2Error extends Error {
 }
 
 export interface P3P2Events {
-  /** A room started: the player joined, hosted, or came back after a reload. */
+  /** A room started: the player joined, or came back after a reload. */
   room: (room: Room) => void
   /** The room is over for this player. */
   leave: (reason: CloseReason) => void

@@ -21,6 +21,8 @@ export interface RoomRecord {
    * the link there leaves out, for the player to type: one of `FRONT_HIDDEN`.
    */
   front: number | null
+  /** The URL parameter the room's game reads its invite from (its `urlParam`), or null for `room`. */
+  param: string | null
   createdAt: number
 }
 

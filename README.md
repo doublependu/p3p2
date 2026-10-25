@@ -5,16 +5,17 @@ Multiplayer for static web games, through a small server of your own.
 - **The p3p2 server**: a small self-hosted service. Its owner logs in to a portal and creates
   *rooms*, each for one game. It relays messages between the players in a room and saves what
   the game asks it to keep. It never needs to know what the messages mean.
-- **`@p3p2/client`**: a library for static web games, under 2 KB until a room is opened. The player
-  pastes a room URL into the game, gets a link (and a QR code) to send to friends, and everyone
-  who opens the link plays and chats together.
+  [p3p2.me](https://p3p2.me/) explains how to get a p3p2 server.
+- **`@p3p2/client`**: a library for static web games, under 2 KB until a room is opened. The owner
+  of the server sends a room's invite link (or its QR code) to friends, and everyone who opens it,
+  the owner too, plays and chats together.
 
 ## In two minutes
 
-**A player** opens a game, presses the multiplayer button (or a button of the game's own), pastes a room URL from the
-server's portal, and sends the invite link it gives them. Whoever opens the link is asked *Join?*,
-and is in the same game. Friends can also open the server's address, and pick the room there. A reload, a dropped
-connection, or a phone switching networks comes back by itself.
+**The owner of a p3p2 server** creates a room for a game in the server's portal, and sends its invite link to
+friends. Whoever opens the link, the owner too, is asked *Join?*, and is in the same game. Friends can also open
+the server's address, and pick the room there. A reload, a dropped connection, or a phone switching networks comes
+back by itself.
 
 **A game** adds a few lines:
 
@@ -77,10 +78,9 @@ npm run examples         # in a second terminal: builds world, arena and rally, 
 
 1. Open the setup link the server printed and choose the owner password.
 2. In the portal, create a room. As the game URL enter the address you will open the example at,
-   for instance `http://192.168.1.118:5180/chat.html`. Copy the room URL.
-3. Open that example address, open the multiplayer panel, paste the room URL, and press *Create a
-   multiplayer game room for my friends*.
-4. Open the invite link in another browser profile or a private window, or scan the QR code with
+   for instance `http://192.168.1.118:5180/chat.html`.
+3. On the room's page, press **Open**: the example opens with the room's invite link, and asks *Join?*.
+4. Open the same link in another browser profile or a private window, or scan the QR code with
    a phone on the same Wi-Fi.
 
 Use this machine's LAN address everywhere, never `localhost`: the links are built from the
@@ -95,8 +95,8 @@ cut connections:
 npm run lag -- --latency 150 --jitter 50 --drop-every 30    # listens on 8081, forwards to 8080
 ```
 
-In the game, paste the room URL with port 8081 in place of 8080. The invite link is built from
-that address, so the host and every guest go through the proxy.
+Open the invite link with port 8081 in place of 8080 (`?room=http://192.168.1.118:8081/…`). The link the panel then
+shows is built from that address, so everyone who opens it goes through the proxy too.
 
 ## Measuring a server
 
@@ -169,7 +169,7 @@ Environment variables, all optional:
 
 | Variable | Default | |
 |---|---|---|
-| `P3P2_PUBLIC_URL` | `http://<LAN address>:<port>` | How players reach the server. Room URLs are built from it. |
+| `P3P2_PUBLIC_URL` | `http://<LAN address>:<port>` | How players reach the server. Invite links are built from it. |
 | `P3P2_PORT`, `P3P2_HOST` | `8080`, `0.0.0.0` | Where to listen |
 | `P3P2_DATA_DIR` | `data` | Where the SQLite database lives |
 | `P3P2_OWNER_PASSWORD` | | Sets the owner password instead of the one-time setup link |

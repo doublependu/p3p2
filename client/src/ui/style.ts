@@ -3,12 +3,12 @@ export const STYLE: string = `
   all: initial; display: block; position: fixed; z-index: 2147483000;
   font: 14px/1.4 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; color: var(--ink);
   color-scheme: light dark; -webkit-tap-highlight-color: transparent;
-  --bg: #fff; --ink: #1d1c19; --soft: #6b6860; --line: #d9d6cc; --field: #fff;
+  --bg: #fff; --ink: #1d1c19; --soft: #6b6860; --line: #d9d6cc; --field: #fff; --fixed: #f0eee8;
   --accent: #2f6f3e; --accent-ink: #fff; --danger: #a8321f; --pill: #1f201ccc; --pill-ink: #fff;
 }
 @media (prefers-color-scheme: dark) {
   :host {
-    --bg: #1f201c; --ink: #ecebe4; --soft: #a3a094; --line: #3a3b35; --field: #161714;
+    --bg: #1f201c; --ink: #ecebe4; --soft: #a3a094; --line: #3a3b35; --field: #161714; --fixed: #2b2c27;
     --accent: #7fc48f; --accent-ink: #0f1a12; --danger: #f08a75;
   }
 }
@@ -20,6 +20,7 @@ button:disabled { opacity: .5; cursor: default; }
 button.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); font-weight: 600; }
 button:focus-visible, input:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
 input { width: 100%; min-width: 0; padding: 6px 8px; border: 1px solid var(--line); border-radius: 8px; background: var(--field); }
+a { color: var(--accent); }
 @media (pointer: coarse) { input { font-size: 16px; } button { padding: 8px 12px; } }
 
 .pill {
@@ -49,7 +50,6 @@ label input, label button { font-size: 14px; font-weight: 400; color: var(--ink)
 p { margin: 0; overflow-wrap: anywhere; }
 .soft { color: var(--soft); font-size: 12px; }
 .status { font-size: 12px; min-height: 1.4em; }
-.status.ok { color: var(--accent); }
 .status.bad { color: var(--danger); }
 .row { display: flex; gap: 6px; align-items: center; }
 .row > input { flex: 1; }
@@ -60,10 +60,11 @@ p { margin: 0; overflow-wrap: anywhere; }
 ul, ol { list-style: none; margin: 0; padding: 0; }
 .members li { display: flex; align-items: center; gap: 6px; padding: 3px 0; }
 .members .name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.members button { padding: 0 6px; border: 0; color: var(--soft); }
 .tag { font-size: 11px; color: var(--soft); border: 1px solid var(--line); border-radius: 99px; padding: 0 6px; }
 .tag.host { color: var(--accent); border-color: var(--accent); }
 .log { height: 120px; overflow-y: auto; border: 1px solid var(--line); border-radius: 8px; padding: 6px 8px; background: var(--field); overflow-wrap: anywhere; }
+/* What nobody types in looks it: tinted, without the field's edge. */
+input[readonly], .log { background: var(--fixed); border-color: transparent; }
 /* A phone on its side: little height, and the keyboard takes half of it. */
 @media (max-height: 480px) { .log { height: 60px; } }
 .log li { padding: 1px 0; }

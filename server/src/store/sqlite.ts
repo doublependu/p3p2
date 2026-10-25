@@ -25,6 +25,7 @@ function room(r: Row): RoomRecord {
     versionPolicy: r.version_policy as VersionPolicy,
     gameId: (r.game_id as string | null) ?? null,
     front: (r.front as number | null) ?? null,
+    param: (r.param as string | null) ?? null,
     createdAt: r.created_at as number,
   }
 }
@@ -185,15 +186,16 @@ export class Store implements HubStore {
 
   updateRoom(
     id: number,
-    r: { name: string; origins: string[]; maxMembers: number; versionPolicy: VersionPolicy; front: number | null },
+    r: { name: string; origins: string[]; maxMembers: number; versionPolicy: VersionPolicy; front: number | null; param: string | null },
   ): void {
     this.run(
-      'UPDATE rooms SET name = ?, origins = ?, max_members = ?, version_policy = ?, front = ? WHERE id = ?',
+      'UPDATE rooms SET name = ?, origins = ?, max_members = ?, version_policy = ?, front = ?, param = ? WHERE id = ?',
       r.name,
       JSON.stringify(r.origins),
       r.maxMembers,
       r.versionPolicy,
       r.front,
+      r.param,
       id,
     )
   }

@@ -5,13 +5,13 @@ export const PORTAL_CSS: string = `
 :root {
   color-scheme: light dark;
   --bg: #f6f5f1; --card: #fff; --ink: #1d1c19; --soft: #6b6860; --line: #dedbd2;
-  --accent: #2f6f3e; --accent-ink: #fff; --danger: #a8321f; --ok: #2f6f3e; --field: #fff;
+  --accent: #2f6f3e; --accent-ink: #fff; --danger: #a8321f; --ok: #2f6f3e; --field: #fff; --fixed: #f0eee8;
   font: 16px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
 }
 @media (prefers-color-scheme: dark) {
   :root {
     --bg: #161714; --card: #1f201c; --ink: #ecebe4; --soft: #a3a094; --line: #34352f;
-    --accent: #7fc48f; --accent-ink: #0f1a12; --danger: #f08a75; --ok: #7fc48f; --field: #161714;
+    --accent: #7fc48f; --accent-ink: #0f1a12; --danger: #f08a75; --ok: #7fc48f; --field: #161714; --fixed: #2b2c27;
   }
 }
 * { box-sizing: border-box; }
@@ -37,6 +37,8 @@ input, textarea, select, button { font: inherit; color: inherit; }
 input[type=text], input[type=password], input[type=number], input[type=url], textarea, select {
   width: 100%; padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--field);
 }
+/* What nobody can change looks it: tinted, without the field's edge. */
+input[readonly], textarea[readonly] { background: var(--fixed); border-color: transparent; }
 textarea { min-height: 5em; resize: vertical; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: .875rem; }
 input.mono, .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: .875rem; }
 input:focus-visible, textarea:focus-visible, select:focus-visible, button:focus-visible, a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }

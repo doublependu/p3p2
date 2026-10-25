@@ -32,6 +32,7 @@ export type ErrorCode =
   | 'version'
   | 'seq'
   | 'game'
+  | 'name'
 
 export type ByeReason = 'kicked' | 'ended' | 'replaced' | 'slow' | 'shutdown'
 export type LeaveReason = 'left' | 'timeout' | 'kicked'
@@ -450,9 +451,22 @@ export function cleanText(raw: unknown, max: number): string {
   return Array.from(s).slice(0, max).join('').trim()
 }
 
-/** A display name: cleaned, and at most NAME_MAX characters. */
+/** What a name keeps: letters, with their marks, and digits, of any language; spaces; and `. - _ '`. */
+const NAME_DROP = /[^\p{L}\p{M}\p{Nd} ._'-]/gu
+
+/**
+ * A display name: cleaned, only the characters a name keeps, and at most NAME_MAX of them. Empty unless it has a
+ * letter or a digit: a name of dots, or of emoji alone, is no name.
+ */
 export function cleanName(raw: unknown): string {
-  return cleanText(raw, NAME_MAX)
+  const kept = cleanText(raw, NAME_MAX * 4).replace(NAME_DROP, '').replace(/ {2,}/g, ' ').trim()
+  const name = Array.from(kept).slice(0, NAME_MAX).join('').trim()
+  return /[\p{L}\p{Nd}]/u.test(name) ? name : ''
+}
+
+/** What two names are compared by: "Ada", "ADA" and "ａｄａ" are one name in a room. */
+export function nameKey(name: string): string {
+  return name.normalize('NFKC').toLowerCase()
 }
 
 export type Parsed<T> = { ok: true; frame: T } | { ok: false; why: string }

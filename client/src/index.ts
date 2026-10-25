@@ -102,11 +102,6 @@ export class P3P2 {
     return (await this.load()).join(invite, options)
   }
 
-  /** Hosts in the room behind a room URL from the portal, and creates the invite link. */
-  async host(roomUrl: string, options?: { name?: string }): Promise<Room> {
-    return (await this.load()).host(roomUrl, options)
-  }
-
   /** Looks up an invite without joining, for a game that asks "Join?" in its own words. */
   async peek(invite: Invite): Promise<InviteDetails> {
     return (await this.load()).peek(invite)

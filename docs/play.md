@@ -6,7 +6,9 @@ A friend wants to play a game with you, and sent you a link to it. This is what 
 
 1. The game opens, as it would on any visit, and a small window asks: *You were invited to a room on …*, with
    the room's name, who is hosting it, and how many are playing.
-2. Type the name the others will see, and press **Join**. Or **Play alone**, and nothing else happens.
+2. Type the name the others will see, and press **Join**. Or **Play alone**, and nothing else happens. A name is
+   letters and digits, in any language, with spaces and `. - _ '` if you like, at most 24 of them. Nobody else in
+   the room can have it, whatever the capitals.
 3. You are in. What being in the same room means depends on the game: the same field to walk in, the same road
    to drive, the same match.
 
@@ -18,7 +20,7 @@ On a phone it is the same. A computer and a phone can play together, and so can 
 ## From the server's address
 
 A friend may send you the address of their p3p2 server instead (`https://p3p2.example.com/`). It lists the rooms
-they opened to friends. Press **Play** beside the one they meant: the game opens, and asks *Join?*.
+they opened to friends. Press **Play** beside the one they meant: the game opens in a new tab, and asks *Join?*.
 
 If the link there ends in dashes, the game first asks for the last few characters of it. Your friend has them:
 type them as they say them, in capitals or not. If the game doesn't ask, it is older than that: ask your friend for
@@ -29,6 +31,8 @@ the whole link.
 - **If your connection drops**, the game tries to get you back by itself. For the next 30 seconds your place in
   the room is kept, and the others' games are told they have not heard from you.
 - **If you reload the page**, or the browser does, you are back in the room as the same player.
+- **If you open the game again in another tab** of the same browser, you move to that tab: one browser is one
+  player. The other tab says *This room is now open in another tab.*
 - **If you put the game in the background** (another tab, another app), the others' games are told you are away.
   Some stop the world from waiting for you, or from aiming at you, while you are.
 
@@ -56,8 +60,9 @@ for 30 seconds, in case you come back, and then tells the others you left.
 | *Those aren't the right characters.* | They are not the ones the link left out. They change with every new invite. | Ask your friend for them again, or for the whole link. |
 | *Too many tries. Wait a moment and try again.* | Somebody tried too many wrong characters for this room, perhaps not you. | Wait a few minutes, or ask your friend: the room's owner can show the whole link. |
 | *The room is full.* | Every place is taken. | Wait for somebody to leave, or ask the host. |
+| *Somebody in this room already has that name. Choose another.* | Another player there has it. | Type another name, and press **Join** again. |
 | *The players in this room have a different version of the game.* | Your copy of the game and theirs differ, often because one of you loaded it before an update. | Reload the page. If that changes nothing, they need to reload. |
 | *Can't reach …* | The server is not answering. | Check your connection; if it is fine, tell your friend. |
 | *This room isn't set up for …* | The game you opened is not the one the room was made for. | Tell your friend: the room's owner can add this game's address. |
-| *You were removed from the room.* | Somebody who hosts it removed you. | |
+| *You were removed from the room.* | The room's owner removed you, in the server's portal. | |
 | *This room is now open in another tab.* | You opened the game twice in one browser: one player, one place. | Use the other tab. To play as two people on one computer, use a second browser or a private window. |

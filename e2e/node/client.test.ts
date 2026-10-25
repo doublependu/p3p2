@@ -37,7 +37,6 @@ test('two players: messages, presence, and what the room keeps', async () => {
   const { key, invite } = w.room()
   const ada = await w.join({ key }, 'Ada')
   assert.equal(ada.room.isHost, true)
-  assert.equal(ada.room.isMod, true)
 
   ada.room.send('world', { seed: 7 }, { retain: 'room' })
   ada.room.send('bag', ['key'], { retain: 'player' })
@@ -48,7 +47,6 @@ test('two players: messages, presence, and what the room keeps', async () => {
   ada.room.on('member-join', (m) => joined.push(m.name))
   const grace = await w.join({ invite }, 'Grace')
   assert.equal(grace.room.isHost, false)
-  assert.equal(grace.room.isMod, false)
   assert.deepEqual(grace.room.members.map((m) => m.name), ['Ada', 'Grace'])
   assert.deepEqual(grace.room.retained('world'), { seed: 7 })
   assert.deepEqual(grace.room.retained('bag', { player: ada.pid }), ['key'])

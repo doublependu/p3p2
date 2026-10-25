@@ -14,13 +14,15 @@
 </head>
 <body>
 <h1>Ball and bricks</h1>
-<p id="state">Playing alone. Open the multiplayer panel in the corner and paste a room URL to host.</p>
+<p id="state">Playing alone. Open an invite link from a p3p2 server to play with friends.</p>
 <canvas id="field" width="800" height="600" aria-label="A ball bouncing under a wall of bricks. Click to send the ball that way."></canvas>
 <p id="score" class="soft"></p>
 <p id="who" class="soft"></p>
 <p class="soft">This page stands in for a game that needs one player to be in charge. The host's browser
 moves the ball and decides which brick it hits; the others see what the host sends them, and a click
-anywhere asks the host to send the ball that way. Every brick that falls is an op in the room's log,
+anywhere asks the host to send the ball that way. Each word from the host says when the ball was there, and the
+others carry it on from that moment, so the time a word takes on its way does not move the ball. Every page draws
+the ball where it is at each frame. Every brick that falls is an op in the room's log,
 which the server numbers and saves. Close the host's tab and the next player carries on with the same
 ball. Let everyone leave, and the wall is as you left it when somebody comes back.</p>
 
@@ -49,9 +51,13 @@ ball. Let everyone leave, and the wall is as you left it when somebody comes bac
   const SEND_MS = 1000 / 15
   /** With no word from the host for this long, the ball waits where it is for the next host. */
   const QUIET_MS = 500
+  /** A report older than this, ms, is carried on as if it were this old: a page that stopped for a moment. */
+  const AGE_MAX = 250
 
   const round = (v) => Math.round(v * 100) / 100
   const isBall = (b) => Array.isArray(b) && b.length === 4 && b.every(Number.isFinite)
+  /** The host's word on the ball: where it was, and when, on the room's clock. */
+  const isReport = (r) => Array.isArray(r) && r.length === 5 && r.every(Number.isFinite)
   const isWorld = (w) => w && Number.isInteger(w.wall) && Number.isInteger(w.hits) && Array.isArray(w.gone) && isBall(w.ball)
   const freshWorld = () => ({ wall: 1, gone: [], hits: 0, ball: [W / 2, H - 60, SPEED * 0.6, -SPEED * 0.8] })
 
@@ -65,6 +71,10 @@ ball. Let everyone leave, and the wall is as you left it when somebody comes bac
     const pending = new Set()
     let loaded = 0
     let ticks = 0
+    // The host's: the ball turned off a brick, or was kicked, and the others are told at once.
+    let turned = false
+    // Where the last frame drew the ball.
+    let drawn = [ball[0], ball[1]]
 
     room.log.open({
       // The last snapshot, or nothing. Whatever comes from a server is checked before it is used.
@@ -81,8 +91,9 @@ ball. Let everyone leave, and the wall is as you left it when somebody comes bac
           world.hits++
           world.ball = op.ball
           pending.delete(op.i)
-          // The host knows better where the ball is by now. Everyone else takes it from the op.
-          if (!room.isHost || entry.replayed) ball = [...op.ball]
+          // The op's ball is where the ball was at the hit, a moment ago. The host, and a guest that hears from it,
+          // know better where it is by now. A page that is loading the log takes it from there.
+          if (entry.replayed) ball = [...op.ball]
           if (room.isHost && !entry.replayed && world.hits % SNAP_EVERY === 0) room.log.snapshot()
         } else if (op?.t === 'wall' && op.wall === world.wall + 1) {
           world.wall = op.wall
@@ -95,35 +106,76 @@ ball. Let everyone leave, and the wall is as you left it when somebody comes bac
       save: () => ({ ...world, ball: ball.map(round) }),
     })
 
-    function move(dt) {
-      let [x, y, vx, vy] = ball
+    /** Where ball `b` is `dt` seconds later, between the walls. */
+    function moved(b, dt) {
+      let [x, y, vx, vy] = b
       x += vx * dt
       y += vy * dt
       if (x < R) [x, vx] = [R, Math.abs(vx)]
       else if (x > W - R) [x, vx] = [W - R, -Math.abs(vx)]
       if (y < R) [y, vy] = [R, Math.abs(vy)]
       else if (y > H - R) [y, vy] = [H - R, -Math.abs(vy)]
-      ball = [x, y, vx, vy]
+      return [x, y, vx, vy]
     }
 
-    /** The host's part: what the ball hits. A brick goes when its op has come back from the server. */
-    function collide() {
-      const [x, y] = ball
+    /**
+     * Turns ball `b` off the first brick it is in, out on the side it came in by, and returns that brick, or -1.
+     * Every page turns the ball off the bricks it sees, so that a guest's ball does not fly into a brick until the
+     * host's next word. Only the host says which brick goes.
+     */
+    function bounce(b) {
+      const [x, y] = b
       for (let i = 0; i < BRICKS; i++) {
         if (world.gone.includes(i) || pending.has(i)) continue
         const left = (i % COLS) * BW
         const top = TOP + Math.floor(i / COLS) * BH
-        const dx = Math.min(x + R - left, left + BW - (x - R))
-        const dy = Math.min(y + R - top, top + BH - (y - R))
+        const fromLeft = x + R - left
+        const fromRight = left + BW - (x - R)
+        const fromTop = y + R - top
+        const fromBelow = top + BH - (y - R)
+        const dx = Math.min(fromLeft, fromRight)
+        const dy = Math.min(fromTop, fromBelow)
         if (dx <= 0 || dy <= 0) continue
-        if (dx < dy) ball[2] = -ball[2]
-        else ball[3] = -ball[3]
-        if (room.log.submit({ t: 'hit', wall: world.wall, i, ball: ball.map(round) })) pending.add(i)
-        return
+        if (dx < dy) {
+          b[0] += fromLeft < fromRight ? -dx : dx
+          b[2] = fromLeft < fromRight ? -Math.abs(b[2]) : Math.abs(b[2])
+        } else {
+          b[1] += fromTop < fromBelow ? -dy : dy
+          b[3] = fromTop < fromBelow ? -Math.abs(b[3]) : Math.abs(b[3])
+        }
+        return i
       }
-      if (world.gone.length === BRICKS && !pending.has('wall') && room.log.submit({ t: 'wall', wall: world.wall + 1 })) {
+      return -1
+    }
+
+    /** The host's part: what the ball hits. A brick goes when its op has come back from the server. */
+    function collide() {
+      const i = bounce(ball)
+      if (!room.isHost) return
+      if (i !== -1) {
+        turned = true
+        if (room.log.submit({ t: 'hit', wall: world.wall, i, ball: ball.map(round) })) pending.add(i)
+      } else if (world.gone.length === BRICKS && !pending.has('wall') && room.log.submit({ t: 'wall', wall: world.wall + 1 })) {
         pending.add('wall')
       }
+    }
+
+    /** Moves the ball on by `seconds`, in short steps, off the walls and the bricks. */
+    function run(seconds) {
+      for (let left = seconds; left > 0; left -= 1 / 120) {
+        ball = moved(ball, Math.min(left, 1 / 120))
+        collide()
+      }
+    }
+
+    /** Where the ball will be `seconds` from now, for drawing: off the walls and the bricks, deciding nothing. */
+    function ahead(seconds) {
+      let b = ball
+      for (let left = seconds; left > 0; left -= 1 / 120) {
+        b = moved(b, Math.min(left, 1 / 120))
+        bounce(b)
+      }
+      return b
     }
 
     function kick(to) {
@@ -131,6 +183,7 @@ ball. Let everyone leave, and the wall is as you left it when somebody comes bac
       const [x, y] = ball
       const far = Math.hypot(to[0] - x, to[1] - y) || 1
       ball = [x, y, ((to[0] - x) / far) * SPEED, ((to[1] - y) / far) * SPEED]
+      turned = true
     }
 
     /** A click: the host turns the ball itself, everyone else asks the host to. */
@@ -143,7 +196,7 @@ ball. Let everyone leave, and the wall is as you left it when somebody comes bac
       const role = room.isHost ? 'the host' : `hosted by ${room.host?.name ?? 'nobody'}`
       $('state').textContent = room.server
         ? `In "${room.name}" as ${room.self.name} (${role}), ${room.members.length} here.`
-        : 'Playing alone. Open the multiplayer panel in the corner and paste a room URL to host.'
+        : 'Playing alone. Open an invite link from a p3p2 server to play with friends.'
       $('score').textContent = `Wall ${world.wall}: ${world.gone.length} of ${BRICKS} bricks down, ${world.hits} since the beginning.`
       // Who can be counted on right now: a page in the background, or one the server has not
       // heard from (its connection is down, or it froze), keeps its place but is not here.
@@ -151,33 +204,38 @@ ball. Let everyone leave, and the wall is as you left it when somebody comes bac
       $('who').textContent = room.server ? room.members.map((m) => `${m.name}: ${states[m.state]}`).join(' · ') : ''
     }
 
+    // When the ball was where `ball` says, on this page's clock.
     let last = performance.now()
     let sent = 0
     let heard = last
+    /** False while a guest waits for a host that has gone quiet: the ball stays put rather than fly through the wall. */
+    const moving = (now) => room.isHost || now - heard <= QUIET_MS
     // A timer, not animation frames: those stop in a tab that is not in front.
     const timer = setInterval(() => {
       const now = performance.now()
-      let left = Math.min(0.25, (now - last) / 1000)
+      const left = Math.min(0.25, (now - last) / 1000)
       last = now
       // Everyone moves the ball along. Only the host decides what it hits, and says where it is.
-      // When the host has gone quiet, the ball stays put rather than fly through the wall.
-      if (!room.isHost && now - heard > QUIET_MS) left = 0
-      for (; left > 0; left -= 1 / 120) {
-        move(Math.min(left, 1 / 120))
-        if (room.isHost) collide()
-      }
+      if (moving(now)) run(left)
       ticks++
-      if (room.isHost && now - sent >= SEND_MS) {
+      if (room.isHost && (turned || now - sent >= SEND_MS)) {
         sent = now
-        room.send('ball', ball.map(round), { volatile: true })
+        turned = false
+        // With the moment it was there: the others carry it on from then, not from when the word arrives.
+        room.send('ball', [...ball.map(round), Math.round(room.now())], { volatile: true })
       }
     }, 1000 / 60)
 
     const off = [
       room.on('ball', (data, from) => {
-        if (room.isHost || from !== room.host || !isBall(data)) return
-        ball = data
-        heard = performance.now()
+        if (room.isHost || from !== room.host || !isReport(data)) return
+        // Where the host said, a few milliseconds ago: carried on to now.
+        const now = performance.now()
+        const age = Math.min(AGE_MAX, Math.max(0, room.now() - data[4]))
+        ball = data.slice(0, 4)
+        last = now
+        heard = now
+        run(age / 1000)
       }),
       room.on('kick', (data) => {
         if (room.isHost) kick(data)
@@ -200,7 +258,13 @@ ball. Let everyone leave, and the wall is as you left it when somebody comes bac
     }
     canvas.addEventListener('pointerdown', click)
 
-    let frame = requestAnimationFrame(function draw() {
+    let frame = requestAnimationFrame(function draw(t) {
+      // The ball where it is at this frame, not where the last tick of the timer left it: the timer and the screen
+      // do not tick together, and some frames would see two ticks and some none.
+      // A word from the host can come after the frame began, and puts the ball a little past the frame's time: it is
+      // taken back to it.
+      const since = moving(t) ? Math.max(-1 / 30, Math.min(1 / 30, (t - last) / 1000)) : 0
+      drawn = since >= 0 ? ahead(since) : [ball[0] + ball[2] * since, ball[1] + ball[3] * since]
       const ink = getComputedStyle(canvas).color
       ctx.setTransform(canvas.width / W, 0, 0, canvas.height / H, 0, 0)
       ctx.clearRect(0, 0, W, H)
@@ -214,7 +278,7 @@ ball. Let everyone leave, and the wall is as you left it when somebody comes bac
       ctx.globalAlpha = 1
       ctx.fillStyle = ink
       ctx.beginPath()
-      ctx.arc(ball[0], ball[1], R, 0, Math.PI * 2)
+      ctx.arc(drawn[0], drawn[1], R, 0, Math.PI * 2)
       ctx.fill()
       frame = requestAnimationFrame(draw)
     })
@@ -223,6 +287,8 @@ ball. Let everyone leave, and the wall is as you left it when somebody comes bac
     window.game = {
       get x() { return ball[0] },
       get y() { return ball[1] },
+      /** Where the last frame drew the ball: x, y. */
+      get drawn() { return [drawn[0], drawn[1]] },
       get wall() { return world.wall },
       get gone() { return [...world.gone].sort((a, b) => a - b) },
       get hits() { return world.hits },
@@ -243,7 +309,7 @@ ball. Let everyone leave, and the wall is as you left it when somebody comes bac
     }
   }
 
-  const p3p2 = new P3P2({ game: { id: 'host-ball', version: '1.0.0' } })
+  const p3p2 = new P3P2({ game: { id: 'host-ball', version: '1.1.0' } })
   window.p3p2 = p3p2
 
   let stop = () => {}

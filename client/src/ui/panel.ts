@@ -1,4 +1,4 @@
-// <p3p2-panel>: paste the room URL, create the invite, share it, see who is here, chat.
+// <p3p2-panel>: "Join?" for an invite link, the link to pass on, who is here, chat.
 // Everything that comes from the server or from other players is written with textContent.
 
 import { NAME_MAX } from '@p3p2/protocol'
@@ -178,73 +178,23 @@ export class PanelElement extends HTMLElement {
     input.value = this.controller.name
     input.onchange = () => {
       this.controller.name = input.value
+      // The name as it will be used: without what a name cannot have.
+      input.value = this.controller.name
     }
     return input
   }
 
-  // ---- not in a room: paste the room URL ----
+  // ---- not in a room: the way in is an invite link ----
 
   private renderSetup(note: string = ''): void {
-    const name = this.nameField()
-    const url = h('input', {
-      type: 'text',
-      inputmode: 'url',
-      placeholder: 'https://your-server/room/…',
-      autocomplete: 'off',
-      autocapitalize: 'off',
-      spellcheck: 'false',
-    })
-    url.value = this.controller.savedRoomUrl
-    const status = h('p', { class: 'status', role: 'status' }, note)
-    const create = h('button', { class: 'primary', type: 'button', disabled: true }, 'Create a multiplayer game room for my friends')
-
-    const say = (text: string, kind: '' | 'ok' | 'bad' = '') => {
-      status.textContent = text
-      status.className = `status ${kind}`
-    }
-
-    let turn = 0
-    let timer: ReturnType<typeof setTimeout> | undefined
-    const check = async () => {
-      const mine = ++turn
-      create.disabled = true
-      const text = url.value.trim()
-      if (!text) return say(note)
-      say('Checking…')
-      try {
-        const { ref, details } = await this.controller.checkRoom(text)
-        if (mine !== turn) return
-        say(`✓ ${details.name} on ${serverName(ref.server)}`, 'ok')
-        create.disabled = false
-      } catch (err) {
-        if (mine === turn) say((err as Error).message, 'bad')
-      }
-    }
-    url.oninput = () => {
-      clearTimeout(timer)
-      create.disabled = true
-      timer = setTimeout(check, 350)
-    }
-    create.onclick = async () => {
-      create.disabled = true
-      say('Connecting…')
-      try {
-        await this.controller.host(url.value, { name: name.value })
-      } catch (err) {
-        say((err as Error).message, 'bad')
-        create.disabled = false
-      }
-    }
-
+    // In a tab of its own: the game stays open.
+    const site = h('a', { href: 'https://p3p2.me/', target: '_blank', rel: 'noopener' }, 'p3p2.me')
     this.setBody(
       'Multiplayer',
-      h('label', {}, 'Your name', name),
-      h('label', {}, 'Room URL', url),
-      status,
-      create,
-      h('p', { class: 'soft' }, "Paste a room URL from your p3p2 server's portal. You get a link to send to your friends."),
+      ...(note ? [h('p', { class: 'status', role: 'status' }, note)] : []),
+      h('p', {}, 'To play with friends, open the invite link one of them sent you.'),
+      h('p', { class: 'soft' }, "Hosting? Open the invite link on your room's page, in your p3p2 server's portal. No server yet? ", site, ' says how to get one.'),
     )
-    if (url.value) void check()
   }
 
   // ---- arriving through an invite: ask first ----
@@ -290,6 +240,8 @@ export class PanelElement extends HTMLElement {
         } catch (err) {
           status.textContent = (err as Error).message
           join.disabled = false
+          // Somebody here has that name: another one is what it takes.
+          if ((err as Failure).code === 'name') name.focus()
         }
       }
 
@@ -378,11 +330,6 @@ export class PanelElement extends HTMLElement {
           if (m === room.self) li.append(h('span', { class: 'tag' }, 'you'))
           if (m === room.host) li.append(h('span', { class: 'tag host' }, 'host'))
           if (m.rtt !== null) li.append(h('span', { class: 'soft' }, `${m.rtt} ms`))
-          if (room.isMod && m !== room.self) {
-            const kick = h('button', { type: 'button', title: `Remove ${m.name}`, 'aria-label': `Remove ${m.name}` }, '×')
-            kick.onclick = () => room.kick(m.id)
-            li.append(kick)
-          }
           return li
         }),
       )
@@ -429,13 +376,8 @@ export class PanelElement extends HTMLElement {
       room.on('close', (reason) => this.hide(reason)),
     ]
 
-    const row = h('div', { class: 'row' }, h('span', { class: 'grow' }), leave)
-    if (room.isMod) {
-      const end = h('button', { type: 'button' }, 'End for everyone')
-      end.onclick = () => room.end()
-      row.prepend(end)
-    }
-    parts.push(members, log, h('div', { class: 'row' }, say, send), row)
+    // Removing a player, and ending the game, are for the room's owner, in the server's portal.
+    parts.push(members, log, h('div', { class: 'row' }, say, send), h('div', { class: 'row' }, h('span', { class: 'grow' }), leave))
     this.setBody(room.name, ...parts)
     this.say = say
     drawMembers()

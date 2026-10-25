@@ -319,7 +319,10 @@ test('portal: creating rooms', async () => {
   assert.match(key, /^[0-9a-hjkmnp-tv-z]{26}$/)
   const page = await (await owner.get(`/room/${key}`)).text()
   assert.match(page, /Friday games/)
-  assert.ok(page.includes(`https://p3p2.example.com/room/${key}`))
+  // Nothing to copy but the invite link: everybody joins through it, the owner too.
+  assert.doesNotMatch(page, /Room URL/)
+  assert.ok(!page.includes(`value="https://p3p2.example.com/room/${key}"`))
+  assert.match(page, /aria-label="Invite link"/)
   assert.ok(page.includes('http://192.168.1.118:5173'))
   assert.match(await (await owner.get('/')).text(), /Friday games/)
 
@@ -342,14 +345,16 @@ test('portal: creating rooms', async () => {
   assert.match(await full.text(), /at most 3 rooms/)
 })
 
-test('portal: someone who is not the owner sees only what to do with a room URL', async () => {
+test("portal: someone who is not the owner sees only that a room's page is its owner's", async () => {
   const { base } = await start()
   const owner = new Owner(base)
   await owner.login()
   const key = await owner.room()
   const visitor = new Owner(base)
   const page = await (await visitor.get(`/room/${key}`)).text()
-  assert.match(page, /paste it into the game/)
+  assert.match(page, /for its owner/)
+  assert.match(page, /open the invite link you were sent/)
+  assert.doesNotMatch(page, /paste/)
   assert.doesNotMatch(page, /Danger zone/)
   // Every page says where the source is (the AGPL's offer), escaped like any other value.
   const footer = `<footer>p3p2 ${VERSION} · <a href="https://source.example/a-changed-p3p2?v=1&amp;x=&lt;y&gt;">Source code</a></footer>`
@@ -589,6 +594,40 @@ test('api: invites are created once, renewed on request, and describe the room t
   // A page on a site the room does not accept is ignored: the portal falls back to the game URL.
   await post({ renew: true, page: 'https://evil.example/', param: 'room' })
   assert.match(await (await owner.get(`/room/${key}`)).text(), /https:\/\/game\.example\.com\/\?room=p3p2\.example\.com\//)
+})
+
+test("portal: the room's invite parameter goes into its links, unless a 0.1 game that hosted said otherwise", async () => {
+  const { base, r } = await start()
+  const owner = new Owner(base)
+  await owner.login()
+  const key = await owner.room('game.example.com/play/', { name: 'Friday games' })
+  const link = async () => /value="(https:\/\/game\.example\.com\/[^"]*)" aria-label="Invite link"/.exec(await (await owner.get(`/room/${key}`)).text())?.[1]
+  assert.equal(await link(), `https://game.example.com/play/?room=p3p2.example.com/${codeOf(r, key)}`)
+
+  assert.equal((await owner.post(`/room/${key}/settings`, { param: 'join' })).status, 302)
+  assert.equal(await link(), `https://game.example.com/play/?join=p3p2.example.com/${codeOf(r, key)}`)
+  assert.match(await (await owner.get(`/room/${key}`)).text(), /id="param" name="param" type="text" maxlength="32" placeholder="room" value="join"/)
+  // On the front page too.
+  await owner.post(`/room/${key}/settings`, { param: 'join', front: '0' })
+  assert.ok((await (await new Owner(base).get('/')).text()).includes(`/play/?join=p3p2.example.com/${codeOf(r, key)}`))
+
+  // Not a parameter: refused, and nothing changes.
+  const bad = await owner.post(`/room/${key}/settings`, { param: 'two words' })
+  assert.equal(bad.status, 400)
+  assert.match(await bad.text(), /can&#39;t be the invite parameter/)
+  assert.equal(r.app.store.roomByKey(key)!.param, 'join')
+  // A form from before the field keeps it; an empty one, or "room", is the default again.
+  await owner.post(`/room/${key}/settings`, { name: 'Friday games' })
+  assert.equal(r.app.store.roomByKey(key)!.param, 'join')
+  await owner.post(`/room/${key}/settings`, { param: '' })
+  assert.equal(r.app.store.roomByKey(key)!.param, null)
+  await owner.post(`/room/${key}/settings`, { param: 'room' })
+  assert.equal(r.app.store.roomByKey(key)!.param, null)
+
+  // A 0.1 game that hosted with the room URL said where it is, and what it reads: that is the link.
+  await owner.post(`/room/${key}/settings`, { param: 'join' })
+  await api(base, '/room/invite', key, GAME, { method: 'POST', body: JSON.stringify({ page: 'https://game.example.com/elsewhere/', param: 'p' }) })
+  assert.equal(await link(), `https://game.example.com/elsewhere/?p=p3p2.example.com/${codeOf(r, key)}`)
 })
 
 test('api: a body larger than any game sends is not read, and the host still gets its invite', async () => {

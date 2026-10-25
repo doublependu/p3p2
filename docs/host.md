@@ -1,8 +1,8 @@
 # You want to invite friends
 
-To play a game with friends through p3p2 you need two things: the game, and a **room URL** from a p3p2 server.
-Whoever runs the server (you, or a friend: [self-host.md](self-host.md)) makes rooms in its portal and hands out
-their URLs.
+To play a game with friends through p3p2 you need two things: the game, and a room on a p3p2 server. Whoever runs
+the server (you, or a friend: [self-host.md](self-host.md)) makes rooms in its portal, and hands out their invite
+links. [p3p2.me](https://p3p2.me/) explains how to get a p3p2 server.
 
 ## Getting a room
 
@@ -10,32 +10,39 @@ In the server's portal (its address, logged in with the owner's password):
 
 1. **Game URL**: the address of the game you will play, as you open it in your browser.
 2. **Room name**: what your friends will see.
-3. **Create room**. The room's page shows its **room URL**. Keep it to yourself: it is the key to the room.
+3. **Create room**. The room's page shows its **invite link**, with a QR code.
 
-On the room's page you can also allow more sites for the same room, choose how many may join (16 by default),
-and what happens when players' versions of the game differ.
+On the room's page you can also allow more sites for the same room, choose how many may join (16 by default), what
+happens when players' versions of the game differ, and the **Invite parameter**: leave it at `room`, unless the
+game's developer says the game reads its invite from another one.
 
 ## Inviting
 
-1. Open the game, and its multiplayer window: the button with three players on it, in a corner, or the game's
-   own (FRIENDS, say).
-2. Paste the room URL, type your name, and press **Create a multiplayer game room for my friends**.
-3. You get the **invite link**, with a QR code. Send the link (Copy, or Share on a phone), or let a friend
-   next to you scan the code.
+Everybody joins through the room's invite link, you too.
 
-Whoever opens the link is asked *Join?*, and then is in the room with you. The invite link only lets people in:
-it cannot host, remove anybody or end anything. It lasts 12 hours after the room empties.
+1. On the room's page, press **Open**. The game opens with the link, in a new tab, and asks *Join?*. Type your name
+   and press **Join**.
+2. Send the link to your friends (Copy, on the room's page or in the game's multiplayer window once you are in), or
+   let a friend next to you scan the QR code.
 
-If you reload the page, you are back in the room. Next time, paste the room URL again.
+Whoever opens the link is asked *Join?*, and then is in the room with you. The link only lets people in: removing a
+player and ending the game are on the room's page in the portal (see "While it runs").
 
-The room's page in the portal shows the same link from the moment the room is created, before anyone has hosted:
-**Open** opens the game with it, in a new tab.
+If you reload the page, you are back in the room. Opening the link in another tab of the same browser moves you to
+that tab: one browser is one player.
+
+**The link runs out** 12 hours after the room empties. The room's page then shows **Create invite**: press it, and
+send the new link.
+
+A game made with p3p2 0.1 also has a field for a *room URL* in its multiplayer window. That is the address of the
+room's page in the portal, and it still works there, but such a game takes the invite link too. Keep the address to
+yourself: whoever has it can remove players and end the game from such a game.
 
 ## Friends who come to the server
 
 Instead of a link each time, friends can have the server's address (`https://p3p2.example.com/`) once. Whoever opens
 it without logging in sees the rooms its owner put on its **front page**, each with its invite link, and **Play**
-opens the game.
+opens the game in a new tab.
 
 On the room's page in the portal, **On this server's front page** says how much of the room it shows:
 
@@ -45,9 +52,9 @@ On the room's page in the portal, **On this server's front page** says how much 
   that way type them. Fewer are easier to read out over the phone; more are harder to guess. The room's page shows
   them under the invite link, for you to pass on.
 
-A room is on the front page only while it has an invite: from when it is created, or someone hosts, until 12 hours
-after it empties, or **End session**. The front page never shows the room URL, the characters it leaves out, or who
-is playing.
+A room is on the front page only while it has an invite: from when it is created, or you create a new one, until 12
+hours after it empties, or **End session**. The front page never shows the room's key, the characters it leaves out,
+or who is playing.
 
 The characters left out are the end of the room's invite, so they change with it: **Renew invite**, **End
 session**, the invite running out, and hiding more of the link or taking the room off the front page, which makes a
@@ -58,7 +65,7 @@ invite: send those friends the whole link.
 
 **Someone who keeps guessing.** A room takes ten wrong tries at its characters, and then one more every 6 minutes.
 While somebody keeps trying, nobody new gets in through the room's invite, with the right characters or with the
-whole link. The players in the room stay, and whoever has the room URL still gets in. The server's log says
+whole link. The players in the room stay, and come back after a reload. The server's log says
 `tried-out` when a room has no tries left. Show the room with its whole link, or take it off the front page, and its
 invite works again: nothing is left to guess.
 
@@ -66,12 +73,11 @@ invite works again: nothing is left to guess.
 
 - **Who is there**: the window lists everybody, in the order they came. The room's page in the portal also shows
   who is connected, and who has not been heard from for a few seconds.
-- **Removing someone**: as the one who came in with the room URL, you can remove a player (**Remove …** in the
-  window, or **Kick** in the portal). They can come back with the invite, unless you renew it.
+- **Removing someone**: **Kick** on the room's page in the portal. They can come back with the invite, unless you
+  renew it.
 - **A new invite**: **Renew invite** on the room's page in the portal makes the old link stop working. For when it
   went somewhere it should not have.
-- **Ending**: **End for everyone** in the window (**End session** in the portal) sends everybody out and closes
-  the invite.
+- **Ending**: **End session** on the room's page in the portal sends everybody out and closes the invite.
 - **The host**: many games need one page to run what must run once (enemies, a ball, the clock). That is the first
   to join, and after them whoever has been there longest and is not away. It passes on by itself when the host
   leaves, reloads, or puts the game in the background.
@@ -85,7 +91,8 @@ turned away, and the owner can let another in from the portal. The room's owner 
 
 ## When it does not work
 
-- *That doesn't look like a room URL*: paste it from the portal, whole.
+- *Somebody in this room already has that name*: two players in a room never have the same name, whatever the
+  capitals. Choose another.
 - *This room isn't set up for …*: the game's address is not the one the room was made for. Add it on the room's
   page in the portal (the address as the browser shows it, without the path).
 - On a phone on the same Wi-Fi as a server on your own computer: use the computer's address on the network, not

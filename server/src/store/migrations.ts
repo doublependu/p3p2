@@ -85,4 +85,8 @@ export const MIGRATIONS: string[] = [
   -- not, otherwise how many of the code's last characters are left out (0 for none).
   ALTER TABLE rooms ADD COLUMN front INTEGER;
   `,
+  /* 6 */ `
+  -- The URL parameter the room's game reads its invite from, for the links the portal builds. NULL for "room".
+  ALTER TABLE rooms ADD COLUMN param TEXT;
+  `,
 ]

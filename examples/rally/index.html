@@ -28,10 +28,7 @@
 <!-- The game's own menu: ui: false, so the client's panel is never loaded. -->
 <section id="menu" aria-label="Multiplayer">
   <label>Your name <input id="name" maxlength="40" autocomplete="nickname"></label>
-  <div id="hosting">
-    <label>Room URL <input id="room-url" inputmode="url" placeholder="https://your-server/room/…" autocomplete="off"></label>
-    <p><button id="host" type="button">Host a game</button></p>
-  </div>
+  <p id="hosting">To play somebody, open an invite link from a p3p2 server.</p>
   <div id="asking" hidden>
     <p id="ask"></p>
     <p><button id="join" type="button">Join</button> <button id="alone" type="button">Play alone</button></p>
@@ -40,7 +37,7 @@
     <p id="where"></p>
     <label id="invite-row">Invite <input id="invite" readonly aria-label="Invite"> <button id="copy" type="button">Copy</button></label>
     <ul id="members" aria-label="Players"></ul>
-    <p><button id="play" type="button">Play</button> <button id="leave" type="button">Leave</button> <button id="end" type="button" hidden>End for everyone</button></p>
+    <p><button id="play" type="button">Play</button> <button id="leave" type="button">Leave</button></p>
   </div>
   <p id="problem" role="alert"></p>
 </section>

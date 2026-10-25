@@ -16,6 +16,7 @@ import {
   type MemberInfo,
   type MemberState,
   type MsgFrame,
+  nameKey,
   PROTO,
   parseBinaryHeader,
   parseClientFrame,
@@ -591,9 +592,21 @@ export class Hub {
 
     let room = this.rooms.get(rec.id)
     let member: Member | undefined
+    // Where the client's copy of the log ends, when it is the same member coming back with one.
+    let lastSeq: number | undefined
     if (f.resume && room) {
       const m = room.members.get(f.resume.member)
-      if (m && m.pid === f.player.pid && safeEqual(m.token, f.resume.token)) member = m
+      if (m && m.pid === f.player.pid && safeEqual(m.token, f.resume.token)) {
+        member = m
+        lastSeq = f.resume.lastSeq
+      }
+    }
+    // The same player from another page, without the member's token: another tab of the same browser. One player,
+    // one place: the newer page takes it. The player's secret, checked above, is what says it is the same player.
+    let other = false
+    if (!member && room) {
+      for (const m of room.members.values()) if (m.pid === f.player.pid) member = m
+      other = member !== undefined
     }
 
     // Players whose copies of the game differ would not understand each other's messages.
@@ -608,26 +621,37 @@ export class Hub {
       }
     }
 
-    // Where the client's copy of the log ends, when it is the same member coming back with one.
-    const lastSeq = member ? f.resume?.lastSeq : undefined
     if (member) {
-      // Same member, new connection: a reload, a network blip, or the tab was duplicated.
+      // Same member, new connection: a reload, a network blip, the tab was duplicated, or another tab took it.
       const old = member.session
       if (old) {
         old.member = null
         old.room = null
         this.bye(old, 'replaced')
+        member.session = null
+        // Another page has none of the old page's game, which is still running: the role passes on, as at a reload.
+        if (other) this.handOff(room!, member, now)
       }
       member.game = f.game
+      member.mod = mod
     } else {
       const cap = Math.min(rec.maxMembers, this.limits.maxMembersCap)
       if (room && room.members.size >= cap) return this.fail(s, 'full', 'The room is full')
+      // One name, one member: the others could not tell two of them apart. Members in their grace period count.
+      const name = cleanName(f.name)
+      const taken = (n: string) => room !== undefined && [...room.members.values()].some((o) => nameKey(o.name) === nameKey(n))
+      if (name && taken(name)) {
+        this.log('refused', { code: 'name', room: rec.id })
+        return this.fail(s, 'name', 'Someone in this room already has that name')
+      }
       if (!room) room = this.openRoom(rec)
       const id = room.nextId++
+      let free = id
+      while (!name && taken(`Player ${free}`)) free++
       member = {
         id,
         pid: f.player.pid,
-        name: cleanName(f.name) || `Player ${id}`,
+        name: name || `Player ${free}`,
         order: room.nextOrder++,
         mod,
         token: newToken(),
@@ -1063,6 +1087,19 @@ export class Hub {
     const out = JSON.stringify({ t: 'state', id: m.id, state })
     for (const o of room.members.values()) if (o !== m && o.session) this.deliver(o, out, false)
     this.elect(room, now)
+  }
+
+  /** Passes the host role on from `m`, if it has it, to the earliest of the others who is here. With nobody, it stays. */
+  private handOff(room: LiveRoom, m: Member, now: number): void {
+    if (room.host !== m.id) return
+    let best: Member | undefined
+    for (const o of room.members.values()) {
+      if (o !== m && this.stateOf(o, now) === 'here' && (!best || o.order < best.order)) best = o
+    }
+    if (!best) return
+    room.host = best.id
+    this.broadcast(room, { t: 'host', id: best.id })
+    this.wantSnapshot(room)
   }
 
   /**

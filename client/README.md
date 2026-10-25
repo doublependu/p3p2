@@ -1,11 +1,12 @@
 # @p3p2/client
 
-Multiplayer for static web games, through a small server of your own. The player pastes a room URL into the
-game, gets an invite link and a QR code to send to friends, and everyone who opens the link plays and chats
-together. A reload, a dropped connection, or a phone switching networks comes back by itself.
+Multiplayer for static web games, through a small server of your own. The server's owner sends a room's invite
+link, or its QR code, to friends, and everyone who opens the link, the owner too, plays and chats together. A
+reload, a dropped connection, or a phone switching networks comes back by itself.
 
 It takes a p3p2 server: one Docker image, [`p3p2/p3p2`](https://hub.docker.com/r/p3p2/p3p2), on the smallest
 VPS there is ([hosting a server](https://github.com/doublependu/p3p2/blob/main/docs/self-host.md)).
+[p3p2.me](https://p3p2.me/) explains how to get a p3p2 server.
 
 ## Install
 

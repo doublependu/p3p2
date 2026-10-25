@@ -11,7 +11,7 @@ server (the same player id), and the second takes the first one's place. Chrome 
 private window, are two players.
 
 **By hand**: `npm run dev` here starts a server on port 8080. In its portal (http://localhost:8080) create a room
-for your game's address, paste the room URL into the game, create the invite, and open the invite in the other
+for your game's address, press **Open** on the room's page to join it, and open the same invite link in the other
 browser. A phone on the same Wi-Fi can join too: serve the game on your machine's LAN address
 (`vite --host`), and create the room for that address.
 
@@ -77,8 +77,8 @@ asked:
 npm run lag -- --latency 150 --jitter 50 --drop-every 30    # listens on 8081, forwards to 8080
 ```
 
-Paste the room URL with port 8081 in place of 8080: the invite is built from that address, so the host and every
-guest go through the proxy. In a test, `startLagProxy({ listen: 0, to, latency, jitter })` gives a proxy and its
+Open the invite link with port 8081 in place of 8080: the link the panel then shows is built from that address, so
+everyone who opens it goes through the proxy. In a test, `startLagProxy({ listen: 0, to, latency, jitter })` gives a proxy and its
 `drop()`. Test with 150 ms each way and a cut: a page that reconnects must come back to the same game.
 
 ## Browsers

@@ -103,6 +103,9 @@ must be decided in one place, and sends what it decided as messages, `volatile` 
 
 - **Say everything again now and then.** A report that names every unit is also all a newcomer and the next host
   need, down to the enemies still to come.
+- **Say when.** A report arrives some milliseconds after it was sent, a different number each time. Send
+  `room.now()` with it, and carry what moves on by the report's age, or draw it a little in the past with `Smooth`.
+  Drawn as it arrives, it goes back and forth.
 - **The next host knows what it was shown, not what the old one had in mind.** Put in the report what a unit is in
   the middle of (roused, charging), or let what cannot be picked up halfway end when the host changes.
 - **The host changes** when it leaves, reloads, puts its page in the background, loses its connection for five

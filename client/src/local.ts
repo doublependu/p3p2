@@ -36,7 +36,6 @@ class LocalRoom implements Room {
   readonly members: Member[]
   readonly host: Member
   readonly isHost = true
-  readonly isMod = true
   readonly inviteUrl = null
   readonly limits = { maxFrameBytes: Number.POSITIVE_INFINITY, maxLogBytes: Number.POSITIVE_INFINITY }
   readonly chat: Chat
@@ -192,20 +191,10 @@ class LocalRoom implements Room {
   }
 
   leave(): void {
-    this.close('left')
-  }
-
-  kick(): void {}
-
-  end(): void {
-    this.close('ended')
-  }
-
-  private close(reason: 'left' | 'ended'): void {
     if (this.status === 'closed') return
     this.status = 'closed'
     this.emit('status', 'closed')
-    this.emit('close', reason)
+    this.emit('close', 'left')
   }
 
   /** Never inside the call that caused it: a message from a server would not arrive that way either. */

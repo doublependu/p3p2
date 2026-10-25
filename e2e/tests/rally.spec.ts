@@ -6,7 +6,7 @@ import type { Browser, BrowserContext, Page } from '@playwright/test'
 import { GAME, HOST, PROXY, serverAt } from '../playwright.config.ts'
 import { startLagProxy } from '../tools/lag-proxy.ts'
 import { expect, type TestServer, test } from './fixtures.ts'
-import { closeEngines, createRoom, measure, otherEngines, phoneContext } from './helpers.ts'
+import { closeEngines, createRoom, end, kick, measure, otherEngines, phoneContext, through } from './helpers.ts'
 
 const RALLY = `${GAME}/rally/`
 
@@ -55,11 +55,12 @@ async function visit(where: Browser | BrowserContext, url: string = RALLY): Prom
 const inRoom = (page: Page) => expect.poll(() => rally(page, (r) => r.inRoom)).toBe(true)
 const problem = (page: Page) => page.locator('#problem')
 
-/** Hosts from the game's own menu, and returns the invite it shows. */
-async function open(page: Page, roomUrl: string, name: string): Promise<string> {
+/** Joins first through the room's invite, with the game's own "Join?", and returns the invite its menu shows. */
+async function open(page: Page, invite: string, name: string): Promise<string> {
+  await page.goto(invite)
+  await expect(page.locator('#ask')).toContainText('Join')
   await page.getByLabel('Your name').fill(name)
-  await page.getByLabel('Room URL').fill(roomUrl)
-  await page.getByRole('button', { name: 'Host a game' }).click()
+  await page.getByRole('button', { name: 'Join', exact: true }).click()
   await inRoom(page)
   return page.getByLabel('Invite', { exact: true }).inputValue()
 }
@@ -75,10 +76,10 @@ async function guest(where: Browser | BrowserContext, invite: string, name: stri
 }
 
 /** Two players who have pressed Play, and a ball in flight. */
-async function duel(browser: Browser, server: TestServer, name: string, through?: string) {
+async function duel(browser: Browser, server: TestServer, name: string, far?: string) {
   const owner = await createRoom(browser, server, name, RALLY)
   const ada = await visit(browser)
-  const invite = await open(ada, through ? owner.roomUrl.replace(server.url, through) : owner.roomUrl, 'Ada')
+  const invite = await open(ada, far ? through(owner.invite, server, far) : owner.invite, 'Ada')
   const grace = await guest(browser, invite, 'Grace')
   await ada.getByRole('button', { name: 'Play' }).click()
   await grace.getByRole('button', { name: 'Play' }).click()
@@ -125,14 +126,14 @@ test('an ordinary visit asks no server anything and loads only the game; alone, 
   await context.close()
 })
 
-test('its own menu: hosting, an invite, "Join?" from a lookup, the players with their ping, two sides and a watcher, one ball, a point; and never the panel', async ({ browser, server }) => {
+test('its own menu: "Join?" for the first in, an invite, "Join?" from a lookup, the players with their ping, two sides and a watcher, one ball, a point; and never the panel', async ({ browser, server }) => {
   const scripts: string[] = []
   const watch = (page: Page) => page.on('request', (r) => r.resourceType() === 'script' && scripts.push(new URL(r.url()).pathname))
   const owner = await createRoom(browser, server, 'Rally room', RALLY)
   const ada = await (await browser.newContext()).newPage()
   watch(ada)
   await ada.goto(RALLY)
-  const invite = await open(ada, owner.roomUrl, 'Ada')
+  const invite = await open(ada, owner.invite, 'Ada')
   expect(invite).toMatch(/\?room=/)
   await ada.getByRole('button', { name: 'Copy' }).click()
 
@@ -221,40 +222,37 @@ test('a player who reloads is back on the same side, and the rally goes on', asy
 test('leaving, being removed, and the end: each player is told why the room closed, in the game\'s words', async ({ browser, server }) => {
   const owner = await createRoom(browser, server, 'Closing', RALLY)
   const ada = await visit(browser)
-  const invite = await open(ada, owner.roomUrl, 'Ada')
+  const invite = await open(ada, owner.invite, 'Ada')
   const [grace, edsger, barbara] = [await guest(browser, invite, 'Grace'), await guest(browser, invite, 'Edsger'), await guest(browser, invite, 'Barbara')]
   await grace.getByRole('button', { name: 'Leave' }).click()
   await expect(problem(grace)).toHaveText('You left the game.')
-  await expect(edsger.getByRole('button', { name: /^Remove/ })).toHaveCount(0)
-  await ada.getByRole('button', { name: 'Remove Edsger' }).click()
-  await expect(problem(edsger)).toHaveText('The host took you out of the game.')
-  await ada.getByRole('button', { name: 'End for everyone' }).click()
-  await expect(problem(barbara)).toHaveText('The host ended the game for everybody.')
-  await expect(problem(ada)).toHaveText('The host ended the game for everybody.')
+  // Removing a player, and the end, are the owner's, in the portal: the game has no buttons for them.
+  for (const page of [ada, edsger]) await expect(page.getByRole('button', { name: /^(Remove|End)/ })).toHaveCount(0)
+  await kick(owner, 'Edsger')
+  await expect(problem(edsger)).toHaveText("The room's owner took you out of the game.")
+  await end(owner)
+  await expect(problem(barbara)).toHaveText("The room's owner ended the game for everybody.")
+  await expect(problem(ada)).toHaveText("The room's owner ended the game for everybody.")
   for (const page of [grace, edsger, barbara]) await expect(page.locator('#state')).toContainText('Playing alone')
   await close([ada, grace, edsger, barbara], owner)
 })
 
 test('refusals in the game\'s own words: a server that is not running, and an https page with a server on plain http', async ({ browser, server }) => {
   const owner = await createRoom(browser, server, 'Refusals', RALLY)
-  const key = owner.roomUrl.split('/room/')[1]
-  const ada = await visit(browser)
-  await ada.getByLabel('Room URL').fill(`http://${HOST}:18999/room/${key}`)
-  await ada.getByRole('button', { name: 'Host a game' }).click()
+  const code = owner.invite.split('/').at(-1)
+  const ada = await visit(browser, `${RALLY}?room=http://${HOST}:18999/${code}`)
   await expect(problem(ada)).toHaveText('No answer from that server. Is it running, and is the address right?')
 
-  // The same game, as an https site would serve it, with a room URL of a server on plain http by its name. The
+  // The same game, as an https site would serve it, with an invite to a server on plain http by its name. The
   // client knows before it asks anything.
   const context = await browser.newContext()
   await context.route('https://rally.test/**', async (r) => {
     const response = await r.fetch({ url: `${GAME}${new URL(r.request().url()).pathname}` })
     await r.fulfill({ response })
   })
-  const secure = await visit(context, 'https://rally.test/rally/')
   const asked: string[] = []
-  secure.on('request', (r) => r.url().includes('/api/') && asked.push(r.url()))
-  await secure.getByLabel('Room URL').fill(`http://p3p2.test:${server.port}/room/${key}`)
-  await secure.getByRole('button', { name: 'Host a game' }).click()
+  context.on('request', (r) => r.url().includes('/api/') && asked.push(r.url()))
+  const secure = await visit(context, `https://rally.test/rally/?room=http://p3p2.test:${server.port}/${code}`)
   await expect(problem(secure)).toHaveText('This game is on https, and that server is on plain http: the browser will not let the two talk.')
   expect(asked).toEqual([])
   await close([ada, secure], owner)
@@ -263,7 +261,7 @@ test('refusals in the game\'s own words: a server that is not running, and an ht
 test('too many lookups at once from one address: the next is refused, in the game\'s words', async ({ browser, server }) => {
   const owner = await createRoom(browser, server, 'Busy', RALLY)
   const ada = await visit(browser)
-  const invite = await open(ada, owner.roomUrl, 'Ada')
+  const invite = await open(ada, owner.invite, 'Ada')
   const code = new URL(invite).searchParams.get('room')!.split('/').at(-1)
   const lookup = () =>
     fetch(`${server.url}/api/v1/invite`, { headers: { authorization: `Bearer ${code}`, origin: GAME } }).then(
@@ -287,7 +285,7 @@ test('too many lookups at once from one address: the next is refused, in the gam
 test('a server that does not speak the game\'s protocol is refused, in the game\'s words', async ({ browser, server }) => {
   const owner = await createRoom(browser, server, 'Old server', RALLY)
   const ada = await visit(browser)
-  const invite = await open(ada, owner.roomUrl, 'Ada')
+  const invite = await open(ada, owner.invite, 'Ada')
   // Grace's hello is rewritten on its way to ask for a protocol the server does not take, and the server's own
   // answer comes back.
   const grace = await (await browser.newContext()).newPage()
@@ -306,7 +304,7 @@ test('a server that does not speak the game\'s protocol is refused, in the game\
 test('a browser that holds another player\'s id with the wrong key is refused, in the game\'s words', async ({ browser, server }) => {
   const owner = await createRoom(browser, server, 'Wrong key', RALLY)
   const ada = await visit(browser)
-  const invite = await open(ada, owner.roomUrl, 'Ada')
+  const invite = await open(ada, owner.invite, 'Ada')
   const pid = await ada.evaluate(() => (window as unknown as { p3p2: { room: { self: { pid: string } } } }).p3p2.room.self.pid)
   const context = await browser.newContext()
   await context.addInitScript(
@@ -347,7 +345,7 @@ test('Chrome against Firefox and WebKit: the same ball', async ({ browser, serve
   for (const { name, browser: other } of await otherEngines()) {
     const owner = await createRoom(browser, server, `Rally ${name}`, RALLY)
     const ada = await visit(browser)
-    const invite = await open(ada, owner.roomUrl, 'Ada')
+    const invite = await open(ada, owner.invite, 'Ada')
     const them = await guest(other, invite, name)
     await ada.getByRole('button', { name: 'Play' }).click()
     await them.getByRole('button', { name: 'Play' }).click()
@@ -362,7 +360,7 @@ test('Chrome against Firefox and WebKit: the same ball', async ({ browser, serve
 test('on a phone, a finger moves the paddle', async ({ browser, server }) => {
   const owner = await createRoom(browser, server, 'Pocket rally', RALLY)
   const ada = await visit(browser)
-  const invite = await open(ada, owner.roomUrl, 'Ada')
+  const invite = await open(ada, owner.invite, 'Ada')
   const phone = await guest(await phoneContext(browser, false), invite, 'Grace')
   await ada.getByRole('button', { name: 'Play' }).click()
   await phone.getByRole('button', { name: 'Play' }).tap()

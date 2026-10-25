@@ -23,7 +23,7 @@ const counted = (page: Page) => page.evaluate(() => (window as unknown as { card
 test('the host deals each player a card nobody else sees, in one message, until it is shown', async ({ browser, server }) => {
   const owner = await createRoom(browser, server, 'Card table', CARDS)
   const ada = await player(browser, CARDS)
-  const invite = await host(ada.page, owner.roomUrl, 'Ada')
+  const invite = await host(ada.page, owner.invite, 'Ada')
   await ada.page.locator('p3p2-panel').getByRole('button', { name: 'Close' }).click()
   const grace = await join(browser, invite, 'Grace')
   const edsger = await join(browser, invite, 'Edsger')

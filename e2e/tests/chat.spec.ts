@@ -1,6 +1,6 @@
-import type { Page, WebSocketRoute } from '@playwright/test'
+import type { Locator, Page, WebSocketRoute } from '@playwright/test'
 import { GAME, OTHER_SITE } from '../playwright.config.ts'
-import { accept, CHAT, createRoom, host, inInvite, join, type Player, player, scan, selfId } from './helpers.ts'
+import { accept, CHAT, createRoom, end, host, inInvite, join, kick, type Player, player, scan, selfId } from './helpers.ts'
 import { expect, test } from './fixtures.ts'
 
 test('a normal visit loads only the entry file', async ({ browser }) => {
@@ -17,7 +17,7 @@ test('a normal visit loads only the entry file', async ({ browser }) => {
 
   // The rest arrives when the player asks for it.
   await page.getByRole('button', { name: 'Multiplayer' }).click()
-  await expect(page.getByLabel('Room URL')).toBeVisible()
+  await expect(page.getByRole('dialog', { name: 'Multiplayer' })).toBeVisible()
   expect(scripts.sort()).toEqual(['/dist/p3p2-core.js', '/dist/p3p2-panel.js', '/dist/p3p2.js'])
   await context.close()
 })
@@ -25,7 +25,7 @@ test('a normal visit loads only the entry file', async ({ browser }) => {
 test('a host and two guests chat, and share a world', async ({ browser, server }) => {
   const owner = await createRoom(browser, server, 'Friday games')
   const ada = await player(browser)
-  const invite = await host(ada.page, owner.roomUrl, 'Ada')
+  const invite = await host(ada.page, owner.invite, 'Ada')
   expect(invite).toMatch(new RegExp(`^${CHAT}\\?room=${inInvite(server.url)}/[0-9a-z]{10}$`))
   await expect(ada.page.locator('#state')).toHaveText('In "Friday games" as Ada (the host), 1 here.')
 
@@ -75,7 +75,7 @@ for (const colorScheme of ['light', 'dark'] as const) {
     const context = await browser.newContext({ colorScheme })
     const page = await context.newPage()
     await page.goto(CHAT)
-    const invite = await host(page, owner.roomUrl, 'Ada')
+    const invite = await host(page, owner.invite, 'Ada')
 
     await page.getByRole('button', { name: 'QR code' }).click()
     const canvas = page.getByRole('img', { name: 'QR code of the invite link' })
@@ -102,16 +102,9 @@ for (const colorScheme of ['light', 'dark'] as const) {
 test('a room only works from its own game site', async ({ browser, server }) => {
   const owner = await createRoom(browser, server, 'Bound room')
   const ada = await player(browser)
-  const invite = await host(ada.page, owner.roomUrl, 'Ada')
+  const invite = await host(ada.page, owner.invite, 'Ada')
 
-  // The room URL, pasted into the same game on another site.
-  const elsewhere = await player(browser, `${OTHER_SITE}/chat.html`)
-  await elsewhere.page.getByRole('button', { name: 'Multiplayer' }).click()
-  await elsewhere.page.getByLabel('Room URL').fill(owner.roomUrl)
-  await expect(elsewhere.page.getByRole('status')).toContainText(`isn't set up for ${OTHER_SITE}`)
-  await expect(elsewhere.page.getByRole('button', { name: 'Create a multiplayer game room for my friends' })).toBeDisabled()
-
-  // The invite, opened on another site.
+  // The invite, opened in the same game on another site.
   const guest = await player(browser, invite.replace(GAME, OTHER_SITE))
   await expect(guest.page.getByRole('status')).toContainText(`isn't set up for ${OTHER_SITE}`)
   await expect(guest.page.getByRole('button', { name: 'Join', exact: true })).toBeDisabled()
@@ -119,14 +112,14 @@ test('a room only works from its own game site', async ({ browser, server }) => 
   await expect(guest.page.locator('#state')).toContainText('Playing alone')
   expect(new URL(guest.page.url()).search).toBe('')
 
-  for (const p of [ada, elsewhere, guest]) await p.context.close()
+  for (const p of [ada, guest]) await p.context.close()
   await owner.close()
 })
 
 test('a room is for the game first played in it: another game on the same site is turned away, until the owner lets it in', async ({ browser, server }) => {
   const owner = await createRoom(browser, server, 'One game room')
   const ada = await player(browser)
-  const invite = await host(ada.page, owner.roomUrl, 'Ada')
+  const invite = await host(ada.page, owner.invite, 'Ada')
 
   // The invite, opened in another game on the same site: same origin, another game id.
   const cards = await player(browser, invite.replace('/chat.html', '/cards.html'))
@@ -162,12 +155,12 @@ test('Share hands the invite to the system share sheet, where there is one', asy
   })
   const page = await context.newPage()
   await page.goto(CHAT)
-  const invite = await host(page, owner.roomUrl, 'Ada')
+  const invite = await host(page, owner.invite, 'Ada')
   await page.locator('p3p2-panel').getByRole('button', { name: 'Share' }).click()
   await expect.poll(() => page.evaluate(() => (window as unknown as { shared: { url: string }[] }).shared.map((s) => s.url))).toEqual([invite])
   // Without one, there is no Share button at all.
   const plain = await player(browser)
-  await host(plain.page, owner.roomUrl, 'Grace')
+  await host(plain.page, owner.invite, 'Grace')
   await expect(plain.page.locator('p3p2-panel').getByRole('button', { name: 'Share' })).toBeHidden()
   for (const c of [context, plain.context]) await c.close()
   await owner.close()
@@ -176,7 +169,7 @@ test('Share hands the invite to the system share sheet, where there is one', asy
 test('an invite that was replaced is refused; the new one works', async ({ browser, server }) => {
   const owner = await createRoom(browser, server, 'Renewed room')
   const ada = await player(browser)
-  const old = await host(ada.page, owner.roomUrl, 'Ada')
+  const old = await host(ada.page, owner.invite, 'Ada')
 
   await owner.portal.reload()
   owner.portal.once('dialog', (d) => void d.accept())
@@ -198,7 +191,7 @@ test('an invite that was replaced is refused; the new one works', async ({ brows
 test('a reload keeps the membership, for guest and host, and passes the host role on', async ({ browser, server }) => {
   const owner = await createRoom(browser, server, 'Reload room')
   const ada = await player(browser)
-  const invite = await host(ada.page, owner.roomUrl, 'Ada')
+  const invite = await host(ada.page, owner.invite, 'Ada')
   const grace = await join(browser, invite, 'Grace')
   const graceId = await selfId(grace.page)
   const adaId = await selfId(ada.page)
@@ -214,10 +207,9 @@ test('a reload keeps the membership, for guest and host, and passes the host rol
   await expect(ada.page.locator('#state')).toHaveText('In "Reload room" as Ada (hosted by Grace), 2 here.')
   await expect(grace.page.locator('#state')).toHaveText('In "Reload room" as Grace (the host), 2 here.')
   expect(await selfId(ada.page)).toBe(adaId)
-  // Still the key holder: the invite link and the controls are there.
+  // Still in the room, with the link to pass on.
   await ada.page.getByRole('button', { name: 'Multiplayer' }).click()
   await expect(ada.page.getByLabel('Invite link', { exact: true })).toHaveValue(invite)
-  await expect(ada.page.getByRole('button', { name: 'End for everyone' })).toBeVisible()
 
   // Nobody saw anyone leave.
   await grace.page.getByRole('button', { name: 'Multiplayer' }).click()
@@ -228,10 +220,10 @@ test('a reload keeps the membership, for guest and host, and passes the host rol
   await owner.close()
 })
 
-test('leave, kick, and end for everyone', async ({ browser, server }) => {
+test("leave; and the owner's Kick and End session, in the portal, where the players' panels have neither", async ({ browser, server }) => {
   const owner = await createRoom(browser, server, 'Bouncer room')
   const ada = await player(browser)
-  const invite = await host(ada.page, owner.roomUrl, 'Ada')
+  const invite = await host(ada.page, owner.invite, 'Ada')
   const grace = await join(browser, invite, 'Grace')
   const edsger = await join(browser, invite, 'Edsger')
   const barbara = await join(browser, invite, 'Barbara')
@@ -242,16 +234,19 @@ test('leave, kick, and end for everyone', async ({ browser, server }) => {
   await expect(ada.page.locator('#state')).toContainText('3 here')
   await expect(ada.page.locator('.log')).toContainText('Grace left')
 
-  await ada.page.getByRole('button', { name: 'Remove Edsger' }).click()
+  // Everybody came in through the invite, the first one too: nobody's panel can remove a player or end the game.
+  await barbara.page.getByRole('button', { name: 'Multiplayer' }).click()
+  for (const p of [ada, barbara]) {
+    await expect(p.page.getByRole('button', { name: /^Remove/ })).toHaveCount(0)
+    await expect(p.page.getByRole('button', { name: 'End for everyone' })).toHaveCount(0)
+  }
+
+  await kick(owner, 'Edsger')
   await expect(edsger.page.locator('#state')).toHaveText('Playing alone again (kicked).')
   await expect(edsger.page.getByRole('status')).toHaveText('You were removed from the room.')
   await expect(ada.page.locator('#state')).toContainText('2 here')
-  // Guests have no such button.
-  await barbara.page.getByRole('button', { name: 'Multiplayer' }).click()
-  await expect(barbara.page.getByRole('button', { name: 'Remove Ada' })).toHaveCount(0)
-  await expect(barbara.page.getByRole('button', { name: 'End for everyone' })).toHaveCount(0)
 
-  await ada.page.getByRole('button', { name: 'End for everyone' }).click()
+  await end(owner)
   await expect(barbara.page.locator('#state')).toHaveText('Playing alone again (ended).')
   await expect(barbara.page.getByRole('status')).toHaveText('The session was ended.')
   await expect(ada.page.locator('#state')).toHaveText('Playing alone again (ended).')
@@ -263,7 +258,7 @@ test('leave, kick, and end for everyone', async ({ browser, server }) => {
 test('the host role moves on when the host leaves', async ({ browser, server }) => {
   const owner = await createRoom(browser, server, 'Handover room')
   const ada = await player(browser)
-  const invite = await host(ada.page, owner.roomUrl, 'Ada')
+  const invite = await host(ada.page, owner.invite, 'Ada')
   const grace = await join(browser, invite, 'Grace')
   const edsger = await join(browser, invite, 'Edsger')
 
@@ -278,7 +273,7 @@ test('the host role moves on when the host leaves', async ({ browser, server }) 
 test('typing in the panel does not reach the game, but key releases do', async ({ browser, server }) => {
   const owner = await createRoom(browser, server, 'Keys room')
   const ada = await player(browser)
-  await host(ada.page, owner.roomUrl, 'Ada')
+  await host(ada.page, owner.invite, 'Ada')
   await ada.page.evaluate(() => {
     const w = window as unknown as { keys: { down: number; up: number; press: number } }
     w.keys = { down: 0, up: 0, press: 0 }
@@ -322,7 +317,7 @@ test('the panel fits a phone', async ({ browser, server }) => {
   const context = await browser.newContext({ viewport: { width: 360, height: 640 }, hasTouch: true, isMobile: true })
   const page = await context.newPage()
   await page.goto(CHAT)
-  await host(page, owner.roomUrl, 'Ada')
+  await host(page, owner.invite, 'Ada')
   const box = await page.locator('.card').boundingBox()
   expect(box!.x).toBeGreaterThanOrEqual(0)
   expect(box!.x + box!.width).toBeLessThanOrEqual(360)
@@ -359,7 +354,7 @@ test('the panel fits a phone', async ({ browser, server }) => {
 test('a dropped connection comes back by itself, as the same member', async ({ browser, server }) => {
   const owner = await createRoom(browser, server, 'Blip room')
   const ada = await player(browser)
-  const invite = await host(ada.page, owner.roomUrl, 'Ada')
+  const invite = await host(ada.page, owner.invite, 'Ada')
 
   // Grace's sockets pass through the test, which can cut them.
   const context = await browser.newContext()
@@ -399,7 +394,7 @@ test('a dropped connection comes back by itself, as the same member', async ({ b
 test('the invite link can be copied', async ({ browser, server }) => {
   const owner = await createRoom(browser, server, 'Copy room')
   const ada = await player(browser)
-  const invite = await host(ada.page, owner.roomUrl, 'Ada')
+  const invite = await host(ada.page, owner.invite, 'Ada')
   await ada.page.getByRole('button', { name: 'Copy' }).click()
   // With the Clipboard API: copied. Without it (plain http): the old command, or at least the
   // link is selected, ready for Ctrl+C or a long press.
@@ -413,7 +408,7 @@ test('the invite link can be copied', async ({ browser, server }) => {
 test('chat that comes while the panel is closed is counted on the multiplayer button', { tag: '@this-client' }, async ({ browser, server }) => {
   const owner = await createRoom(browser, server, 'Unread room')
   const ada = await player(browser)
-  const invite = await host(ada.page, owner.roomUrl, 'Ada')
+  const invite = await host(ada.page, owner.invite, 'Ada')
   const grace = await join(browser, invite, 'Grace')
   await ada.page.getByRole('button', { name: 'Close' }).click()
   const pill = (p: Player) => p.page.locator('p3p2-panel').getByRole('button', { name: /^Multiplayer/ })
@@ -461,8 +456,10 @@ async function onFrontPage(portal: Page, hidden: number): Promise<string> {
   return (await chars.textContent())!
 }
 
-test("the owner's room page has an invite link before anyone has hosted, and it opens the game in a new tab", { tag: '@this-server' }, async ({ browser, server }) => {
+test("the owner's room page has an invite link before anyone has played, and no room URL; the link opens the game in a new tab", { tag: '@this-server' }, async ({ browser, server }) => {
   const owner = await createRoom(browser, server, 'Fresh room')
+  await expect(owner.portal.getByLabel('Room URL')).toHaveCount(0)
+  await expect(owner.portal.getByText('everyone joins this room through it, you too')).toBeVisible()
   const link = await owner.portal.getByLabel('Invite link', { exact: true }).inputValue()
   expect(link).toMatch(new RegExp(`^${CHAT}\\?room=${inInvite(server.url)}/[0-9a-z]{10}$`))
   const [tab] = await Promise.all([owner.portal.context().waitForEvent('page'), owner.portal.getByRole('link', { name: 'Open', exact: true }).click()])
@@ -477,7 +474,7 @@ test("a friend who opens the server's address finds the room, types the characte
   const owner = await createRoom(browser, server, 'Friday night')
   const hidden = await onFrontPage(owner.portal, 4)
   const ada = await player(browser)
-  const invite = await host(ada.page, owner.roomUrl, 'Ada')
+  const invite = await host(ada.page, owner.invite, 'Ada')
   expect(invite.slice(-4)).toBe(hidden)
   const shown = `${invite.slice(0, -4)}----`
 
@@ -486,8 +483,12 @@ test("a friend who opens the server's address finds the room, types the characte
   await expect(grace.page.getByRole('heading', { name: 'Friday night' })).toBeVisible()
   await expect(grace.page.getByLabel('Invite link to Friday night')).toHaveValue(shown)
   await expect(grace.page.getByText('The game asks for the last 4 characters.')).toBeVisible()
-  await grace.page.getByRole('link', { name: 'Play', exact: true }).click()
-  await expect(grace.page).toHaveURL(shown)
+  // Play opens the game in a new tab, and the front page stays.
+  const [tab] = await Promise.all([grace.context.waitForEvent('page'), grace.page.getByRole('link', { name: 'Play', exact: true }).click()])
+  await expect(tab).toHaveURL(shown)
+  await expect(grace.page.getByRole('heading', { name: 'Friday night' })).toBeVisible()
+  await grace.page.close()
+  grace.page = tab
 
   const chars = grace.page.getByLabel('The last 4 characters')
   await expect(chars).toBeFocused()
@@ -515,7 +516,7 @@ test('a game with its own Join? puts in the characters the link leaves out itsel
   const owner = await createRoom(browser, server, 'Own menu room')
   const hidden = await onFrontPage(owner.portal, 4)
   const ada = await player(browser)
-  await host(ada.page, owner.roomUrl, 'Ada')
+  await host(ada.page, owner.invite, 'Ada')
   const visitor = await player(browser, `${server.url}/`)
   const shown = new URL(await visitor.page.getByLabel('Invite link to Own menu room').inputValue()).searchParams.get('room')!
 
@@ -559,14 +560,15 @@ test('the single-file build works without a bundler or modules', async ({ browse
   // A page of the game's site that knows nothing about p3p2.
   await page.goto(`${GAME}/index.html`)
   await page.addScriptTag({ url: '/dist/p3p2.iife.js' })
-  const result = await page.evaluate(async (roomUrl) => {
-    type Client = { host(url: string, o: { name: string }): Promise<{ self: { name: string }; isHost: boolean; inviteUrl: string }> }
+  const result = await page.evaluate(async (invite) => {
+    type Room = { self: { name: string }; isHost: boolean; inviteUrl: string }
+    type Client = { join(i: unknown, o: { ask: boolean; name: string }): Promise<Room> }
     const P3P2 = (window as unknown as { P3P2: (new (o: object) => Client) & { fromUrl(p: string, h: string): unknown } }).P3P2
     const parsed = P3P2.fromUrl('room', 'https://game.example.com/?room=p3p2.example.com/789xyz0abc')
     const p3p2 = new P3P2({ game: { id: 'script-tag', version: '1.0.0' } })
-    const room = await p3p2.host(roomUrl, { name: 'Ida' })
+    const room = await p3p2.join(P3P2.fromUrl('room', invite), { ask: false, name: 'Ida' })
     return { parsed, name: room.self.name, isHost: room.isHost, invite: room.inviteUrl }
-  }, owner.roomUrl)
+  }, owner.invite)
   expect(result.parsed).toEqual({ server: 'https://p3p2.example.com', code: '789xyz0abc' })
   expect(result.name).toBe('Ida')
   expect(result.isHost).toBe(true)
@@ -591,10 +593,110 @@ test('a game with a button of its own: the panel shows none, and opens when the 
   await expect(button).toHaveCount(0)
 
   await page.evaluate(() => (window as unknown as { p3p2: { open(): Promise<void> } }).p3p2.open())
-  await expect(page.getByLabel('Room URL')).toBeVisible()
+  const panel = page.getByRole('dialog', { name: 'Multiplayer' })
+  await expect(panel).toBeVisible()
   await expect(button).toHaveCount(0)
   await page.getByRole('button', { name: 'Close' }).click()
-  await expect(page.getByLabel('Room URL')).toBeHidden()
+  await expect(panel).toBeHidden()
   await expect(button).toHaveCount(0)
   await context.close()
+})
+
+test('outside a room the panel says to open an invite link, has no room URL, and links to p3p2.me in a new tab', { tag: '@this-client' }, async ({ browser }) => {
+  const context = await browser.newContext()
+  const page = await context.newPage()
+  await page.goto(CHAT)
+  await page.getByRole('button', { name: 'Multiplayer' }).click()
+  const panel = page.getByRole('dialog', { name: 'Multiplayer' })
+  await expect(panel).toContainText('To play with friends, open the invite link one of them sent you.')
+  await expect(panel.getByRole('textbox')).toHaveCount(0)
+  await expect(page.getByLabel('Room URL')).toHaveCount(0)
+  // Where to get a server, in a tab of its own: the game stays open. Not followed: the tests use no site but their own.
+  const site = panel.getByRole('link', { name: 'p3p2.me' })
+  await expect(site).toHaveAttribute('href', 'https://p3p2.me/')
+  await expect(site).toHaveAttribute('target', '_blank')
+  await context.close()
+})
+
+test('two tabs of one browser are one player: the newer takes the place, and the older says why', { tag: '@this-server' }, async ({ browser, server }) => {
+  const owner = await createRoom(browser, server, 'Two tabs room')
+  const ada = await player(browser)
+  const invite = await host(ada.page, owner.invite, 'Ada')
+  const grace = await join(browser, invite, 'Grace')
+  const id = await selfId(grace.page)
+  // The same invite, opened again in another tab of Grace's browser.
+  const tab = await grace.context.newPage()
+  await tab.goto(invite)
+  await accept(tab, 'Grace')
+  expect(await selfId(tab)).toBe(id)
+  await expect(grace.page.locator('#state')).toHaveText('Playing alone again (replaced).')
+  await expect(grace.page.getByRole('status')).toHaveText('This room is now open in another tab.')
+  // The others saw nobody come or go.
+  await expect(ada.page.locator('#state')).toContainText('2 here')
+  await expect(ada.page.locator('.members li')).toHaveCount(2)
+  await expect(ada.page.locator('.log li', { hasText: 'Grace joined' })).toHaveCount(1)
+  await expect(ada.page.locator('.log')).not.toContainText('Grace left')
+  for (const p of [ada, grace]) await p.context.close()
+  await owner.close()
+})
+
+test('a player who picks a name already in the room is asked for another, and gets in with it', { tag: ['@this-server', '@this-client'] }, async ({ browser, server }) => {
+  const owner = await createRoom(browser, server, 'Names room')
+  const ada = await player(browser)
+  const invite = await host(ada.page, owner.invite, 'Ada')
+  const other = await player(browser, invite)
+  const join = other.page.getByRole('button', { name: 'Join', exact: true })
+  const name = other.page.getByLabel('Your name')
+  await expect(join).toBeEnabled()
+  await name.fill('ADA')
+  await join.click()
+  await expect(other.page.getByRole('status')).toHaveText('Somebody in this room already has that name. Choose another.')
+  await expect(name).toBeFocused()
+  await expect(ada.page.locator('#state')).toContainText('1 here')
+  // Leaving the field shows the name as it will be: without what a name cannot have.
+  await name.fill('Ada 🎮 2')
+  await name.blur()
+  await expect(name).toHaveValue('Ada 2')
+  await accept(other.page, 'Ada 2')
+  await expect(ada.page.locator('#state')).toContainText('2 here')
+  for (const p of [ada, other]) await p.context.close()
+  await owner.close()
+})
+
+/** The background and the edge of a field, as drawn. */
+const look = (field: Locator) =>
+  field.evaluate((el) => {
+    const s = getComputedStyle(el)
+    return { background: s.backgroundColor, edge: s.borderTopColor }
+  })
+const TRANSPARENT = 'rgba(0, 0, 0, 0)'
+
+test('in the portal, a field nobody can change looks unlike one the owner can, light and dark', { tag: '@this-server' }, async ({ browser, server }) => {
+  const owner = await createRoom(browser, server, 'Look room')
+  for (const colorScheme of ['light', 'dark'] as const) {
+    await owner.portal.emulateMedia({ colorScheme })
+    const fixed = await look(owner.portal.getByLabel('Invite link', { exact: true }))
+    const changes = await look(owner.portal.getByLabel('Room name', { exact: true }))
+    expect(fixed.background, colorScheme).not.toBe(changes.background)
+    expect(fixed.edge, colorScheme).toBe(TRANSPARENT)
+    expect(changes.edge, colorScheme).not.toBe(TRANSPARENT)
+  }
+  await owner.close()
+})
+
+test('in the panel, the invite link and the chat log look unlike the fields a player types in, light and dark', { tag: '@this-client' }, async ({ browser, server }) => {
+  const owner = await createRoom(browser, server, 'Panel look room')
+  const ada = await player(browser)
+  await host(ada.page, owner.invite, 'Ada')
+  for (const colorScheme of ['light', 'dark'] as const) {
+    await ada.page.emulateMedia({ colorScheme })
+    const changes = await look(ada.page.getByPlaceholder('Say something…'))
+    for (const fixed of [await look(ada.page.getByLabel('Invite link', { exact: true })), await look(ada.page.locator('p3p2-panel .log'))]) {
+      expect(fixed.background, colorScheme).not.toBe(changes.background)
+      expect(fixed.edge, colorScheme).toBe(TRANSPARENT)
+    }
+    expect(changes.edge, colorScheme).not.toBe(TRANSPARENT)
+  }
+  await ada.context.close()
+  await owner.close()
 })

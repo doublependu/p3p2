@@ -244,7 +244,7 @@ test('in Chrome', async (t) => {
     assert.deepEqual(await page.evaluate(() => (window as unknown as { seen: unknown }).seen), { members: ['Ada'] })
     // The panel is a lazy chunk of the game's build, fetched from the game's own site.
     await page.getByRole('button', { name: 'Multiplayer' }).click()
-    await page.getByLabel('Room URL').waitFor()
+    await page.getByRole('dialog', { name: 'Multiplayer' }).waitFor()
     assert.deepEqual(errors, [])
   })
 })

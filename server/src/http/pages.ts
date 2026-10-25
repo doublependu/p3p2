@@ -118,7 +118,7 @@ export function dashboardPage(server: Server, rooms: RoomSummary[], form: NewRoo
   return layout(
     { title: 'Rooms', server, owner: true },
     html`<h1>Rooms</h1>
-<p class="soft">A room belongs to one game. Paste its URL into that game's multiplayer menu to host.</p>
+<p class="soft">A room belongs to one game. Its page has the invite link that you and your friends join with.</p>
 <div class="card">
   ${
     rooms.length
@@ -184,7 +184,6 @@ function frontNote(room: RoomRecord, invite: InviteRecord): Page | '' {
 
 export interface RoomView {
   room: RoomRecord
-  roomUrl: string
   invite: InviteRecord | null
   inviteLink: string
   expiry: string
@@ -205,15 +204,6 @@ export function roomPage(server: Server, v: RoomView): Page {
 ${v.error ? html`<p class="error" role="alert">${v.error}</p>` : ''}
 
 <div class="card">
-  <h2>Room URL</h2>
-  <div class="row">
-    <input class="mono" id="room-url" type="text" readonly value="${v.roomUrl}" aria-label="Room URL">
-    <button type="button" data-copy="room-url">Copy</button>
-  </div>
-  <p class="soft small hint">Paste it into the game's multiplayer menu. Anyone who has this URL can host in this room, so keep it to yourself.</p>
-</div>
-
-<div class="card">
   <h2>Invite link</h2>
   ${
     v.invite
@@ -222,7 +212,7 @@ ${v.error ? html`<p class="error" role="alert">${v.error}</p>` : ''}
     <button type="button" data-copy="invite-url">Copy</button>
     <a class="button" href="${v.inviteLink}" target="_blank" rel="noreferrer" title="Open the game in a new tab">Open</a>
   </div>
-  <p class="soft small hint">${v.expiry} Friends who open it join this room.</p>
+  <p class="soft small hint">Open it to play, and send it to your friends: everyone joins this room through it, you too. ${v.expiry}</p>
   ${frontNote(room, v.invite)}
   <img class="qr" src="${base}/qr.svg?c=${v.invite.code.slice(0, 4)}" width="220" height="220" alt="QR code of the invite link">
   <div class="actions">
@@ -230,7 +220,7 @@ ${v.error ? html`<p class="error" role="alert">${v.error}</p>` : ''}
       <button type="submit">Renew invite</button>
     </form>
   </div>`
-      : html`<p class="soft">No invite is open. The game makes one when you host; you can also make one here.</p>
+      : html`<p class="soft">No invite is open. Create one to play, and to let friends in.</p>
   <div class="actions"><form method="post" action="${base}/invite"><button type="submit">Create invite</button></form></div>`
   }
 </div>
@@ -288,6 +278,9 @@ ${v.error ? html`<p class="error" role="alert">${v.error}</p>` : ''}
       ([value, text]) => html`<option value="${value}" ${value === String(room.front ?? 'off') ? 'selected' : ''}>${text}</option>`,
     )}</select>
     <p class="soft small">The front page is this server's address, for anyone who isn't logged in. Hiding more of the link, or taking the room off, makes a new invite. Only games on p3p2 0.2 or later ask for the characters left out.</p>
+    <label for="param">Invite parameter</label>
+    <input class="mono" id="param" name="param" type="text" maxlength="32" placeholder="room" value="${room.param ?? ''}" autocomplete="off" spellcheck="false">
+    <p class="soft small">The parameter the game reads its invite from, in the link: <code>room</code>, unless its developer says otherwise.</p>
     <div class="actions"><button type="submit">Save</button></div>
   </form>
   <h3>The game</h3>
@@ -307,7 +300,7 @@ ${v.error ? html`<p class="error" role="alert">${v.error}</p>` : ''}
     <form method="post" action="${base}/clear" data-confirm="Delete everything the game saved in this room? Players online are disconnected.">
       <button class="danger" type="submit">Clear saved data</button>
     </form>
-    <form method="post" action="${base}/rotate" data-confirm="Replace the room URL with a new one? The old URL stops working and the session ends.">
+    <form method="post" action="${base}/rotate" data-confirm="Give this room a new key? This page moves to a new address, games on p3p2 0.1 can't host with the old one, and the session ends.">
       <button class="danger" type="submit">Rotate key</button>
     </form>
     <form method="post" action="${base}/delete" data-confirm="Delete this room and everything saved in it?">
@@ -333,7 +326,7 @@ export function frontPage(server: Server, rooms: FrontRoom[]): Page {
   return layout(
     { title: 'Rooms', server, owner: false },
     html`<h1>Rooms</h1>
-<p class="soft">Rooms on this server that friends can join. <b>Play</b> opens the game, which asks whether to join.</p>
+<p class="soft">Rooms on this server that friends can join. <b>Play</b> opens the game in a new tab, and it asks whether to join.</p>
 ${
   rooms.length
     ? rooms.map(
@@ -342,7 +335,7 @@ ${
   <p class="soft small">${host(r.game)} · ${r.members >= r.maxMembers ? 'full' : `${r.members} of ${r.maxMembers} playing`}</p>
   <div class="row">
     <input class="mono" type="text" readonly value="${r.link}" aria-label="Invite link to ${r.name}">
-    <a class="button primary" href="${r.link}">Play</a>
+    <a class="button primary" href="${r.link}" target="_blank" rel="noreferrer" title="Open the game in a new tab">Play</a>
   </div>
   ${
     r.hidden
@@ -362,8 +355,8 @@ export function publicRoomPage(server: Server, room: RoomRecord): Page {
     { title: room.name, server, owner: false },
     html`<div class="card narrow">
   <h1>${room.name}</h1>
-  <p>This is a p3p2 room for <a href="${room.gameUrl}" rel="noreferrer">${host(room.gameUrl)}</a>.</p>
-  <p>To host a game in it, copy this page's address and paste it into the game's multiplayer menu.</p>
+  <p>This is the page of a p3p2 room for <a href="${room.gameUrl}" rel="noreferrer">${host(room.gameUrl)}</a>, for its owner.</p>
+  <p>To play, open the invite link you were sent.</p>
   <p class="soft small"><a href="/login">Owner log in</a></p>
 </div>`,
   )

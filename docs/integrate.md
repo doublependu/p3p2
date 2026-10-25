@@ -6,16 +6,19 @@ and then a state too large for one message, and a simulation that one player run
 others.
 
 You need the game's source, and a p3p2 server to try it against. The one in this repository
-runs on your own machine: [Try it on one machine](../README.md#try-it-on-one-machine).
+runs on your own machine: [Try it on one machine](../README.md#try-it-on-one-machine). For one your
+players can reach, [p3p2.me](https://p3p2.me/) explains how to get a p3p2 server.
 
 ## What the player gets
 
 A multiplayer button in a corner of your game, with the p3p2 mark on it: three players. Behind it:
 
-1. a field to paste a **room URL** into, which the owner of a p3p2 server gives out;
-2. a button that turns that into an **invite link**, with a QR code;
-3. for whoever opens the link, a question, *Join?*, and then the same room;
-4. a list of who is there, and chat.
+1. for whoever opens a room's **invite link**, which the owner of a p3p2 server sends out, a question, *Join?*,
+   and then the same room;
+2. the same link to pass on, with a QR code;
+3. a list of who is there, and chat.
+
+Opened without a link, it says to open one, and points to [p3p2.me](https://p3p2.me/) for a server.
 
 Your game decides what being in the same room means.
 
@@ -187,6 +190,11 @@ room.on('host-change', () => {
 
 - **Say everything again now and then.** A report that names every unit, ten times a second, is
   also all a newcomer needs, and all the next host needs.
+- **Say when.** A report says where something was when the host sent it, and arrives some milliseconds later, a
+  different number each time: drawn as it arrives, the thing goes back and forth by that much. Send `room.now()`
+  with it. Where its path can be worked out, carry it on by its age (`room.now() - at`), and draw it where it is at
+  each frame, as [`examples/host-ball/`](../examples/host-ball/index.html) does with its ball. Otherwise draw it a
+  little in the past with `Smooth`, as [`examples/arena/`](../examples/arena/arena.js) does.
 - **What must not be lost is not `volatile`**: a wall that came down, a change of phase.
 - **Bytes are cheaper than JSON** for a list that goes out ten times a second: `room.send`
   takes an `ArrayBuffer` or a typed array, and the others get a `Uint8Array`.
@@ -292,9 +300,9 @@ creature is moved by whoever has been in the room longest of those down there.
 
 1. Start the server and create a room in its portal. As the game URL give the address you will
    open the game at, with this machine's LAN address and never `localhost`.
-2. Open the game there, open the multiplayer panel, paste the room URL, and create the invite.
-3. Open the invite in **another browser**, not another tab: a tab of the same browser is the
-   same player. Then scan the QR code with a phone on the same Wi-Fi.
+2. On the room's page, press **Open**: the game opens with the room's invite link, and asks *Join?*.
+3. Open the same link in **another browser**, not another tab: a tab of the same browser is the
+   same player, and takes its place. Then scan the QR code with a phone on the same Wi-Fi.
 4. `npm run lag` puts 150 ms and a connection that drops in front of the server:
    [Testing on a bad connection](../README.md#testing-on-a-bad-connection).
 
@@ -321,6 +329,24 @@ creature is moved by whoever has been in the room longest of those down there.
   member. Somebody who closes the page keeps their place for 30 seconds.
 
 [sharing-state.md](sharing-state.md#the-traps) has the rest of the traps.
+
+## From 0.1 to 0.2
+
+A game made with 0.1 keeps working with a 0.2 server. Moving it to the 0.2 client changes this:
+
+- **Everybody joins through a room's invite link**, the owner of the server too. `p3p2.host()` is gone, and with it
+  `room.isMod`, `room.kick()`, `room.end()` and the error codes `room-url` and `room`. Removing a player and ending
+  the game are on the room's page in the portal. A game with a menu of its own keeps only its *Join?*, as
+  [`examples/rally/`](../examples/rally/rally.js) does.
+- **The panel** has no field for a room URL, and no buttons to remove a player or to end the game. Outside a room
+  it says to open an invite link.
+- **A `urlParam` of your own**: the room's owner sets the same one as the room's **Invite parameter** in the
+  portal, for the links it shows.
+- **`Smooth` only draws between reports** by default: `coast` is 0. `coast: 250` is what 0.1 did.
+- **A link from a server's front page may leave the code's last characters out**, a dash for each. The panel asks
+  for them. A game with a *Join?* of its own puts them in itself ([api.md](api.md)).
+- **A room refuses a name one of its members has**, whatever the capitals, with the error code `name`. A name keeps
+  only letters and digits of any language, spaces and `. - _ '`. That is the server's doing, for 0.1 games too.
 
 
 ## Before you call it done

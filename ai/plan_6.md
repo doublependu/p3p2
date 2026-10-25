@@ -32,6 +32,13 @@ recommendations.
 - **p3p2.me is yours** (you): the comment in `client/src/logo.ts` that names it stays. That answers the question
   `ai/next_5.md` left open.
 - **The README and the docs mention p3p2.me** (you, 2026-10-25): see "p3p2.me in the docs" under feature 4.
+- **Decisions 0 to 5 as recommended** ("Implement plan 6 with the recommendations", 2026-10-25):
+  - one release, 0.2.0, with plans 5 and 6;
+  - the newer tab takes the player's place;
+  - names of letters and digits of any language, spaces and `. - _ '`;
+  - no room URL in the 0.2 client's API;
+  - the server still takes room URLs from 0.1 games;
+  - an **Invite parameter** in the room's settings.
 
 ## Decisions for you
 

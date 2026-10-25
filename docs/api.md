@@ -31,9 +31,9 @@ const p3p2 = new P3P2({ game: { id: 'my-game', version: '1.4.0' } })
 | `ui.corner` | Where the panel sits: `'top-right'` (the default), `'top-left'`, `'bottom-right'`, `'bottom-left'`. |
 | `ui.button` | `false`: no multiplayer button. The game opens the panel with `p3p2.open()` from a button of its own ([duel](../examples/duel/duel.js)). |
 | `ui.chatKey` | The key that opens chat while a room is open; `'Enter'` by default, `false` for none ([world](../examples/world/world.js): `'t'`). |
-| `urlParam` | The query parameter that carries the invite: `room` by default. |
+| `urlParam` | The query parameter that carries the invite: `room` by default. With another, the room's owner sets the same one as the room's **Invite parameter** in the portal, for the links it shows. |
 
-**Joining, hosting, leaving**
+**Joining, leaving**
 
 | | |
 |---|---|
@@ -42,20 +42,20 @@ const p3p2 = new P3P2({ game: { id: 'my-game', version: '1.4.0' } })
 | `p3p2.invite` | The invite in the page's address (`{ server, code }`), or `null`. No network. A link from a server's front page may leave the code's last characters out: `code` then ends in a dash for each (see below). |
 | `p3p2.peek(invite)` | Who is behind an invite, without joining: `{ roomName, hostName, members, maxMembers }`. For a game that asks "Join?" in its own words ([rally](../examples/rally/rally.js)). |
 | `p3p2.join(invite, options)` | Joins through an invite. `options.ask`: ask the player in the panel first (default: when the panel is on). `options.name`: the player's name. Resolves to `null` if the player chose to play alone. |
-| `p3p2.host(roomUrl, options)` | Hosts in the room behind a room URL from the portal, and creates the invite link. `options.name`: the player's name. |
 | `p3p2.open()` | Opens the panel. |
 | `p3p2.room` | The room the player is in, or `null`. |
 | `p3p2.options` | The options it was made with. |
-| `p3p2.on('room', room => …)` | A room started: joined, hosted, or back after a reload. A room already open is reported at once. Returns a function that stops listening. |
-| `p3p2.on('leave', reason => …)` | The room is over for this player. `reason`: `'left'`, `'kicked'`, `'ended'`, `'replaced'` (the same player opened it in another tab) or `'lost'` (the connection could not be restored). |
+| `p3p2.on('room', room => …)` | A room started: joined, or back after a reload. A room already open is reported at once. Returns a function that stops listening. |
+| `p3p2.on('leave', reason => …)` | The room is over for this player. `reason`: `'left'`, `'kicked'` (by the room's owner, in the portal), `'ended'` (likewise), `'replaced'` (the same player opened it in another tab) or `'lost'` (the connection could not be restored). |
 | `P3P2.fromUrl(param, href)` | The invite in an address, read with a parameter name. |
 | `P3P2.isTyping` | True while the player is typing in the panel: for a game that listens to keys in the capture phase. |
 | `P3P2.local(name)` | A room of one, in the page, that talks to no server: the same code alone and with friends. |
 
 Errors that these reject with carry a `code` next to the message (`P3P2Error`): `unreachable`, `mixed` (an https
-page and an http server), `origin` (the room does not allow this site), `room-url`, `room`, `auth` (the invite
-expired, or the characters put in for the dashes are wrong), `hidden` (the code still ends in dashes), `full`,
-`rate` (too many tries, from this address or for the room), `proto`, `player`, `version`.
+page and an http server), `origin` (the room does not allow this site), `auth` (the invite expired, or the
+characters put in for the dashes are wrong), `hidden` (the code still ends in dashes), `full`, `name` (a member of
+the room has that name already, whatever its capitals), `rate` (too many tries, from this address or for the room),
+`proto`, `player`, `version`.
 [`examples/rally/`](../examples/rally/rally.js) says each in its own words.
 
 A link from a server's front page may leave the code's last characters out, for the player to type: `p3p2.invite`
@@ -80,7 +80,6 @@ if (invite && missing) invite.code = invite.code.slice(0, -missing) + (await ask
 | `room.members` | Everybody in the room, `self` included, in the order they joined. |
 | `room.host` | The member who runs what must run once, or `null`. The first to join, then the earliest who is `here`. |
 | `room.isHost` | Whether that is this player. |
-| `room.isMod` | True for a player who joined with the room URL: they can kick and end. |
 | `room.limits` | What the server takes, in bytes: `maxFrameBytes`, and `maxLogBytes`, how large the room's log may grow. `Infinity` where the server does not say. |
 | `room.inviteUrl` | The link to share, or `null` when this player has none. |
 | `room.status` | `'open'`, `'reconnecting'` or `'closed'`. |
@@ -124,13 +123,11 @@ if (invite && missing) invite.code = invite.code.slice(0, -missing) + (await ask
 | `'error'` | `({ code, message })`: the server refused something, and the room stays open. `too-big` (a value or an op over its cap), `rate`, `forbidden`, `seq`. |
 | `'close'` | `(reason)`, as `p3p2.on('leave')` ([rally](../examples/rally/rally.js) says why). |
 
-**Leaving and moderation**
+**Leaving**
 
 | | |
 |---|---|
-| `room.leave()` | Leaves now. |
-| `room.kick(memberId)` | For mods. |
-| `room.end()` | For mods: everybody out, and the invite closed. |
+| `room.leave()` | Leaves now. Removing a player and ending the game are the room's owner's, in the server's portal. |
 
 ## `room.presence`
 

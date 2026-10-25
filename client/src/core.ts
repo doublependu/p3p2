@@ -1,15 +1,6 @@
 // The lazy part of the library: REST calls, identity, and the room's lifecycle.
 
-import {
-  type Auth,
-  cleanName,
-  cleanText,
-  INVITE_CODE_RE,
-  type InviteRef,
-  inviteUrl,
-  parseRoomUrl,
-  type RoomRef,
-} from '@p3p2/protocol'
+import { type Auth, cleanName, cleanText, type InviteRef, inviteUrl } from '@p3p2/protocol'
 import { Failure } from './errors.ts'
 import type { Bridge } from './index.ts'
 import { type Resume, RoomClient } from './room.ts'
@@ -23,12 +14,6 @@ interface SavedSession {
   resume: Resume
   /** The invite behind the link this player can share. */
   invite: InviteRef | null
-}
-
-export interface RoomDetails {
-  name: string
-  members: number
-  maxMembers: number
 }
 
 const memory = new Map<string, string>()
@@ -106,15 +91,6 @@ export class Controller {
     local.set('p3p2:name', cleanName(value) || null)
   }
 
-  /** The room URL the host pasted last time, for this game. */
-  get savedRoomUrl(): string {
-    return local.get(`p3p2:room:${this.gameId}`) ?? ''
-  }
-
-  set savedRoomUrl(value: string) {
-    local.set(`p3p2:room:${this.gameId}`, value || null)
-  }
-
   /** This browser's player id on one server. Random, and kept apart per server. */
   private identity(server: string): { pid: string; secret: string } {
     const key = `p3p2:pid:${server}`
@@ -127,18 +103,14 @@ export class Controller {
 
   // ---- REST ----
 
-  private async call(server: string, path: string, token: string, body?: unknown): Promise<Record<string, unknown>> {
+  private async call(server: string, path: string, token: string): Promise<Record<string, unknown>> {
     if (location.protocol === 'https:' && server.startsWith('http:') && !/^http:\/\/(localhost|127\.0\.0\.1)[:/]/.test(`${server}/`)) {
       throw new Failure('mixed', server)
     }
-    const headers: Record<string, string> = { Authorization: `Bearer ${token}` }
-    if (body !== undefined) headers['Content-Type'] = 'application/json'
     let res: Response
     try {
       res = await fetch(`${server}/api/v1${path}`, {
-        method: body === undefined ? 'GET' : 'POST',
-        headers,
-        body: body === undefined ? undefined : JSON.stringify(body),
+        headers: { Authorization: `Bearer ${token}` },
         credentials: 'omit',
         cache: 'no-store',
         referrerPolicy: 'no-referrer',
@@ -176,42 +148,7 @@ export class Controller {
     }
   }
 
-  /** Checks a pasted room URL against its server. */
-  async checkRoom(text: string): Promise<{ ref: RoomRef; details: RoomDetails }> {
-    const ref = parseRoomUrl(text)
-    if (!ref) throw new Failure('room-url', '')
-    try {
-      const data = await this.call(ref.server, '/room', ref.key)
-      return {
-        ref,
-        details: {
-          name: cleanText(data.name, 60) || 'Room',
-          members: count(data.members),
-          maxMembers: count(data.maxMembers),
-        },
-      }
-    } catch (err) {
-      throw err instanceof Failure && err.code === 'auth' ? new Failure('room', ref.server) : err
-    }
-  }
-
   // ---- rooms ----
-
-  async host(roomUrl: string, options: { name?: string } = {}): Promise<Room> {
-    const ref = parseRoomUrl(roomUrl)
-    if (!ref) throw new Failure('room-url', '')
-    let grant: Record<string, unknown>
-    try {
-      // The server is told where this game lives, so its portal can show the same link.
-      grant = await this.call(ref.server, '/room/invite', ref.key, { page: location.href, param: this.bridge.param })
-    } catch (err) {
-      throw err instanceof Failure && err.code === 'auth' ? new Failure('room', ref.server) : err
-    }
-    const code = typeof grant.code === 'string' && INVITE_CODE_RE.test(grant.code) ? grant.code : null
-    if (!code) throw new Failure('bad-answer', ref.server)
-    this.savedRoomUrl = roomUrl.trim()
-    return this.enter(ref.server, { key: ref.key }, { server: ref.server, code }, null, options.name)
-  }
 
   async join(invite: Invite, options: JoinOptions = {}): Promise<Room | null> {
     if (options.name !== undefined) this.name = options.name
@@ -248,8 +185,7 @@ export class Controller {
     }
   }
 
-  private async enter(server: string, auth: Auth, invite: InviteRef | null, resume: Resume | null, name?: string): Promise<Room> {
-    if (name !== undefined) this.name = name
+  private async enter(server: string, auth: Auth, invite: InviteRef | null, resume: Resume | null): Promise<Room> {
     this.room?.leave()
     const room = new RoomClient({
       server,

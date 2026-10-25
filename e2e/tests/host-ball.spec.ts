@@ -2,8 +2,9 @@
 // of a wall. The role passes on when the host goes, and the wall outlives everyone.
 
 import type { Browser, Page } from '@playwright/test'
-import { GAME } from '../playwright.config.ts'
-import { createRoom, host, join, player, type Server } from './helpers.ts'
+import { GAME, HOST, serverAt } from '../playwright.config.ts'
+import { startLagProxy } from '../tools/lag-proxy.ts'
+import { createRoom, host, join, player, type Server, through } from './helpers.ts'
 import { expect, test } from './fixtures.ts'
 
 // A log this small is full after a few dozen ops: the host's snapshots are what keep the wall.
@@ -11,6 +12,8 @@ test.use({ settings: { P3P2_MAX_LOG_BYTES: '16384' } })
 
 // Four times the speed: a brick about every second.
 const BALL = `${GAME}/host-ball/?speed=4`
+/** The ball's speed at that, in the field's units a second. The field is 400 wide. */
+const SPEED = 170 * 4
 
 /** What the page shows of its game. */
 interface Game {
@@ -23,10 +26,11 @@ interface Game {
   seq: number
   host: boolean
   ticks: number
+  drawn: [number, number]
   kick(x: number, y: number): void
 }
 
-type Look = Omit<Game, 'kick'>
+type Look = Omit<Game, 'kick' | 'drawn'>
 
 function look(page: Page): Promise<Look> {
   return page.evaluate(() => {
@@ -64,6 +68,62 @@ async function travel(page: Page): Promise<number> {
   return path
 }
 
+/** Where the page draws the ball at each frame for `ms`: [the moment, on a clock every page here shares, x, y]. */
+function frames(page: Page, ms: number): Promise<[number, number, number][]> {
+  return page.evaluate(
+    (ms) =>
+      new Promise((resolve) => {
+        const out: [number, number, number][] = []
+        const end = performance.now() + ms
+        requestAnimationFrame(function frame(t) {
+          const [x, y] = (window as unknown as { game: Game }).game.drawn
+          out.push([performance.timeOrigin + t, x, y])
+          if (t < end) requestAnimationFrame(frame)
+          else resolve(out)
+        })
+      }),
+    ms,
+  )
+}
+
+/**
+ * The frames whose step is more than a quarter longer or shorter than the ball's speed gives, of those where the ball
+ * goes straight on: a frame that turns it off a wall or a brick, or the frame before, is shorter by rights.
+ */
+function uneven(rows: [number, number, number][]): { straight: number; uneven: number } {
+  const steps = rows.slice(1).map(([t, x, y], i) => [x - rows[i]![1], y - rows[i]![2], (t - rows[i]![0]) / 1000] as const)
+  const same = (a: (typeof steps)[number], b: (typeof steps)[number]) => {
+    const la = Math.hypot(a[0], a[1])
+    const lb = Math.hypot(b[0], b[1])
+    return !la || !lb || (a[0] * b[0] + a[1] * b[1]) / (la * lb) > 0.999
+  }
+  let straight = 0
+  let off = 0
+  for (let i = 1; i < steps.length - 1; i++) {
+    const [dx, dy, dt] = steps[i]!
+    if (!same(steps[i - 1]!, steps[i]!) || !same(steps[i]!, steps[i + 1]!)) continue
+    straight++
+    const ratio = Math.hypot(dx, dy) / (SPEED * dt)
+    if (ratio < 0.75 || ratio > 1.25) off++
+  }
+  return { straight, uneven: off }
+}
+
+/** How far the guest's ball is from the host's at the same moment, for each of the guest's frames. */
+function gaps(host: [number, number, number][], guest: [number, number, number][]): number[] {
+  const out: number[] = []
+  let j = 1
+  for (const [t, x, y] of guest) {
+    while (j < host.length - 1 && host[j]![0] < t) j++
+    const [ta, xa, ya] = host[j - 1]!
+    const [tb, xb, yb] = host[j]!
+    if (t < ta || t > tb) continue
+    const u = (t - ta) / (tb - ta || 1)
+    out.push(Math.hypot(x - (xa + (xb - xa) * u), y - (ya + (yb - ya) * u)))
+  }
+  return out.sort((a, b) => a - b)
+}
+
 /** Everyone ends up with the same wall, and at the same place in the log. */
 async function agree(pages: Page[]): Promise<Look> {
   let last: Look | undefined
@@ -97,7 +157,7 @@ async function leave(page: Page): Promise<void> {
 async function trio(browser: Browser, server: Server, name: string) {
   const owner = await createRoom(browser, server, name, BALL)
   const ada = await player(browser, BALL)
-  const invite = await host(ada.page, owner.roomUrl, 'Ada')
+  const invite = await host(ada.page, owner.invite, 'Ada')
   const grace = await join(browser, invite, 'Grace')
   const edsger = await join(browser, invite, 'Edsger')
   return { owner, invite, ada, grace, edsger }
@@ -183,6 +243,37 @@ test('the host moves the ball for everyone; when its page closes, the next playe
 
   for (const p of [grace, edsger, barbara, ida]) await p.context.close()
   await owner.close()
+})
+
+test('the ball moves as evenly on a guest as on the host, over a network like a LAN', { tag: '@alone' }, async ({ browser, server }) => {
+  // A millisecond each way, and up to three more, as between two computers on one LAN. Without it the two pages'
+  // timers tick together here, and a guest that is a tick out stays a tick out and looks smooth.
+  const proxy = await startLagProxy({ listen: 0, host: HOST, to: { host: '127.0.0.1', port: server.port }, latency: 1, jitter: 3 })
+  try {
+    const owner = await createRoom(browser, server, 'Even room', BALL)
+    const ada = await player(browser, BALL)
+    const invite = await host(ada.page, through(owner.invite, server, serverAt(server.url, proxy.port)), 'Ada')
+    const grace = await join(browser, invite, 'Grace')
+    // The pages' readings of the room's clock settle, and the ball flies.
+    await grace.page.waitForTimeout(1500)
+    const [hosted, seen] = await Promise.all([frames(ada.page, 4000), frames(grace.page, 4000)])
+    const onHost = uneven(hosted)
+    const onGuest = uneven(seen)
+    const apart = gaps(hosted, seen)
+    const p95 = apart[Math.floor(apart.length * 0.95)]!
+    test.info().annotations.push({ type: 'even', description: JSON.stringify({ host: onHost, guest: onGuest, apartP95: Math.round(p95 * 100) / 100 }) })
+    expect(onHost.straight).toBeGreaterThan(100)
+    expect(onGuest.straight).toBeGreaterThan(100)
+    // Before each page drew the ball where it is at each frame: 8 of the host's and 13 to 21 of the guest's.
+    expect(onHost.uneven).toBeLessThanOrEqual(2)
+    expect(onGuest.uneven).toBeLessThanOrEqual(2)
+    // Before the host's word said when: 10.9, a tick's travel. Now what is left is the pages' readings of the clock.
+    expect(p95).toBeLessThan(5)
+    for (const p of [ada, grace]) await p.context.close()
+    await owner.close()
+  } finally {
+    await proxy.close()
+  }
 })
 
 test('a host whose page stops, connected and in front, hands the role on; everybody sees who is not here', { tag: '@alone' }, async ({ browser, server }) => {

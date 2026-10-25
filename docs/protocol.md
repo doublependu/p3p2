@@ -16,8 +16,8 @@ only for what may change within it. Everything described here is implemented. Wh
 
 | Link | Looks like | Who has it | What it allows |
 |---|---|---|---|
-| Room URL | `https://p3p2.example.com/room/<key>` | The owner, and whoever they give it to | Hosting: create and renew the invite, kick, end the session |
-| Invite link | `https://game.example.com/?room=p3p2.example.com/<code>` | Everyone the host sends it to | Joining |
+| Room URL | `https://p3p2.example.com/room/<key>` | The owner: it is the room's page in the portal | Hosting: create and renew the invite, kick, end the session. Clients from 0.2 on never use it |
+| Invite link | `https://game.example.com/?room=p3p2.example.com/<code>` | Everyone the owner sends it to, the owner too | Joining |
 
 - `<key>` is 26 characters of Crockford base32 (130 random bits). It lasts until the owner
   rotates it or deletes the room.
@@ -146,14 +146,22 @@ The client sends `hello` within 5 seconds. The server answers `welcome`, or `err
 ```
 
 - **Auth.** A room key makes the member a *mod* (`self.mod`): it may `kick` and `end`. An invite
-  code only lets it join.
+  code only lets it join. Clients from 0.2 on join with invites only, the owner too, who removes players and ends
+  the session in the portal. The key is for the clients before them.
 - **Origin.** The handshake's `Origin` must be one of the room's origins.
 - **Player id.** `pid` is a random id the client keeps per server, with a secret. The server
   registers the pair the first time it sees the `pid` and afterwards accepts that `pid` only
-  with the same secret. It is not a login; it keeps one player from posing as another. Two tabs
-  of one browser are two members with the same `pid`.
-- **Name.** Cleaned by the server: no control or formatting characters, single spaces, at most
-  24 characters. An empty name becomes `Player <id>`.
+  with the same secret. It is not a login; it keeps one player from posing as another. A `hello`
+  with the `pid` of a member already in the room takes that member over, as a resume does, without
+  its token: another tab of the same browser. The older connection is told `bye replaced`, and the
+  others hear of nothing. One player is one member of a room. When the older connection was still
+  open and held the host role, the role passes on, as at a reload: the newer page has none of the
+  older one's game.
+- **Name.** Cleaned by the server: only letters (with their marks) and digits of any script,
+  spaces and `. - _ '`, single spaces, at most 24 characters, and at least one letter or digit.
+  An empty name becomes `Player <n>`, with the member's id for `n`, or the next number nobody's
+  name has. A name a member of the room already has, compared after NFKC and in lower case, is
+  refused with `error name`. Members in their grace period count.
 - **Members.** `id` is unique in the room while the member stays. `order` is the order of
   joining.
 - **Host.** The first to join. See "Members and host" for when the role passes on.
@@ -450,6 +458,7 @@ Every `msg` carries `ts`, the server time when it was relayed. `pres` carries no
 | `timeout` | closed | No `hello` within 5 seconds |
 | `version` | closed | The room's members run another version of the game |
 | `game` | closed | The room is held to another game (another `game.id`) |
+| `name` | closed | A member of the room already has that name |
 | `rate` | kept | Over the rate limit; the frames were dropped |
 | `rate` | closed | In answer to `hello`: too many wrong tries for the room (see "The two links") |
 | `too-big` | kept | Saved values or the log over the room's cap, or a presence value over its limit; ignored |
@@ -530,3 +539,5 @@ These need **protocol 2**, taken beside protocol 1 (see "Old clients"):
 | 2026-10-13 | `welcome.limits.maxLogBytes`, the room's log cap | A game that keeps "the newest so many things" learned the cap from a refusal |
 | 2026-10-15 | `source` in `/info`: where the server's source code is | The AGPL asks a server that runs changed code to offer its users that code |
 | 2026-10-24 | An invite link whose code ends in dashes, and `rate` for too many wrong tries for a room, from `GET /invite` and in answer to `hello` | A server's front page shows a room's link without its last characters, for friends to type; an older client opens such a link as if there were none |
+| 2026-10-25 | A `hello` with the `pid` of a member in the room takes that member over | Two tabs of one browser were two players |
+| 2026-10-25 | Names keep only letters, digits, spaces and `. - _ '`; error code `name` for a name the room has | Two players could have one name, or one made of lookalike symbols; an older client shows the code |

@@ -68,6 +68,7 @@ export class World {
   limits: Limits
   hub: Hub
   private players = 0
+  private names = 0
   /** Everybody who joined, for the second-by-second `away: false` that a page in front sends. */
   private everyone: Player[] = []
 
@@ -124,7 +125,8 @@ export class World {
         auth,
         player: { pid, secret: over.secret ?? `secret-of-${pid}` },
         game: { id: over.game ?? 'test', version: over.version ?? '1.0.0' },
-        name: over.name ?? 'Ada',
+        // A name of its own: a room takes each name once.
+        name: over.name ?? `Tester ${++this.names}`,
         resume: over.resume,
       }),
     )

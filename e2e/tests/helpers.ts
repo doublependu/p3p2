@@ -17,9 +17,20 @@ export interface Server {
   url: string
 }
 
+/** A room, from its owner's side: its page in the portal, and the invite link everybody joins it with. */
+export interface Owner {
+  portal: Page
+  /** The room's page, at the room URL: what a game on p3p2 0.1 can host with. */
+  roomUrl: string
+  /** The room's invite link, from its page: everybody joins through it, the owner too. */
+  invite: string
+  close: () => Promise<void>
+}
+
 /**
  * The owner's side: logs in to the portal of the server and creates a room for a game: the chat example unless
- * told otherwise. `players`: how many may join, where the server's default is not wanted.
+ * told otherwise. `players`: how many may join, where the server's default is not wanted. A server before 0.2 makes
+ * no invite with the room: the owner creates it.
  */
 export async function createRoom(
   browser: Browser,
@@ -27,7 +38,7 @@ export async function createRoom(
   name: string,
   game: string = CHAT,
   options: { players?: number } = {},
-): Promise<{ portal: Page; roomUrl: string; close: () => Promise<void> }> {
+): Promise<Owner> {
   const context = await browser.newContext()
   const portal = await context.newPage()
   // Not the server's address: once a room is on its front page, that is the front page.
@@ -39,8 +50,45 @@ export async function createRoom(
   if (options.players !== undefined) await portal.getByLabel('Most players').fill(String(options.players))
   await portal.getByRole('button', { name: 'Create room' }).click()
   await expect(portal.getByRole('heading', { name })).toBeVisible()
-  const roomUrl = await portal.getByLabel('Room URL').inputValue()
-  return { portal, roomUrl, close: () => context.close() }
+  return { portal, roomUrl: portal.url(), invite: await openInvite(portal), close: () => context.close() }
+}
+
+/** The invite link on a room's page in the portal. When the room has none, the owner creates one. */
+async function openInvite(portal: Page): Promise<string> {
+  const link = portal.getByLabel('Invite link', { exact: true })
+  if (!(await link.isVisible())) await portal.getByRole('button', { name: 'Create invite' }).click()
+  return link.inputValue()
+}
+
+/** The room's invite link as its page shows it now: after a restart, another day, once the old one has run out. */
+export async function currentInvite(owner: Owner): Promise<string> {
+  await owner.portal.goto(owner.roomUrl)
+  // The owner's session in the portal lasts 30 days. After that, the owner logs in again.
+  if (await owner.portal.getByRole('link', { name: 'Owner log in' }).isVisible()) {
+    await owner.portal.goto(new URL('/login', owner.roomUrl).href)
+    await owner.portal.getByLabel('Password').fill(PASSWORD)
+    await owner.portal.getByRole('button', { name: 'Log in' }).click()
+    await owner.portal.goto(owner.roomUrl)
+  }
+  return openInvite(owner.portal)
+}
+
+/** The owner removes a player, on the room's page in the portal. */
+export async function kick(owner: Owner, name: string): Promise<void> {
+  await owner.portal.reload()
+  await owner.portal.getByRole('listitem').filter({ hasText: name }).getByRole('button', { name: 'Kick' }).click()
+}
+
+/** The owner ends the game for everybody, on the room's page in the portal. */
+export async function end(owner: Owner): Promise<void> {
+  await owner.portal.reload()
+  owner.portal.once('dialog', (d) => void d.accept())
+  await owner.portal.getByRole('button', { name: 'End session' }).click()
+}
+
+/** An invite link that goes through another address of its server, such as a lag proxy in front of it. */
+export function through(invite: string, server: Server, other: string): string {
+  return invite.replace(`=${inInvite(server.url)}/`, `=${inInvite(other)}/`)
 }
 
 export interface Player {
@@ -56,13 +104,18 @@ export async function player(browser: Browser, url: string = CHAT): Promise<Play
   return { page, context }
 }
 
-/** Pastes the room URL into the panel, creates the invite, and returns the link to share. */
-export async function host(page: Page, roomUrl: string, name: string): Promise<string> {
-  await page.getByRole('button', { name: 'Multiplayer' }).click()
+/**
+ * The first one in, who is the host: opens the room's invite link in this page and joins, through the panel. Then
+ * opens the panel again, at the link to pass on, and returns that link.
+ */
+export async function host(page: Page, invite: string, name: string): Promise<string> {
+  await page.goto(invite)
+  const join = page.getByRole('button', { name: 'Join', exact: true })
+  await expect(join).toBeEnabled()
   await page.getByLabel('Your name').fill(name)
-  await page.getByLabel('Room URL').fill(roomUrl)
-  await expect(page.getByRole('status')).toContainText('✓')
-  await page.getByRole('button', { name: 'Create a multiplayer game room for my friends' }).click()
+  await join.click()
+  // The panel gets out of the way once the player is in.
+  await page.getByRole('button', { name: 'Multiplayer' }).click()
   const link = page.getByLabel('Invite link', { exact: true })
   await expect(link).toBeVisible()
   return link.inputValue()

@@ -7,7 +7,7 @@ import type { Browser, BrowserContext, BrowserContextOptions, Page } from '@play
 import { GAME, HOST, PROXY, serverAt } from '../playwright.config.ts'
 import { startLagProxy } from '../tools/lag-proxy.ts'
 import { expect, type TestServer, test } from './fixtures.ts'
-import { accept, closeEngines, createRoom, measure, otherEngines, phoneContext } from './helpers.ts'
+import { accept, closeEngines, createRoom, currentInvite, measure, otherEngines, phoneContext, through } from './helpers.ts'
 
 const DUEL = `${GAME}/duel/`
 /** The script tag of the page, as docs/integrate.md gives it. */
@@ -70,19 +70,17 @@ async function visit(context: BrowserContext, url: string = DUEL): Promise<Page>
 
 const inRoom = (page: Page) => expect.poll(() => duel(page, (d) => d.inRoom)).toBe(true)
 
-/** Hosts from the panel, opened with the page's own button. */
-async function open(page: Page, roomUrl: string, name: string): Promise<string> {
+/** Joins first through the room's invite, then opens the panel with the page's own button, at the link to pass on. */
+async function open(page: Page, invite: string, name: string): Promise<string> {
+  await page.goto(invite)
+  await accept(page, name)
   await page.getByRole('button', { name: 'Friends' }).click()
-  await page.getByLabel('Your name').fill(name)
-  await page.getByLabel('Room URL').fill(roomUrl)
-  await expect(page.getByRole('status')).toContainText('✓')
-  await page.getByRole('button', { name: 'Create a multiplayer game room for my friends' }).click()
   const link = page.getByLabel('Invite link', { exact: true })
   await expect(link).toBeVisible()
-  const invite = await link.inputValue()
+  const shared = await link.inputValue()
   await page.locator('p3p2-panel').getByRole('button', { name: 'Close' }).click()
   await inRoom(page)
-  return invite
+  return shared
 }
 
 async function guest(context: BrowserContext, invite: string, name: string): Promise<Page> {
@@ -95,7 +93,7 @@ async function guest(context: BrowserContext, invite: string, name: string): Pro
 async function table(browser: Browser, server: TestServer, name: string, players: string[], options: { players?: number } = {}) {
   const owner = await createRoom(browser, server, name, DUEL, options)
   const first = await visit(await profile(browser))
-  const invite = await open(first, owner.roomUrl, players[0]!)
+  const invite = await open(first, owner.invite, players[0]!)
   const pages = [first]
   for (const n of players.slice(1)) pages.push(await guest(await profile(browser), invite, n))
   return { owner, invite, pages }
@@ -168,10 +166,11 @@ test('an ordinary visit loads only its script tag and its own script, and asks n
   // The game has a button of its own for the panel, and the panel shows none.
   await expect(page.getByRole('button', { name: 'Multiplayer', exact: true })).toHaveCount(0)
   await page.getByRole('button', { name: 'Friends' }).click()
-  await expect(page.getByLabel('Room URL')).toBeVisible()
+  const panel = page.getByRole('dialog', { name: 'Multiplayer' })
+  await expect(panel).toBeVisible()
   await expect(page.getByRole('button', { name: 'Multiplayer', exact: true })).toHaveCount(0)
   await page.locator('p3p2-panel').getByRole('button', { name: 'Close' }).click()
-  await expect(page.getByLabel('Room URL')).toBeHidden()
+  await expect(panel).toBeHidden()
   await context.close()
 })
 
@@ -259,10 +258,10 @@ test.describe('on a server that keeps its data on disk', () => {
     expect(await duel(ada, (d) => d.probe(32))).toBe(true)
     await expect(ada.locator('#state')).toContainText("Waiting for Grace's page to answer.")
     await ada.close()
-    // Three days later. The host pastes the room URL again, and Grace opens the new invite.
+    // Three days later. The invite has run out: the owner creates a new one, Ada comes in first, and Grace follows.
     await server.restart({ days: 3 })
     const adaAgain = await visit(adas)
-    const invite = await open(adaAgain, owner.roomUrl, 'Ada')
+    const invite = await open(adaAgain, await currentInvite(owner), 'Ada')
     const back = await guest(graces, invite, 'Grace')
     await expect.poll(() => duel(adaAgain, (d) => d.table.game.answers[1])).toEqual([{ i: 32, hit: true }])
     await agree([adaAgain, back])
@@ -276,7 +275,7 @@ test('through a server far away that drops: a probe made while the connection is
   try {
     const owner = await createRoom(browser, server, 'Far duel', DUEL)
     const ada = await visit(await profile(browser))
-    const invite = await open(ada, owner.roomUrl.replace(server.url, serverAt(server.url, proxy.port)), 'Ada')
+    const invite = await open(ada, through(owner.invite, server, serverAt(server.url, proxy.port)), 'Ada')
     const grace = await guest(await profile(browser), invite, 'Grace')
     await hideBoth(ada, grace)
     const status = (page: Page) => page.evaluate(() => (window as unknown as { p3p2: { room: { status: string } } }).p3p2.room.status)
@@ -324,7 +323,7 @@ test('Chrome, Firefox and WebKit at one table: the same game on every page', asy
   const engines = await otherEngines()
   const owner = await createRoom(browser, server, 'Three engines', DUEL)
   const ada = await visit(await profile(browser))
-  const invite = await open(ada, owner.roomUrl, 'Ada')
+  const invite = await open(ada, owner.invite, 'Ada')
   const pages = [ada]
   for (const { name, browser: other } of engines) pages.push(await guest(await profile(other), invite, name))
   await hideBoth(pages[0]!, pages[1]!)

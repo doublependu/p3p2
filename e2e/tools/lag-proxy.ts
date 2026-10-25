@@ -9,9 +9,9 @@
 //   --jitter      up to this many more ms, at random, per chunk of data
 //   --drop-every  cut every connection each time this many seconds have passed (0: never)
 //
-// To play through it, paste the room URL into the game with the proxy's port in place of the
-// server's (http://192.168.1.118:8081/room/…). The invite link is built from that address, so
-// the host and every guest go through the proxy.
+// To play through it, open the invite link with the proxy's port in place of the server's
+// (?room=http://192.168.1.118:8081/…). The link the panel then shows is built from that address,
+// so everyone who opens it goes through the proxy too.
 
 import { connect, createServer, type Socket } from 'node:net'
 

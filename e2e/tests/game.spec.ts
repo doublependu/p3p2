@@ -4,7 +4,7 @@
 import type { Page } from '@playwright/test'
 import { GAME, HOST, serverAt } from '../playwright.config.ts'
 import { startLagProxy } from '../tools/lag-proxy.ts'
-import { accept, createRoom, host, inInvite, join, player, selfId } from './helpers.ts'
+import { accept, createRoom, host, inInvite, join, player, selfId, through } from './helpers.ts'
 import { expect, test } from './fixtures.ts'
 
 // A log this small is full after a few dozen ops, so the tests see what happens then.
@@ -64,7 +64,7 @@ async function inRoom<T, A = undefined>(page: Page, fn: (room: TestRoom, arg: A)
 test('presence, saved player values and binary data reach the other players', async ({ browser, server }) => {
   const owner = await createRoom(browser, server, 'Game data room')
   const ada = await player(browser)
-  const invite = await host(ada.page, owner.roomUrl, 'Ada')
+  const invite = await host(ada.page, owner.invite, 'Ada')
   const grace = await join(browser, invite, 'Grace')
   const adaId = (await selfId(ada.page))!
 
@@ -153,8 +153,8 @@ test('through a slow connection that drops, everything still arrives and everyon
   try {
     const owner = await createRoom(browser, server, 'Far away')
     const ada = await player(browser)
-    // The host pastes the room URL with the proxy's address. The invite carries it to the guests.
-    const invite = await host(ada.page, owner.roomUrl.replace(server.url, far), 'Ada')
+    // The first in opens the invite with the proxy's address. The link it passes on carries it to the guests.
+    const invite = await host(ada.page, through(owner.invite, server, far), 'Ada')
     expect(invite).toContain(`room=${inInvite(far)}/`)
     const grace = await join(browser, invite, 'Grace')
     const ids = [await selfId(ada.page), await selfId(grace.page)]
@@ -240,7 +240,7 @@ test('the log: the same ops in the same order for everyone, also for who was cut
   try {
     const owner = await createRoom(browser, server, 'Log room')
     const ada = await player(browser)
-    const invite = await host(ada.page, owner.roomUrl, 'Ada')
+    const invite = await host(ada.page, owner.invite, 'Ada')
     await follow(ada.page)
     expect(await inRoom(ada.page, (room) => room.log.submit('one'))).toBe(true)
     await expect.poll(() => followed(ada.page)).toEqual([['load', null], [1, 'one', false, 'Ada']])
@@ -326,7 +326,7 @@ test('the log: the same ops in the same order for everyone, also for who was cut
 test('a player on another version of the game is kept out, until the owner allows it', async ({ browser, server }) => {
   const owner = await createRoom(browser, server, 'Version room')
   const ada = await player(browser)
-  const invite = await host(ada.page, owner.roomUrl, 'Ada')
+  const invite = await host(ada.page, owner.invite, 'Ada')
 
   const old = await player(browser, `${invite}&v=0.9.0`)
   const joinButton = old.page.getByRole('button', { name: 'Join', exact: true })

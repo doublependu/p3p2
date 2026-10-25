@@ -7,7 +7,7 @@ import { devices } from '@playwright/test'
 import { GAME, HOST, PROXY, serverAt } from '../playwright.config.ts'
 import { startLagProxy } from '../tools/lag-proxy.ts'
 import { expect, type TestServer, test } from './fixtures.ts'
-import { accept, closeEngines, createRoom, host, inInvite, measure, otherEngines } from './helpers.ts'
+import { accept, closeEngines, createRoom, currentInvite, host, inInvite, measure, type Owner, otherEngines, through } from './helpers.ts'
 
 const WORLD = `${GAME}/world/`
 
@@ -60,9 +60,9 @@ async function visit(browser: Browser, url: string = WORLD): Promise<Page> {
 
 const inRoom = (page: Page) => expect.poll(() => world(page, (w) => w.inRoom)).toBe(true)
 
-/** Hosts from the panel, closes it, and returns the invite. */
-async function open(page: Page, roomUrl: string, name: string): Promise<string> {
-  const invite = await host(page, roomUrl, name)
+/** Joins first through the room's invite, closes the panel, and returns the link to pass on. */
+async function open(page: Page, invite: string, name: string): Promise<string> {
+  invite = await host(page, invite, name)
   await page.locator('p3p2-panel').getByRole('button', { name: 'Close' }).click()
   await inRoom(page)
   return invite
@@ -103,7 +103,7 @@ async function agree(pages: Page[], timeout = 15_000): Promise<string> {
 async function room(browser: Browser, server: TestServer, name: string, players: string[], options: { players?: number } = {}) {
   const owner = await createRoom(browser, server, name, WORLD, options)
   const first = await visit(browser)
-  const invite = await open(first, owner.roomUrl, players[0]!)
+  const invite = await open(first, owner.invite, players[0]!)
   const pages = [first]
   for (const n of players.slice(1)) pages.push(await guest(browser, invite, n))
   return { owner, invite, pages }
@@ -223,31 +223,27 @@ test('of two players who reach for one stone, the first has it on every page', a
   await close(pages, owner)
 })
 
-test('two people host an empty room at the same moment and end up in one world; a room that holds a world wins over whoever hosts next', async ({ browser, server }) => {
+test('two people join an empty room at the same moment and end up in one world; a room that holds a world wins over whoever comes next', async ({ browser, server }) => {
   const owner = await createRoom(browser, server, 'Both at once', WORLD)
-  const [ada, grace] = [await visit(browser), await visit(browser)]
-  const seeds = [await world(ada, (w) => w.seed), await world(grace, (w) => w.seed)]
-  expect(seeds[0]).not.toBe(seeds[1])
+  // Each page offers the room a seed of its own once it is in.
+  const [ada, grace] = [await visitInvite(browser, owner.invite), await visitInvite(browser, owner.invite)]
+  const join = { name: 'Join', exact: true }
   for (const [page, name] of [[ada, 'Ada'], [grace, 'Grace']] as const) {
-    await page.getByRole('button', { name: 'Multiplayer' }).click()
+    await expect(page.getByRole('button', join)).toBeEnabled()
     await page.getByLabel('Your name').fill(name)
-    await page.getByLabel('Room URL').fill(owner.roomUrl)
-    await expect(page.getByRole('status')).toContainText('✓')
   }
-  const create = { name: 'Create a multiplayer game room for my friends' }
-  await Promise.all([ada.getByRole('button', create).click(), grace.getByRole('button', create).click()])
-  // One of them was first, by the server's count. The other's page raises that world in place of its own.
+  await Promise.all([ada.getByRole('button', join).click(), grace.getByRole('button', join).click()])
+  // One of them was first, by the server's count. The other's page raises that world.
   for (const page of [ada, grace]) await inRoom(page)
   await agree([ada, grace])
-  expect(seeds).toContain(await world(ada, (w) => w.seed))
   await expect.poll(async () => (await world(ada, (w) => w.others())).length).toBe(1)
 
-  // Another day the room is empty, and somebody else hosts in it, standing in a world of their own.
+  // Another day the room is empty, and somebody else comes in first, standing in a world of their own.
   const held = await world(ada, (w) => w.seed)
   await close([ada, grace])
   const edsger = await visit(browser)
   expect(await world(edsger, (w) => w.seed)).not.toBe(held)
-  await open(edsger, owner.roomUrl, 'Edsger')
+  await open(edsger, owner.invite, 'Edsger')
   await expect.poll(() => world(edsger, (w) => w.seed)).toBe(held)
   await close([edsger], owner)
 })
@@ -257,7 +253,7 @@ test('Chrome, Firefox and WebKit raise the same world from one seed, tile by til
   const engines = await otherEngines()
   const owner = await createRoom(browser, server, 'Three engines', WORLD)
   const ada = await visit(browser)
-  const invite = await open(ada, owner.roomUrl, 'Ada')
+  const invite = await open(ada, owner.invite, 'Ada')
   const pages = [ada]
   for (const { name, browser: other } of engines) pages.push(await guest(other, invite, name))
   // Both parts of the world, by their prints, and the yard tile by tile: a shuffle by `sort` would show here.
@@ -348,11 +344,9 @@ async function walkAndKeep(page: Page, watcher: Page, keys: string[]): Promise<{
   return at
 }
 
-/** Hosts again in a room, from a page of a profile that was there before: the room URL pasted, as any other day. */
-async function hostAgain(page: Page, roomUrl: string, name: string): Promise<string> {
-  await page.goto(WORLD)
-  await page.waitForFunction(() => (window as unknown as { example?: World }).example?.fingerprint)
-  return open(page, roomUrl, name)
+/** Comes in first again, from a page of a profile that was there before, with the invite the room's page has now. */
+async function hostAgain(page: Page, owner: Owner, name: string): Promise<string> {
+  return open(page, await currentInvite(owner), name)
 }
 
 test.describe('on a server that keeps its data on disk', () => {
@@ -384,14 +378,14 @@ test.describe('on a server that keeps its data on disk', () => {
     await inRoom(back)
     expect(await world(back, (w) => w.where)).toEqual(stood)
 
-    // A week later. Everybody has gone, the invite has run out, and the host pastes the room URL again.
+    // A week later. Everybody has gone, the invite has run out, and the owner creates a new one.
     stood = await walkAndKeep(back, ada, ['ArrowDown'])
     const seed = await world(ada, (w) => w.seed)
     await ada.close()
     await back.close()
     await server.restart({ days: 7 })
     const adaAgain = await adas.newPage()
-    const again = await hostAgain(adaAgain, owner.roomUrl, 'Ada')
+    const again = await hostAgain(adaAgain, owner, 'Ada')
     back = await graces.newPage()
     await back.goto(again)
     await accept(back, 'Grace')
@@ -406,8 +400,8 @@ test('through a server far away that drops: ops made while the connection is dow
   try {
     const owner = await createRoom(browser, server, 'Far away', WORLD)
     const ada = await visit(browser)
-    // The host pastes the room URL with the proxy's address, and the invite takes the guests the same way.
-    const invite = await open(ada, owner.roomUrl.replace(server.url, serverAt(server.url, proxy.port)), 'Ada')
+    // The first in opens the invite with the proxy's address, and the link it passes on takes the guests the same way.
+    const invite = await open(ada, through(owner.invite, server, serverAt(server.url, proxy.port)), 'Ada')
     expect(invite).toContain(inInvite(serverAt(server.url, proxy.port)))
     const grace = await guest(browser, invite, 'Grace')
     await world(grace, (w) => w.standOn(4))
@@ -436,7 +430,7 @@ test('an op on its way to the server when the connection drops is not lost', asy
   try {
     const owner = await createRoom(browser, server, 'In flight', WORLD)
     const ada = await visit(browser)
-    const invite = await open(ada, owner.roomUrl.replace(server.url, serverAt(server.url, proxy.port)), 'Ada')
+    const invite = await open(ada, through(owner.invite, server, serverAt(server.url, proxy.port)), 'Ada')
     const grace = await guest(browser, invite, 'Grace')
     // Grace takes a stone, and the network goes down before her op has reached the server.
     await world(grace, (w) => w.standOn(4))
@@ -454,7 +448,7 @@ test('every op submitted while the connection is down arrives', { tag: '@this-cl
   try {
     const owner = await createRoom(browser, server, 'Many waiting', WORLD)
     const ada = await visit(browser)
-    const invite = await open(ada, owner.roomUrl.replace(server.url, serverAt(server.url, proxy.port)), 'Ada')
+    const invite = await open(ada, through(owner.invite, server, serverAt(server.url, proxy.port)), 'Ada')
     const grace = await guest(browser, invite, 'Grace')
     // The moment Grace's connection is lost, she builds 256 walls, an op each: more than the server takes at once.
     // In the same turn of the page's code, so every one of them waits for the connection.
@@ -653,7 +647,7 @@ test.describe('on a server with 1 MB messages and its byte rate as it comes', ()
 test.describe('on a server that keeps its data on disk, three months on', () => {
   test.use({ onDisk: true })
 
-  test('after 90 days away, the room URL pasted again gives the same room and world, the guests are the same players, and their own values are theirs', async ({ browser, server }) => {
+  test("after 90 days away, a new invite from the room's page gives the same room and world, the guests are the same players, and their own values are theirs", async ({ browser, server }) => {
     test.setTimeout(90_000)
     const { owner, pages } = await room(browser, server, 'Three months', ['Ada', 'Grace'])
     const [ada, grace] = pages as [Page, Page]
@@ -667,7 +661,7 @@ test.describe('on a server that keeps its data on disk, three months on', () => 
     await grace.close()
 
     await server.restart({ days: 90 })
-    const adaAgain = await hostAgain(await adas.newPage(), owner.roomUrl, 'Ada')
+    const adaAgain = await hostAgain(await adas.newPage(), owner, 'Ada')
     const back = await graces.newPage()
     await back.goto(adaAgain)
     await accept(back, 'Grace')
