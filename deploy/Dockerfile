@@ -14,7 +14,7 @@
 # The server's dependencies are plain JavaScript (SQLite is node:sqlite), the same on every machine. They are
 # installed once, on the machine that builds, and copied into the image for each machine: npm never runs under
 # emulation.
-FROM --platform=$BUILDPLATFORM node:24.22.0-alpine3.24@sha256:44fce696f38ba8c987c4db89954051000bbd05ffd8d8659ba15ed4a8602e937f AS deps
+FROM --platform=$BUILDPLATFORM node:26.12.1-alpine3.24@sha256:40cd011b55415bc894e45b02fdd5a5dfde056921b7d23a64c74f80497af48797 AS deps
 WORKDIR /app
 COPY package.json package-lock.json ./
 COPY protocol/package.json protocol/
@@ -24,7 +24,7 @@ COPY e2e/package.json e2e/
 COPY bench/package.json bench/
 RUN npm ci --omit=dev --workspace @p3p2/server --include-workspace-root=false
 
-FROM node:24.22.0-alpine3.24@sha256:44fce696f38ba8c987c4db89954051000bbd05ffd8d8659ba15ed4a8602e937f
+FROM node:26.12.1-alpine3.24@sha256:40cd011b55415bc894e45b02fdd5a5dfde056921b7d23a64c74f80497af48797
 # Set by the workflows: the release, and the commit it was built from.
 ARG VERSION=dev
 ARG REVISION=unknown
