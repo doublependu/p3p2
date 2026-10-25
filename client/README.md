@@ -24,7 +24,7 @@ optimizeDeps: { exclude: ['@p3p2/client'] },
 A game without a bundler takes one file, which defines `window.P3P2` (with `P3P2.Smooth` and `P3P2.pack`):
 
 ```html
-<script src="https://cdn.jsdelivr.net/npm/@p3p2/client@0.1/dist/p3p2.iife.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@p3p2/client@0.2/dist/p3p2.iife.js"></script>
 ```
 
 ## A few lines

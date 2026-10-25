@@ -51,7 +51,7 @@ The whole walk-through, with backups, updates and moving, is
 
 ```sh
 docker run -d --name p3p2 -p 8080:8080 -v p3p2-data:/data \
-  -e P3P2_PUBLIC_URL=http://<this machine's address>:8080 p3p2/p3p2:0.1
+  -e P3P2_PUBLIC_URL=http://<this machine's address>:8080 p3p2/p3p2:0.2
 docker logs p3p2              # prints the one-time setup link
 ```
 

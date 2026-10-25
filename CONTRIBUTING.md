@@ -65,9 +65,22 @@ For maintainers. A release is one commit that sets the version of every package,
 npm version X.Y.Z --workspaces --include-workspace-root --no-git-tag-version
 ```
 
-With a new minor version, also change `X.Y` in the image tag of `deploy/docker-compose.yml` and in the script
-tags of `client/README.md`, `docs/integrate.md` and `examples/duel/index.html`. Commit, push, and once CI is green
-on `main`:
+Two examples in the docs show the version too, and change with it: the tarball's name in `docs/integrate.md`, and
+`version` in `docs/protocol.md`.
+
+With a new minor version, also change `X.Y`:
+
+- in the image tag, `p3p2/p3p2:X.Y`, in `deploy/docker-compose.yml`, `deploy/Dockerfile`, `deploy/DOCKERHUB.md`,
+  `docs/self-host.md` (whose "Updating" also names the next minor version) and `SECURITY.md`;
+- in the script tag, `@p3p2/client@X.Y`, in `client/README.md`, `docs/integrate.md` and `examples/duel/index.html`;
+- in `CDN` in `e2e/tests/duel.spec.ts` and `e2e/tests/upgrade.spec.ts`. The tests answer that address with the
+  client under test, so it has to be the page's: otherwise the page asks jsDelivr, which has no `X.Y` before the
+  release, and the duel tests fail.
+
+`deploy/DOCKERHUB.md` is the image's page on Docker Hub, which the release doesn't update: paste its overview in
+once the image is out.
+
+Commit, push, and once CI is green on `main`:
 
 ```sh
 npm run build && npm run e2e:all        # what CI does not run: see "The checks"

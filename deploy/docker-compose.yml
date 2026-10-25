@@ -11,9 +11,9 @@ name: p3p2
 
 services:
   p3p2:
-    # The newest 0.1 release: `docker compose pull` brings its fixes. A new minor version, which may change the
+    # The newest 0.2 release: `docker compose pull` brings its fixes. A new minor version, which may change the
     # database, comes with a new tag here.
-    image: p3p2/p3p2:0.1
+    image: p3p2/p3p2:0.2
     restart: unless-stopped
     # Every P3P2_ setting in .env reaches the server (the README lists them).
     env_file:

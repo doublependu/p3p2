@@ -22,7 +22,7 @@ way is welcome as an issue.
 
 ## Which versions
 
-The newest release. p3p2 is at 0.x, and a fix comes as a new release. The image's minor tag (`p3p2/p3p2:0.1`)
+The newest release. p3p2 is at 0.x, and a fix comes as a new release. The image's minor tag (`p3p2/p3p2:0.2`)
 and `npm update` pick it up.
 
 ## What happens next

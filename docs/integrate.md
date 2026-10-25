@@ -42,12 +42,12 @@ A game without a bundler takes one file instead, and finds the library at `windo
 `Smooth` at `P3P2.Smooth` and `pack` at `P3P2.pack`:
 
 ```html
-<script src="https://cdn.jsdelivr.net/npm/@p3p2/client@0.1/dist/p3p2.iife.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@p3p2/client@0.2/dist/p3p2.iife.js"></script>
 ```
 
 Either way, the game never has to update p3p2 to keep working: every newer server takes every
 client that was released ([Old clients](protocol.md#old-clients)). Updating brings the client's
-own fixes, which `@0.1` in the script tag picks up by itself.
+own fixes, which `@0.2` in the script tag picks up by itself.
 
 [`examples/world/`](../examples/world/) is a Vite project set up this way, and
 [`examples/duel/`](../examples/duel/index.html) a page with the script tag and one classic script.
@@ -56,8 +56,8 @@ To try a change to the client that isn't released yet, build it in a checkout of
 repository, and install the packed file in the game:
 
 ```sh
-npm run build && npm pack --workspace @p3p2/client      # in the checkout: gives p3p2-client-0.1.2.tgz
-npm install ../p3p2/p3p2-client-0.1.2.tgz               # in the game
+npm run build && npm pack --workspace @p3p2/client      # in the checkout: gives p3p2-client-0.2.0.tgz
+npm install ../p3p2/p3p2-client-0.2.0.tgz               # in the game
 ```
 
 ## 2. Join a room before the world is built

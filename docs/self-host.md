@@ -85,7 +85,7 @@ docker compose up -d
 docker compose logs p3p2
 ```
 
-The first start pulls two images, the server's (`p3p2/p3p2:0.1`) and Caddy's (`caddy:2`).
+The first start pulls two images, the server's (`p3p2/p3p2:0.2`) and Caddy's (`caddy:2`).
 
 The log ends with a link, `https://p3p2.example.com/setup?token=…`. Open it once and choose the
 owner password. From then on `https://p3p2.example.com/` is the portal, where you log in and
@@ -123,7 +123,7 @@ cd /opt/p3p2 && git pull
 cd deploy && docker compose pull && docker compose up -d
 ```
 
-`p3p2/p3p2:0.1` is the newest release of 0.1, so `pull` brings its fixes. A new minor version, 0.2, is a new
+`p3p2/p3p2:0.2` is the newest release of 0.2, so `pull` brings its fixes. A new minor version, 0.3, is a new
 tag in `docker-compose.yml`, which `git pull` brings. It may change the database in a way that an older
 server can't read: take a [backup](#backups) first.
 
@@ -187,7 +187,7 @@ invites protect.
 - **A room**: **Delete room**. Its URL and its invite stop working.
 - **Everything**: on the VPS, `cd /opt/p3p2/deploy && docker compose down -v` stops the server and Caddy and
   deletes both volumes, the database with them; `rm -rf /opt/p3p2` removes the code, and
-  `docker image rm p3p2/p3p2:0.1 caddy:2` the two images. (Not `docker image prune -a`, unless p3p2 is all the
+  `docker image rm p3p2/p3p2:0.2 caddy:2` the two images. (Not `docker image prune -a`, unless p3p2 is all the
   machine runs: it removes every image that no running container uses.)
 
 ## Without a domain name

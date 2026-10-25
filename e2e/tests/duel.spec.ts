@@ -11,7 +11,7 @@ import { accept, closeEngines, createRoom, currentInvite, measure, otherEngines,
 
 const DUEL = `${GAME}/duel/`
 /** The script tag of the page, as docs/integrate.md gives it. */
-const CDN = 'https://cdn.jsdelivr.net/npm/@p3p2/client@0.1/dist/p3p2.iife.js'
+const CDN = 'https://cdn.jsdelivr.net/npm/@p3p2/client@0.2/dist/p3p2.iife.js'
 
 test.skip(PROXY, 'the client the script tag gets is the one under test, which the proxy setup does not serve')
 test.afterAll(closeEngines)
