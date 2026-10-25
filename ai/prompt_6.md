@@ -19,5 +19,5 @@
     - remove the option to join a game by providing the room URL in the p3p2 client
         - the p3p2 cient no longer needs this field
     - After this change, "remove a player" and "end the game" can only be done in the p3p2 server (and not in the p3p2 client UI) 
-    - the room page no longer needs the copy URL function
+    - the room page no longer needs the copy room URL function
 
