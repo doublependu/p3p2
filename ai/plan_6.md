@@ -25,6 +25,14 @@ URL into the panel, so their helpers change.
 Answer the decisions first. Each one has a recommendation, and "Implement plan 6" without answers means the
 recommendations.
 
+## Decided
+
+- **The panel outside a room** (you, 2026-10-25): words only, with no field to paste an invite link into. It links
+  to p3p2.me, your website, which explains how to get a p3p2 server. See "The client" under feature 4.
+- **p3p2.me is yours** (you): the comment in `client/src/logo.ts` that names it stays. That answers the question
+  `ai/next_5.md` left open.
+- **The README and the docs mention p3p2.me** (you, 2026-10-25): see "p3p2.me in the docs" under feature 4.
+
 ## Decisions for you
 
 **0. One release.** *Recommended:* plans 5 and 6 go out together as 0.2.0. 0.2.0 isn't out yet, and feature 4
@@ -258,9 +266,14 @@ new error code, `name`: "Someone in this room already has that name". Members in
 
 ### The client
 
-- **The panel outside a room** (`client/src/ui/panel.ts`, `renderSetup`): no name field, no room URL, no button.
-  It says: "To play with friends, open the invite link one of them sent you." Under that, in small text: "Running a
-  p3p2 server? Open the invite link on the room's page in its portal." It still shows why the last room ended.
+- **The panel outside a room** (`client/src/ui/panel.ts`, `renderSetup`): words only (decided). No name field, no
+  room URL, no button.
+  - "To play with friends, open the invite link one of them sent you."
+  - In small text: "Hosting? Open the invite link on your room's page, in your p3p2 server's portal. No server yet?
+    p3p2.me says how to get one."
+  - **p3p2.me** links to `https://p3p2.me/` in a new tab (`target="_blank" rel="noopener"`), so the game stays
+    open. The panel stops clicks from reaching the game, but it doesn't cancel them, so the link works.
+  - It still shows why the last room ended, above these words.
 - **The panel in a room:** no × beside the others' names, and no **End for everyone**. The invite link to pass on
   stays, for everyone in the room.
 - **The API** (decision 3):
@@ -339,7 +352,9 @@ These work with every client and every server the runs use:
 The tests that are about the room URL in the panel, or about the panel's Remove and End, change:
 
 - `chat.spec.ts`:
-  - "outside a room the panel says to open an invite link, and has no room URL" (`@this-client`);
+  - "outside a room the panel says to open an invite link, has no room URL, and links to p3p2.me in a new tab"
+    (`@this-client`). The test reads the link's address and target, and doesn't follow it: the tests use no site
+    outside this machine.
   - "the owner plays through the room's invite link, and removes a player and ends the game from the portal"
     (all clients);
   - "the players' panels have no Remove and no End" (`@this-client`);
@@ -372,6 +387,20 @@ The tests that are about the room URL in the panel, or about the panel's Remove 
 
 A test checks that `docs/api.md` names every member of the public types. The doc-snippet test type-checks the
 docs' code against the client's types, so a snippet that still calls `host()` fails until it changes.
+
+### p3p2.me in the docs (decided)
+
+One sentence, "[p3p2.me](https://p3p2.me/) explains how to get a p3p2 server", where a reader first needs one:
+
+| Where | Where in it |
+|---|---|
+| `README.md` | The first bullet, "The p3p2 server" |
+| `client/README.md` | "It takes a p3p2 server", which is also the package's page on npm |
+| `docs/host.md` | The first paragraph, beside "whoever runs the server (you, or a friend: self-host.md)" |
+| `docs/integrate.md` | "You need … a p3p2 server to try it against": the one in this repository for trying, p3p2.me for one your players can reach. Plus a line in "What the player gets": opened without a link, the panel points to p3p2.me |
+| `docs/self-host.md` | The top: p3p2.me explains how to get a server, and this page is how to run one yourself |
+
+`docs/play.md` doesn't get it: a player who was sent a link doesn't need a server.
 
 ## Size
 
@@ -427,7 +456,8 @@ With decision 0, plan 5's steps (`ai/plan_5.md`, "Releasing (yours)") are the st
 ## Not in this plan
 
 - **An invite that doesn't run out**, so that the owner's link works every evening without a visit to the portal.
-- **Pasting an invite link into the panel**, for a player who has the game open already. Opening the link does it.
+- **Pasting an invite link into the panel**, for a player who has the game open already: you chose words only
+  (2026-10-25). Opening the link does it.
 - **Refusing room URLs from 0.1 games** (decision 4's alternative), once 0.1 is old enough to drop.
 - **Lookalike names across scripts** (decision 2).
 - **A helper in the library for things whose path can be worked out** (a ball between bounces), carried on from a
@@ -440,5 +470,4 @@ With decision 0, plan 5's steps (`ai/plan_5.md`, "Releasing (yours)") are the st
   - what the other player sees of a hit;
   - the unread count for games with their own button;
   - rally asking for the characters left out;
-  - a setting for the number of tries;
-  - the p3p2.me comment in `logo.ts`.
+  - a setting for the number of tries.
