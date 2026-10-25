@@ -29,15 +29,16 @@ export interface Owner {
 
 /**
  * The owner's side: logs in to the portal of the server and creates a room for a game: the chat example unless
- * told otherwise. `players`: how many may join, where the server's default is not wanted. A server before 0.2 makes
- * no invite with the room: the owner creates it.
+ * told otherwise. `players`: how many may join, where the server's default is not wanted. `front`: the room goes on
+ * the server's front page as it is made, without that many of its link's last characters (from 0.2). A server before
+ * 0.2 makes no invite with the room: the owner creates it.
  */
 export async function createRoom(
   browser: Browser,
   server: Server,
   name: string,
   game: string = CHAT,
-  options: { players?: number } = {},
+  options: { players?: number; front?: number } = {},
 ): Promise<Owner> {
   const context = await browser.newContext()
   const portal = await context.newPage()
@@ -48,6 +49,7 @@ export async function createRoom(
   await portal.getByLabel('Game URL').fill(game)
   await portal.getByLabel('Room name').fill(name)
   if (options.players !== undefined) await portal.getByLabel('Most players').fill(String(options.players))
+  if (options.front !== undefined) await portal.getByLabel("On this server's front page").selectOption(String(options.front))
   await portal.getByRole('button', { name: 'Create room' }).click()
   await expect(portal.getByRole('heading', { name })).toBeVisible()
   return { portal, roomUrl: portal.url(), invite: await openInvite(portal), close: () => context.close() }

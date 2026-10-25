@@ -50,6 +50,8 @@ export interface NewRoom {
   maxMembers: number
   /** Default: exact. */
   versionPolicy?: VersionPolicy
+  /** Default: not on the front page. */
+  front?: number | null
 }
 
 /** All durable state. `node:sqlite` is synchronous; every call here is a few microseconds. */
@@ -149,13 +151,14 @@ export class Store implements HubStore {
 
   createRoom(r: NewRoom, now: number): RoomRecord {
     this.run(
-      'INSERT INTO rooms (key, name, game_url, origins, max_members, version_policy, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)',
+      'INSERT INTO rooms (key, name, game_url, origins, max_members, version_policy, front, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
       r.key,
       r.name,
       r.gameUrl,
       JSON.stringify(r.origins),
       r.maxMembers,
       r.versionPolicy ?? 'exact',
+      r.front ?? null,
       now,
     )
     return this.roomByKey(r.key)!

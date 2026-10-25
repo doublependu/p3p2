@@ -21,7 +21,11 @@ recommendations.
 
 ## Decided
 
-Nothing yet.
+- **Decisions 0 to 3 as recommended** ("Implement plan 7 with the recommendations", 2026-10-26):
+  - a bubble under the field, at once, only when the link doesn't fit;
+  - bold italic serif for p3p2.me;
+  - the same front-page choice on the New room card as in Settings;
+  - all eight UI changes, 3a to 3h.
 
 ## Decisions for you
 

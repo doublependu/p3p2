@@ -310,12 +310,14 @@ test('portal: a form larger than any the portal takes is refused before it is re
 })
 
 test('portal: creating rooms', async () => {
-  const { base } = await start({}, { maxRooms: 3 })
+  const { base, r } = await start({}, { maxRooms: 3 })
   const owner = new Owner(base)
   assert.equal((await owner.post('/rooms', { game: 'game.example.com' })).headers.get('location'), '/login')
   await owner.login()
+  // No rooms: the dashboard says what to do.
+  assert.match(await (await owner.get('/')).text(), /No rooms yet\. Create one below, for the game you want to play\./)
 
-  const key = await owner.room('game.example.com', { name: 'Friday games', max: '8', origins: 'http://192.168.1.118:5173/some/path' })
+  const key = await owner.room('game.example.com', { name: 'Friday games', max: '8' })
   assert.match(key, /^[0-9a-hjkmnp-tv-z]{26}$/)
   const page = await (await owner.get(`/room/${key}`)).text()
   assert.match(page, /Friday games/)
@@ -323,8 +325,17 @@ test('portal: creating rooms', async () => {
   assert.doesNotMatch(page, /Room URL/)
   assert.ok(!page.includes(`value="https://p3p2.example.com/room/${key}"`))
   assert.match(page, /aria-label="Invite link"/)
-  assert.ok(page.includes('http://192.168.1.118:5173'))
-  assert.match(await (await owner.get('/')).text(), /Friday games/)
+  // Settings: the front page right under the name and the number of players, then the other sites.
+  const at = (id: string) => page.indexOf(`id="${id}"`)
+  assert.ok(at('name') < at('max') && at('max') < at('front') && at('front') < at('origins') && at('origins') < at('versions'), page)
+  // The New room card asks about the front page, not about other sites: those are in the room's settings.
+  const dashboard = await (await owner.get('/')).text()
+  assert.match(dashboard, /Friday games/)
+  assert.match(dashboard, /<option value="off" selected>Not shown<\/option>/)
+  assert.doesNotMatch(dashboard, /Other sites|name="origins"/)
+  // A room starts with its game's own site only, whatever an old page sends.
+  const other = await owner.room('game.example.com', { origins: 'http://192.168.1.118:5173' })
+  assert.deepEqual(r.app.store.roomByKey(other)!.origins, ['https://game.example.com'])
 
   const refused: Record<string, string>[] = [
     { game: 'not a url' },
@@ -332,13 +343,13 @@ test('portal: creating rooms', async () => {
     { game: 'ftp://game.example.com' },
     { game: 'game.example.com', max: '0' },
     { game: 'game.example.com', max: '65' },
-    { game: 'game.example.com', origins: 'what is this' },
   ]
   for (const bad of refused) {
     assert.equal((await owner.post('/rooms', bad)).status, 400, JSON.stringify(bad))
   }
+  // A refused form keeps what was chosen.
+  assert.match(await (await owner.post('/rooms', { game: 'word', front: '4' })).text(), /<option value="4" selected>/)
   // Several rooms for the same game, up to the server's limit.
-  await owner.room('game.example.com')
   await owner.room('game.example.com')
   const full = await owner.post('/rooms', { game: 'game.example.com' })
   assert.equal(full.status, 400)
@@ -434,6 +445,24 @@ test('portal: the front page lists the rooms put on it whose invite is open, wit
   assert.ok((await (await visitor.get('/')).text()).includes(`/${next.slice(0, 6)}----`))
   // The owner still gets the dashboard.
   assert.match(await (await owner.get('/')).text(), /New room/)
+})
+
+test('portal: a room goes on the front page as it is made, when the owner says so', async () => {
+  const { base, r } = await start()
+  const owner = new Owner(base)
+  await owner.login()
+  const whole = await owner.room('game.example.com', { name: 'Whole room', front: '0' })
+  const part = await owner.room('game.example.com', { name: 'Part room', front: '4' })
+  const off = await owner.room('game.example.com', { name: 'Off room', front: '9' })
+  const none = await owner.room('game.example.com', { name: 'Plain room' })
+  assert.deepEqual([whole, part, off, none].map((key) => r.app.store.roomByKey(key)!.front), [0, 4, null, null])
+  // On it at once: a room is made with its invite.
+  const html = await (await new Owner(base).get('/')).text()
+  assert.ok(html.includes(`https://game.example.com/?room=p3p2.example.com/${codeOf(r, whole)}`), html)
+  assert.ok(html.includes(`https://game.example.com/?room=p3p2.example.com/${codeOf(r, part)!.slice(0, 6)}----`), html)
+  assert.doesNotMatch(html, /Off room|Plain room/)
+  // The room page has the same choice selected.
+  assert.match(await (await owner.get(`/room/${part}`)).text(), /<option value="4" selected>/)
 })
 
 test('portal: hiding more of the link, or taking the room off the front page, makes a new invite; showing more keeps it', async () => {
@@ -567,7 +596,8 @@ test('api: invites are created once, renewed on request, and describe the room t
   const { base } = await start()
   const owner = new Owner(base)
   await owner.login()
-  const key = await owner.room('game.example.com', { name: 'Friday games', origins: 'http://192.168.1.118:5173' })
+  const key = await owner.room('game.example.com', { name: 'Friday games' })
+  await owner.post(`/room/${key}/settings`, { name: 'Friday games', origins: 'http://192.168.1.118:5173' })
 
   const post = async (body: unknown) => (await (await api(base, '/room/invite', key, GAME, { method: 'POST', body: JSON.stringify(body) })).json()) as InviteGrant
   const first = await post({ page: 'http://192.168.1.118:5173/my-game/?room=old.example/0000000000&x=1#top', param: 'room' })

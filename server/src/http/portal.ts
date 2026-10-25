@@ -216,7 +216,7 @@ export function portalRoutes(app: App): Hono<Env> {
 
   // ---- rooms ----
 
-  const blank: NewRoomForm = { game: '', name: '', maxMembers: '', origins: '', error: '' }
+  const blank: NewRoomForm = { game: '', name: '', maxMembers: '', front: 'off', error: '' }
 
   function dashboard(c: C, form: NewRoomForm = blank, status: 200 | 400 = 200): Response | Promise<Response> {
     const now = app.now()
@@ -269,16 +269,13 @@ export function portalRoutes(app: App): Hono<Env> {
       game: field(raw, 'game'),
       name: field(raw, 'name'),
       maxMembers: field(raw, 'max'),
-      origins: field(raw, 'origins'),
+      front: field(raw, 'front'),
       error: '',
     }
     const refuse = (error: string) => dashboard(c, { ...form, error }, 400)
 
     const game = parseGameUrl(form.game)
     if (!game) return refuse('That game URL does not look right. Try something like game.example.com.')
-    const extra = parseOrigins(form.origins)
-    if (extra.bad) return refuse(`"${extra.bad}" is not a site address.`)
-    if (extra.origins.length > EXTRA_ORIGINS_MAX) return refuse(`At most ${EXTRA_ORIGINS_MAX} other sites.`)
     const maxMembers = memberLimit(form.maxMembers)
     if (maxMembers === null) return refuse(`Players must be a number from 1 to ${config.limits.maxMembersCap}.`)
     if (store.countRooms() >= config.limits.maxRooms) {
@@ -290,13 +287,16 @@ export function portalRoutes(app: App): Hono<Env> {
         key: newRoomKey(),
         name: roomName(form.name, new URL(game.url).host),
         gameUrl: game.url,
-        origins: [game.origin, ...extra.origins.filter((o) => o !== game.origin)],
+        // More sites are added in the room's settings.
+        origins: [game.origin],
         maxMembers,
+        // Off the front page, unless the owner chose otherwise.
+        front: FRONT_HIDDEN.find((n) => String(n) === form.front) ?? null,
       },
       app.now(),
     )
     app.origins.refresh()
-    // With its invite, so that its page has a link to send before anyone has hosted.
+    // With its invite, so that its page has a link to send before anyone has hosted, and the front page one to show.
     ensureInvite(app, room, false)
     app.log('info', 'room-created', { room: room.id, game: game.origin })
     return c.redirect(`/room/${room.key}`)

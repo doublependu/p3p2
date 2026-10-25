@@ -18,7 +18,8 @@ A multiplayer button in a corner of your game, with the p3p2 mark on it: three p
 2. the same link to pass on, with a QR code;
 3. a list of who is there, and chat.
 
-Opened without a link, it says to open one, and points to [p3p2.me](https://p3p2.me/) for a server.
+Opened without a link, it says what multiplayer takes, one small p3p2 relay server that the players share, and to
+open the invite link from the server. [p3p2.me](https://p3p2.me/) says how to get one.
 
 Your game decides what being in the same room means.
 

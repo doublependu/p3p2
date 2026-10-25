@@ -4,12 +4,12 @@ export const STYLE: string = `
   font: 14px/1.4 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; color: var(--ink);
   color-scheme: light dark; -webkit-tap-highlight-color: transparent;
   --bg: #fff; --ink: #1d1c19; --soft: #6b6860; --line: #d9d6cc; --field: #fff; --fixed: #f0eee8;
-  --accent: #2f6f3e; --accent-ink: #fff; --danger: #a8321f; --pill: #1f201ccc; --pill-ink: #fff;
+  --accent: #0b6e61; --accent-ink: #fff; --ok: #2f6f3e; --danger: #a8321f; --pill: #1f201ccc; --pill-ink: #fff;
 }
 @media (prefers-color-scheme: dark) {
   :host {
     --bg: #1f201c; --ink: #ecebe4; --soft: #a3a094; --line: #3a3b35; --field: #161714; --fixed: #2b2c27;
-    --accent: #7fc48f; --accent-ink: #0f1a12; --danger: #f08a75;
+    --accent: #2cc7b1; --accent-ink: #04201c; --ok: #7fc48f; --danger: #f08a75;
   }
 }
 * { box-sizing: border-box; }
@@ -19,6 +19,8 @@ button { cursor: pointer; border: 1px solid var(--line); border-radius: 8px; bac
 button:disabled { opacity: .5; cursor: default; }
 button.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); font-weight: 600; }
 button:focus-visible, input:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+/* The ring is for the keyboard: the link, clicked or tapped, shows none. */
+input[data-pointer]:focus-visible { outline: none; }
 input { width: 100%; min-width: 0; padding: 6px 8px; border: 1px solid var(--line); border-radius: 8px; background: var(--field); }
 a { color: var(--accent); }
 @media (pointer: coarse) { input { font-size: 16px; } button { padding: 8px 12px; } }
@@ -40,13 +42,16 @@ a { color: var(--accent); }
 }
 header { display: flex; align-items: center; gap: 8px; padding: 8px 8px 8px 12px; border-bottom: 1px solid var(--line); }
 header b { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+header .tail { font-weight: 400; font-size: 12px; color: var(--soft); }
+/* The name, as the portal sets it. */
+.wordmark { font: italic 700 16px/1 "Iowan Old Style", "Palatino Linotype", Palatino, P052, Georgia, serif; }
 header button { border: 0; font-size: 18px; line-height: 1; padding: 4px 8px; }
 .body { padding: 12px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; min-height: 0; }
 /* A tall panel scrolls; its parts keep their size. */
 .body > * { flex-shrink: 0; }
 .group { display: flex; flex-direction: column; gap: 6px; }
 label { display: flex; flex-direction: column; gap: 4px; font-size: 12px; font-weight: 600; color: var(--soft); }
-label input, label button { font-size: 14px; font-weight: 400; color: var(--ink); }
+label input, label button, .whole { font-size: 14px; font-weight: 400; color: var(--ink); }
 p { margin: 0; overflow-wrap: anywhere; }
 .soft { color: var(--soft); font-size: 12px; }
 .status { font-size: 12px; min-height: 1.4em; }
@@ -61,10 +66,20 @@ ul, ol { list-style: none; margin: 0; padding: 0; }
 .members li { display: flex; align-items: center; gap: 6px; padding: 3px 0; }
 .members .name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .tag { font-size: 11px; color: var(--soft); border: 1px solid var(--line); border-radius: 99px; padding: 0 6px; }
-.tag.host { color: var(--accent); border-color: var(--accent); }
+.tag.host { color: var(--ok); border-color: var(--ok); }
 .log { height: 120px; overflow-y: auto; border: 1px solid var(--line); border-radius: 8px; padding: 6px 8px; background: var(--field); overflow-wrap: anywhere; }
 /* What nobody types in looks it: tinted, without the field's edge. */
-input[readonly], .log { background: var(--fixed); border-color: transparent; }
+input[readonly], .log { background: var(--fixed); border-color: transparent; text-overflow: ellipsis; }
+/* The whole link, when it doesn't fit: while pointed at, or on the keyboard's focus. */
+.link { position: relative; }
+.whole {
+  display: none; position: absolute; z-index: 1; top: 100%; left: 0; right: 0; margin-top: 4px; padding: 6px 8px;
+  border: 1px solid var(--line); border-radius: 8px; background: var(--bg); box-shadow: 0 4px 16px #0004;
+  overflow-wrap: anywhere; pointer-events: none;
+}
+.cut:hover > .whole { display: block; }
+/* Apart, for browsers without :has(). */
+.cut:has(> :focus-visible:not([data-pointer])) > .whole { display: block; }
 /* A phone on its side: little height, and the keyboard takes half of it. */
 @media (max-height: 480px) { .log { height: 60px; } }
 .log li { padding: 1px 0; }

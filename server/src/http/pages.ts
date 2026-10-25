@@ -36,7 +36,7 @@ function layout(f: Frame, body: Page): Page {
 </head>
 <body>
 <header>
-  <a class="brand" href="/">${raw(MARK)}p3p2</a>
+  <a class="brand" href="/">${raw(MARK)}<span class="wordmark">p3p2</span></a>
   <span class="where">${f.server.name}</span>
   ${f.owner ? html`<form method="post" action="/logout"><button class="link" type="submit">Log out</button></form>` : ''}
 </header>
@@ -52,6 +52,14 @@ function host(url: string): string {
   } catch {
     return url
   }
+}
+
+/**
+ * A link nobody can change, on one line. When it doesn't fit, it ends in "…", and the whole of it shows in a bubble
+ * under it while the pointer is over it, or the keyboard is on it (`.cut`, set by portal.js).
+ */
+function linkField(link: string, label: string, id: string = ''): Page {
+  return html`<span class="link"><input class="mono" ${id ? html`id="${id}" ` : ''}type="text" readonly value="${link}" aria-label="${label}"><span class="whole mono" aria-hidden="true">${link}</span></span>`
 }
 
 export function setupPage(server: Server, token: string, error: string = ''): Page {
@@ -110,7 +118,8 @@ export interface NewRoomForm {
   game: string
   name: string
   maxMembers: string
-  origins: string
+  /** As the room's settings name it: `off`, or how many characters the front page leaves out. */
+  front: string
   error: string
 }
 
@@ -135,7 +144,7 @@ export function dashboardPage(server: Server, rooms: RoomSummary[], form: NewRoo
       ? html`<p class="soft small hint">The rooms on the front page are listed at this server's address, for anyone who isn't logged in, while their invite is open.</p>`
       : ''
   }`
-      : html`<p class="soft">No rooms yet.</p>`
+      : html`<p class="soft">No rooms yet. Create one below, for the game you want to play.</p>`
   }
 </div>
 <div class="card">
@@ -154,9 +163,9 @@ export function dashboardPage(server: Server, rooms: RoomSummary[], form: NewRoo
         <input id="max" name="max" type="number" min="1" max="${cap}" value="${form.maxMembers || defaultMax}">
       </div>
     </div>
-    <label for="origins">Other sites that may use this room <span class="soft">(optional, one per line)</span></label>
-    <textarea id="origins" name="origins" placeholder="http://192.168.1.118:5173">${form.origins}</textarea>
-    <p class="soft small">The room only works from the game's own site. Add the address of a local dev server here to test from it.</p>
+    <label for="front">On this server's front page</label>
+    <select id="front" name="front">${frontChoices(form.front)}</select>
+    <p class="soft small">The front page is this server's address, for anyone who isn't logged in. Only games on p3p2 0.2 or later ask for the characters left out.</p>
     <div class="actions"><button class="primary" type="submit">Create room</button></div>
   </form>
 </div>`,
@@ -174,6 +183,11 @@ const FRONT_CHOICES: [string, string][] = [
   ['0', 'Shown, with the whole invite link'],
   ...FRONT_HIDDEN.filter((n) => n > 0).map((n): [string, string] => [String(n), `Shown, without the link's last ${n} characters`]),
 ]
+
+/** The options of "On this server's front page", the same on the New room card and in a room's settings. */
+function frontChoices(selected: string): Page[] {
+  return FRONT_CHOICES.map(([value, text]) => html`<option value="${value}" ${value === selected ? 'selected' : ''}>${text}</option>`)
+}
 
 /** Under the invite link: how the front page shows it, and the characters it leaves out, which the host passes on. */
 function frontNote(room: RoomRecord, invite: InviteRecord): Page | '' {
@@ -207,18 +221,22 @@ ${v.error ? html`<p class="error" role="alert">${v.error}</p>` : ''}
   <h2>Invite link</h2>
   ${
     v.invite
-      ? html`<div class="row">
-    <input class="mono" id="invite-url" type="text" readonly value="${v.inviteLink}" aria-label="Invite link">
+      ? html`<div class="row share">
+    ${linkField(v.inviteLink, 'Invite link', 'invite-url')}
     <button type="button" data-copy="invite-url">Copy</button>
     <a class="button" href="${v.inviteLink}" target="_blank" rel="noreferrer" title="Open the game in a new tab">Open</a>
   </div>
-  <p class="soft small hint">Open it to play, and send it to your friends: everyone joins this room through it, you too. ${v.expiry}</p>
-  ${frontNote(room, v.invite)}
-  <img class="qr" src="${base}/qr.svg?c=${v.invite.code.slice(0, 4)}" width="220" height="220" alt="QR code of the invite link">
-  <div class="actions">
-    <form method="post" action="${base}/invite" data-confirm="Make a new invite link? The current one stops working for new players.">
-      <button type="submit">Renew invite</button>
-    </form>
+  <div class="beside">
+    <div class="words">
+      <p class="soft small hint">Open it to play, and send it to your friends: everyone joins this room through it, you too. ${v.expiry}</p>
+      ${frontNote(room, v.invite)}
+    </div>
+    <img class="qr" src="${base}/qr.svg?c=${v.invite.code.slice(0, 4)}" width="220" height="220" alt="QR code of the invite link">
+    <div class="actions">
+      <form method="post" action="${base}/invite" data-confirm="Make a new invite link? The current one stops working for new players.">
+        <button type="submit">Renew invite</button>
+      </form>
+    </div>
   </div>`
       : html`<p class="soft">No invite is open. Create one to play, and to let friends in.</p>
   <div class="actions"><form method="post" action="${base}/invite"><button type="submit">Create invite</button></form></div>`
@@ -265,6 +283,9 @@ ${v.error ? html`<p class="error" role="alert">${v.error}</p>` : ''}
         <input id="max" name="max" type="number" min="1" max="${v.cap}" value="${room.maxMembers}" required>
       </div>
     </div>
+    <label for="front">On this server's front page</label>
+    <select id="front" name="front">${frontChoices(String(room.front ?? 'off'))}</select>
+    <p class="soft small">The front page is this server's address, for anyone who isn't logged in. Hiding more of the link, or taking the room off, makes a new invite. Only games on p3p2 0.2 or later ask for the characters left out.</p>
     <label for="origins">Sites that may use this room <span class="soft">(one per line)</span></label>
     <textarea id="origins" name="origins">${room.origins.join('\n')}</textarea>
     <p class="soft small">The game's own site is always allowed.</p>
@@ -273,11 +294,6 @@ ${v.error ? html`<p class="error" role="alert">${v.error}</p>` : ''}
       ([value, text]) => html`<option value="${value}" ${value === room.versionPolicy ? 'selected' : ''}>${text}</option>`,
     )}</select>
     <p class="soft small">The room's version is that of the players already in it. A player who is refused has to reload the game.</p>
-    <label for="front">On this server's front page</label>
-    <select id="front" name="front">${FRONT_CHOICES.map(
-      ([value, text]) => html`<option value="${value}" ${value === String(room.front ?? 'off') ? 'selected' : ''}>${text}</option>`,
-    )}</select>
-    <p class="soft small">The front page is this server's address, for anyone who isn't logged in. Hiding more of the link, or taking the room off, makes a new invite. Only games on p3p2 0.2 or later ask for the characters left out.</p>
     <label for="param">Invite parameter</label>
     <input class="mono" id="param" name="param" type="text" maxlength="32" placeholder="room" value="${room.param ?? ''}" autocomplete="off" spellcheck="false">
     <p class="soft small">The parameter the game reads its invite from, in the link: <code>room</code>, unless its developer says otherwise.</p>
@@ -333,8 +349,8 @@ ${
         (r) => html`<div class="card">
   <h2>${r.name}</h2>
   <p class="soft small">${host(r.game)} · ${r.members >= r.maxMembers ? 'full' : `${r.members} of ${r.maxMembers} playing`}</p>
-  <div class="row">
-    <input class="mono" type="text" readonly value="${r.link}" aria-label="Invite link to ${r.name}">
+  <div class="row share">
+    ${linkField(r.link, `Invite link to ${r.name}`)}
     <a class="button primary" href="${r.link}" target="_blank" rel="noreferrer" title="Open the game in a new tab">Play</a>
   </div>
   ${
@@ -344,7 +360,7 @@ ${
   }
 </div>`,
       )
-    : html`<div class="card"><p class="soft">No room is open right now.</p></div>`
+    : html`<div class="card"><p class="soft">No room is open right now. Whoever runs this server can send you an invite link.</p></div>`
 }
 <p class="soft small"><a href="/login">Owner log in</a></p>`,
   )

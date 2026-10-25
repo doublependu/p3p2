@@ -73,6 +73,8 @@ export class PanelElement extends HTMLElement {
   /** Chat was opened with the chat key: sending or Esc gives the keyboard back to the game. */
   private quick = false
   private say: HTMLInputElement | null = null
+  /** The last thing the player did here was with a pointer (mouse, pen, touch), not the keyboard. */
+  private pointer = false
 
   constructor() {
     super()
@@ -100,9 +102,11 @@ export class PanelElement extends HTMLElement {
     // The game must not see what is typed or clicked here. keyup still passes: a key that was
     // held when the panel took focus would otherwise stay "down" in the game for good.
     this.root.addEventListener('keydown', (e) => {
+      this.pointer = false
       this.onKey(e as KeyboardEvent)
       e.stopPropagation()
     })
+    this.root.addEventListener('pointerdown', () => (this.pointer = true))
     for (const type of ['keypress', 'pointerdown', 'mousedown', 'click', 'dblclick', 'contextmenu']) {
       this.root.addEventListener(type, (e) => e.stopPropagation())
     }
@@ -167,8 +171,8 @@ export class PanelElement extends HTMLElement {
     }
   }
 
-  private setBody(title: string, ...children: Node[]): void {
-    this.title_.textContent = title
+  private setBody(title: string | Node, ...children: Node[]): void {
+    this.title_.replaceChildren(title)
     this.body.replaceChildren(...children)
     this.say = null
   }
@@ -190,10 +194,11 @@ export class PanelElement extends HTMLElement {
     // In a tab of its own: the game stays open.
     const site = h('a', { href: 'https://p3p2.me/', target: '_blank', rel: 'noopener' }, 'p3p2.me')
     this.setBody(
-      'Multiplayer',
+      h('span', {}, 'Multiplayer ', h('span', { class: 'tail' }, '– Powered by '), h('span', { class: 'wordmark' }, 'p3p2.me')),
       ...(note ? [h('p', { class: 'status', role: 'status' }, note)] : []),
-      h('p', {}, 'To play with friends, open the invite link one of them sent you.'),
-      h('p', { class: 'soft' }, "Hosting? Open the invite link on your room's page, in your p3p2 server's portal. No server yet? ", site, ' says how to get one.'),
+      h('p', {}, 'Share one small p3p2 relay server.'),
+      h('p', {}, 'Already have one? Open the invite link from the server.'),
+      h('p', {}, 'No server yet? ', site, ' says how to get one.'),
     )
   }
 
@@ -301,13 +306,13 @@ export class PanelElement extends HTMLElement {
     this.decline = null
 
     const state = h('span', { class: 'soft' })
-    const where = h('p', {}, h('span', { class: 'soft' }, `on ${serverName(room.server)} `), state)
+    const leave = h('button', { type: 'button' }, 'Leave')
+    const where = h('div', { class: 'row' }, h('p', { class: 'grow' }, h('span', { class: 'soft' }, `on ${serverName(room.server)} `), state), leave)
     const members = h('ul', { class: 'members' })
     const log = h('ol', { class: 'log', 'aria-live': 'polite' })
     const say = h('input', { type: 'text', maxlength: CHAT_MAX, placeholder: 'Say something…', autocomplete: 'off', enterkeyhint: 'send' })
     // A button as well as Enter: a phone's keyboard does not always have one, and a thumb finds a button sooner.
     const send = h('button', { type: 'button' }, 'Send')
-    const leave = h('button', { type: 'button' }, 'Leave')
     const parts: Node[] = [where]
 
     if (room.inviteUrl) parts.push(this.inviteSection(room.inviteUrl))
@@ -377,7 +382,7 @@ export class PanelElement extends HTMLElement {
     ]
 
     // Removing a player, and ending the game, are for the room's owner, in the server's portal.
-    parts.push(members, log, h('div', { class: 'row' }, say, send), h('div', { class: 'row' }, h('span', { class: 'grow' }), leave))
+    parts.push(members, log, h('div', { class: 'row' }, say, send))
     this.setBody(room.name, ...parts)
     this.say = say
     drawMembers()
@@ -397,7 +402,16 @@ export class PanelElement extends HTMLElement {
   private inviteSection(url: string): HTMLElement {
     const link = h('input', { type: 'text', readonly: true, 'aria-label': 'Invite link' })
     link.value = url
-    link.onfocus = () => link.select()
+    // When the link doesn't fit, the whole of it shows under it (style.ts): it is cut.
+    const field = h('span', { class: 'link' }, link, h('span', { class: 'whole', 'aria-hidden': 'true' }, url))
+    const measure = () => field.classList.toggle('cut', link.scrollWidth > link.clientWidth)
+    field.onpointerenter = measure
+    link.onfocus = () => {
+      // The focus ring is for the keyboard.
+      link.toggleAttribute('data-pointer', this.pointer)
+      measure()
+      link.select()
+    }
     const copy = h('button', { type: 'button' }, 'Copy')
     const share = h('button', { type: 'button', hidden: !navigator.share }, 'Share')
     const qrButton = h('button', { type: 'button' }, 'QR code')
@@ -435,8 +449,8 @@ export class PanelElement extends HTMLElement {
     return h(
       'div',
       { class: 'group' },
-      h('label', {}, 'Send this link to your friends', h('div', { class: 'row' }, link, copy)),
-      h('div', { class: 'row' }, share, qrButton),
+      h('label', {}, 'Send this link to your friends', field),
+      h('div', { class: 'row' }, copy, share, qrButton),
       canvas,
     )
   }

@@ -1,4 +1,4 @@
-import type { Locator, Page, WebSocketRoute } from '@playwright/test'
+import type { Page, WebSocketRoute } from '@playwright/test'
 import { GAME, OTHER_SITE } from '../playwright.config.ts'
 import { accept, CHAT, createRoom, end, host, inInvite, join, kick, type Player, player, scan, selfId } from './helpers.ts'
 import { expect, test } from './fixtures.ts'
@@ -470,6 +470,15 @@ test("the owner's room page has an invite link before anyone has played, and no 
   await owner.close()
 })
 
+test('a room the owner puts on the front page as it is made is there at once', { tag: '@this-server' }, async ({ browser, server }) => {
+  const owner = await createRoom(browser, server, 'Straight in', CHAT, { front: 0 })
+  await expect(owner.portal.getByLabel("On this server's front page")).toHaveValue('0')
+  const visitor = await player(browser, `${server.url}/`)
+  await expect(visitor.page.getByLabel('Invite link to Straight in')).toHaveValue(owner.invite)
+  await visitor.context.close()
+  await owner.close()
+})
+
 test("a friend who opens the server's address finds the room, types the characters its link leaves out, and plays with the host", { tag: ['@this-server', '@this-client'] }, async ({ browser, server }) => {
   const owner = await createRoom(browser, server, 'Friday night')
   const hidden = await onFrontPage(owner.portal, 4)
@@ -602,13 +611,24 @@ test('a game with a button of its own: the panel shows none, and opens when the 
   await context.close()
 })
 
-test('outside a room the panel says to open an invite link, has no room URL, and links to p3p2.me in a new tab', { tag: '@this-client' }, async ({ browser }) => {
+test('outside a room the panel is powered by p3p2.me, says to open an invite link from a server, has no room URL, and links to p3p2.me in a new tab', { tag: '@this-client' }, async ({ browser }) => {
   const context = await browser.newContext()
   const page = await context.newPage()
   await page.goto(CHAT)
   await page.getByRole('button', { name: 'Multiplayer' }).click()
   const panel = page.getByRole('dialog', { name: 'Multiplayer' })
-  await expect(panel).toContainText('To play with friends, open the invite link one of them sent you.')
+  await expect(panel.locator('header b')).toHaveText('Multiplayer – Powered by p3p2.me')
+  // The name in a face of its own: bold and italic, beside the panel's plain sans-serif.
+  const name = await panel.locator('header .wordmark').evaluate((el) => {
+    const s = getComputedStyle(el)
+    return { style: s.fontStyle, weight: s.fontWeight }
+  })
+  expect(name).toEqual({ style: 'italic', weight: '700' })
+  await expect(panel.locator('p')).toHaveText([
+    'Share one small p3p2 relay server.',
+    'Already have one? Open the invite link from the server.',
+    'No server yet? p3p2.me says how to get one.',
+  ])
   await expect(panel.getByRole('textbox')).toHaveCount(0)
   await expect(page.getByLabel('Room URL')).toHaveCount(0)
   // Where to get a server, in a tab of its own: the game stays open. Not followed: the tests use no site but their own.
@@ -660,43 +680,5 @@ test('a player who picks a name already in the room is asked for another, and ge
   await accept(other.page, 'Ada 2')
   await expect(ada.page.locator('#state')).toContainText('2 here')
   for (const p of [ada, other]) await p.context.close()
-  await owner.close()
-})
-
-/** The background and the edge of a field, as drawn. */
-const look = (field: Locator) =>
-  field.evaluate((el) => {
-    const s = getComputedStyle(el)
-    return { background: s.backgroundColor, edge: s.borderTopColor }
-  })
-const TRANSPARENT = 'rgba(0, 0, 0, 0)'
-
-test('in the portal, a field nobody can change looks unlike one the owner can, light and dark', { tag: '@this-server' }, async ({ browser, server }) => {
-  const owner = await createRoom(browser, server, 'Look room')
-  for (const colorScheme of ['light', 'dark'] as const) {
-    await owner.portal.emulateMedia({ colorScheme })
-    const fixed = await look(owner.portal.getByLabel('Invite link', { exact: true }))
-    const changes = await look(owner.portal.getByLabel('Room name', { exact: true }))
-    expect(fixed.background, colorScheme).not.toBe(changes.background)
-    expect(fixed.edge, colorScheme).toBe(TRANSPARENT)
-    expect(changes.edge, colorScheme).not.toBe(TRANSPARENT)
-  }
-  await owner.close()
-})
-
-test('in the panel, the invite link and the chat log look unlike the fields a player types in, light and dark', { tag: '@this-client' }, async ({ browser, server }) => {
-  const owner = await createRoom(browser, server, 'Panel look room')
-  const ada = await player(browser)
-  await host(ada.page, owner.invite, 'Ada')
-  for (const colorScheme of ['light', 'dark'] as const) {
-    await ada.page.emulateMedia({ colorScheme })
-    const changes = await look(ada.page.getByPlaceholder('Say something…'))
-    for (const fixed of [await look(ada.page.getByLabel('Invite link', { exact: true })), await look(ada.page.locator('p3p2-panel .log'))]) {
-      expect(fixed.background, colorScheme).not.toBe(changes.background)
-      expect(fixed.edge, colorScheme).toBe(TRANSPARENT)
-    }
-    expect(changes.edge, colorScheme).not.toBe(TRANSPARENT)
-  }
-  await ada.context.close()
   await owner.close()
 })

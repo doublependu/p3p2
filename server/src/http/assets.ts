@@ -4,14 +4,15 @@
 export const PORTAL_CSS: string = `
 :root {
   color-scheme: light dark;
+  /* p3p2's teal for links and buttons, as on the favicon (a shade deeper in light, for text); green says "online". */
   --bg: #f6f5f1; --card: #fff; --ink: #1d1c19; --soft: #6b6860; --line: #dedbd2;
-  --accent: #2f6f3e; --accent-ink: #fff; --danger: #a8321f; --ok: #2f6f3e; --field: #fff; --fixed: #f0eee8;
+  --accent: #0b6e61; --accent-ink: #fff; --danger: #a8321f; --ok: #2f6f3e; --field: #fff; --fixed: #f0eee8;
   font: 16px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
 }
 @media (prefers-color-scheme: dark) {
   :root {
     --bg: #161714; --card: #1f201c; --ink: #ecebe4; --soft: #a3a094; --line: #34352f;
-    --accent: #7fc48f; --accent-ink: #0f1a12; --danger: #f08a75; --ok: #7fc48f; --field: #161714; --fixed: #2b2c27;
+    --accent: #2cc7b1; --accent-ink: #04201c; --danger: #f08a75; --ok: #7fc48f; --field: #161714; --fixed: #2b2c27;
   }
 }
 * { box-sizing: border-box; }
@@ -20,11 +21,15 @@ a { color: var(--accent); }
 header { display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-bottom: 1px solid var(--line); }
 header .brand { display: inline-flex; align-items: center; gap: 8px; font-weight: 700; color: var(--ink); text-decoration: none; }
 header .brand svg { width: 20px; height: 20px; }
+/* The name, as the client's panel sets it (client/src/ui/style.ts). */
+.wordmark { font: italic 700 1.2em/1 "Iowan Old Style", "Palatino Linotype", Palatino, P052, Georgia, serif; }
 header .where { color: var(--soft); flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 main { max-width: 760px; margin: 0 auto; padding: 16px 16px 64px; }
 footer { max-width: 760px; margin: -48px auto 0; padding: 0 16px 24px; color: var(--soft); font-size: .875rem; }
 h1 { font-size: 1.5rem; margin: 16px 0 4px; overflow-wrap: anywhere; }
 h2 { font-size: 1.05rem; margin: 0 0 8px; }
+/* A part of a card, a step below its heading. */
+h3 { font-size: .95rem; margin: 20px 0 8px; padding-top: 16px; border-top: 1px solid var(--line); }
 p { margin: 0 0 12px; }
 .soft { color: var(--soft); }
 .small { font-size: .875rem; }
@@ -38,10 +43,13 @@ input[type=text], input[type=password], input[type=number], input[type=url], tex
   width: 100%; padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--field);
 }
 /* What nobody can change looks it: tinted, without the field's edge. */
-input[readonly], textarea[readonly] { background: var(--fixed); border-color: transparent; }
+input[readonly], textarea[readonly] { background: var(--fixed); border-color: transparent; text-overflow: ellipsis; }
 textarea { min-height: 5em; resize: vertical; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: .875rem; }
 input.mono, .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: .875rem; }
 input:focus-visible, textarea:focus-visible, select:focus-visible, button:focus-visible, a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+/* Browsers count a click on a field as keyboard focus. The ring is for the keyboard: a field nobody types in,
+   clicked or tapped, shows none (portal.js). */
+input[readonly][data-pointer]:focus-visible { outline: none; }
 button, .button {
   display: inline-block; padding: 8px 14px; border: 1px solid var(--line); border-radius: 8px;
   background: var(--card); cursor: pointer; text-decoration: none; color: var(--ink); white-space: nowrap;
@@ -50,7 +58,19 @@ button.primary, .button.primary { background: var(--accent); border-color: var(-
 button.danger { color: var(--danger); border-color: color-mix(in srgb, var(--danger) 45%, var(--line)); }
 button.link { border: 0; background: none; padding: 0; color: var(--accent); text-decoration: underline; }
 .row { display: flex; gap: 8px; align-items: center; }
-.row > input { flex: 1; min-width: 0; }
+.row > input, .row > .link { flex: 1; min-width: 0; }
+/* A link with its buttons. On a phone the link takes a line of its own, and the buttons go under it. */
+@media (max-width: 520px) { .share { flex-wrap: wrap; } .share > .link { flex-basis: 100%; } }
+/* The whole of a link that doesn't fit, under it, while the pointer is over it or the keyboard is on it. */
+.link { position: relative; }
+.whole {
+  display: none; position: absolute; z-index: 1; top: 100%; left: 0; right: 0; margin-top: 4px; padding: 8px 10px;
+  border: 1px solid var(--line); border-radius: 8px; background: var(--card); box-shadow: 0 4px 16px #0003;
+  overflow-wrap: anywhere; pointer-events: none;
+}
+.cut:hover > .whole { display: block; }
+/* Apart: a browser without :has() would drop the whole rule, hover too. */
+.cut:has(> input:focus-visible:not([data-pointer])) > .whole { display: block; }
 .actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
 .actions form { margin: 0; }
 .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0 12px; }
@@ -64,6 +84,14 @@ ul.list > li:first-child { border-top: 0; }
 ul.list .grow { flex: 1; min-width: 0; overflow-wrap: anywhere; }
 ul.list a.name { font-weight: 600; text-decoration: none; }
 .qr { display: block; width: 220px; max-width: 100%; height: auto; margin-top: 12px; border-radius: 8px; background: #fff; }
+/* The invite's words and Renew, with the QR code beside them on a wide screen, under them on a phone. */
+.beside { display: grid; grid-template-areas: "words" "qr" "actions"; }
+.beside > .words { grid-area: words; }
+.beside > .qr { grid-area: qr; }
+.beside > .actions { grid-area: actions; align-self: start; }
+@media (min-width: 640px) {
+  .beside { grid-template-columns: 1fr auto; grid-template-rows: auto 1fr; grid-template-areas: "words qr" "actions qr"; gap: 0 16px; }
+}
 .narrow { max-width: 420px; margin: 48px auto; }
 `
 
@@ -87,8 +115,22 @@ document.addEventListener('submit', (e) => {
   const question = e.target.dataset.confirm;
   if (question && !confirm(question)) e.preventDefault();
 });
+// Whether the last thing the visitor did was with a pointer (mouse, pen, touch) or with the keyboard: a field
+// nobody types in shows the focus ring for the keyboard only (data-pointer, in portal.css).
+let pointer = false;
+document.addEventListener('pointerdown', () => { pointer = true; }, true);
+document.addEventListener('keydown', () => { pointer = false; }, true);
+// A link that doesn't fit shows whole under it (.whole in a .link): only then is it .cut.
+const measure = (e) => {
+  const link = e.target.closest && e.target.closest('.link');
+  if (link) link.classList.toggle('cut', link.firstElementChild.scrollWidth > link.firstElementChild.clientWidth);
+};
+document.addEventListener('pointerover', measure);
 document.addEventListener('focusin', (e) => {
-  if (e.target.matches('input[readonly]')) e.target.select();
+  if (!e.target.matches('input[readonly]')) return;
+  e.target.toggleAttribute('data-pointer', pointer);
+  measure(e);
+  e.target.select();
 });
 `
 

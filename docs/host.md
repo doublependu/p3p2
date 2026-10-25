@@ -10,7 +10,9 @@ In the server's portal (its address, logged in with the owner's password):
 
 1. **Game URL**: the address of the game you will play, as you open it in your browser.
 2. **Room name**: what your friends will see.
-3. **Create room**. The room's page shows its **invite link**, with a QR code.
+3. **On this server's front page**: leave it at **Not shown**, unless friends are to find the room at the server's
+   address (see [Friends who come to the server](#friends-who-come-to-the-server)).
+4. **Create room**. The room's page shows its **invite link**, with a QR code.
 
 On the room's page you can also allow more sites for the same room, choose how many may join (16 by default), what
 happens when players' versions of the game differ, and the **Invite parameter**: leave it at `room`, unless the
@@ -44,9 +46,10 @@ Instead of a link each time, friends can have the server's address (`https://p3p
 it without logging in sees the rooms its owner put on its **front page**, each with its invite link, and **Play**
 opens the game in a new tab.
 
-On the room's page in the portal, **On this server's front page** says how much of the room it shows:
+**On this server's front page**, when you create the room and later in its settings, says how much of the room it
+shows:
 
-- **Not shown**, which every room starts with. While no room is shown, the address is the log-in page, as before.
+- **Not shown**, the default. While no room is shown, the address is the log-in page, as before.
 - **Shown, with the whole invite link**: anybody who has the server's address can join.
 - **Shown, without the link's last 2, 3, 4 or 8 characters**: the game asks for them, and the friends who come
   that way type them. Fewer are easier to read out over the phone; more are harder to guess. The room's page shows
