@@ -1,4 +1,4 @@
-# Plan 8: the room list on a phone, "Powered by p3p2", a mark that shows the room is live
+# Plan 8: the room list on a phone, "Powered by p3p2", a mark that shows the room is live, the unread badge
 
 This answers `ai/prompt_8.md`. In short:
 
@@ -9,6 +9,8 @@ This answers `ai/prompt_8.md`. In short:
 - **Feature 2. The mark on the multiplayer button.** It's gray while the player plays alone. In a room, it's p3p2's
   teal, and pulses while the connection to the server is live. When the server goes quiet, or the connection drops,
   the mark goes gray. It turns teal again when the server is heard from.
+- **Feature 3. The unread badge** moves to the top-right corner of the button, which holds the mark and the player
+  count. It no longer covers the start of the count.
 
 Nothing here changes the API or the protocol. 0.2.0 isn't out yet (`package.json` says 0.1.2), so this goes out in
 it, with plans 5, 6 and 7.
@@ -164,9 +166,10 @@ the one the panel uses in dark mode. Contrast with the pill, over four kinds of 
     second.
 - **`client/src/ui/style.ts`:**
   - `.mark { color: #a3a094; }` and `.live .mark { color: #2cc7b1; }`. The member count beside it stays white.
-  - `.live .mark > svg { animation: beat 2s ease-in-out infinite; }` and `@keyframes beat { 50% { opacity: .5 } }`.
+  - `.live .mark { animation: beat 2s ease-in-out infinite; }` and `@keyframes beat { 50% { opacity: .5 } }`.
   - `@media (prefers-reduced-motion: reduce)`: no animation.
-  - The animation is on the `svg`, not on `.mark`, so the red unread badge on the mark's corner doesn't fade with it.
+  - Feature 3 takes the red unread badge out of `.mark`, so `.mark` holds only the mark and the badge doesn't fade
+    with it.
   - It animates `opacity`, which browsers do without repainting, so it costs the game's frames nothing.
 - **Not colour alone:** in a room, the count of players is beside the mark, and the panel says "reconnecting…". The
   button's name stays "Multiplayer", as the tests and screen readers know it.
@@ -203,12 +206,51 @@ New, in `look.spec.ts`, all `@this-client`:
 - **`docs/integrate.md`**, "What the player gets": the same in one line. A game with its own button can show it too,
   from `room.status` and the `'status'` event (`docs/api.md`).
 
+## Feature 3. The unread badge
+
+### Now
+
+The badge is inside `.mark`, at its top-right corner (`top: -8px; right: -9px`). The count is only 6 px to the right
+of the mark, so the badge covers its start. In the panel's own CSS, measured in Chrome, the badge covers 3 × 8 px of
+the count's box, and with "9+" it hides the top-left of a "3".
+
+### The fix
+
+- **`panel.ts`:** the badge moves out of `.mark` and becomes the pill's last child, after the count.
+- **`style.ts`:**
+  - `.pill` gets `position: relative`, and `.mark` loses it;
+  - `.unread` goes to `top: -8px; right: -8px`, on the pill's top-right corner;
+  - its size, colours and dark ring stay as they are.
+- In a room the pill holds the mark and the count, so the badge sits at the top-right of both. Outside a room it's
+  never shown: leaving a room sets it to 0.
+
+I mocked three placements on the pill, with the counts "3" and "12" and the badges "2" and "9+", over a white and a
+near-black game:
+
+- **−8/−8** (chosen): the badge sits on the pill's rounded end and is clear of the count. Its bottom edge meets the
+  top of the count's box, which is 3 px above the digits.
+- −6/−6: a 1 × 2 px corner of "9+" touches the count's box.
+- −7/−3: it overlaps the count's box by up to 4 × 1 px.
+
+The badge reaches 7 px past the pill's top and right edges. The panel sits 12 px in from the corner of the screen,
+so it stays on screen. In a bottom corner, it reaches up into the game, as any badge does.
+
+### Test
+
+The unread test, "chat that comes while the panel is closed is counted on the multiplayer button" (`chat.spec.ts`,
+`@this-client`), checks the badge's position at "3" and at "9+":
+
+- its box and the count's box don't overlap;
+- its right edge is past the pill's right edge, and its top is above the pill's top.
+
+No docs describe the badge, so none change.
+
 ## Size
 
 | gzip | Now (`ai/next_7.md`) | Budget | Plan 8 |
 |---|---|---|---|
 | entry | 1.92 KB | 2 KB | about +0.005 KB: one colour |
-| room client + panel | 14.48 KB | 15 KB | about +0.2 KB: the mark's CSS and pulse (0.12), the check each second (0.06), `heardAt` (0.02) |
+| room client + panel | 14.48 KB | 15 KB | about +0.2 KB: the mark's CSS and pulse (0.12), the check each second (0.06), `heardAt` (0.02); the badge only moves |
 | one file | 18.47 KB | 20 KB | about +0.2 KB |
 | local room, smooth | 1.72, 1.38 KB | 1.8, 1.5 KB | nothing |
 
@@ -220,7 +262,7 @@ and I won't raise a budget without asking you.
 As in plans 5 to 7:
 
 - `@this-server` for the portal's test (the room list);
-- `@this-client` for the panel's (the title, the mark, and the quiet server).
+- `@this-client` for the panel's (the title, the mark, the quiet server, and the badge).
 
 When 0.2.0 is published, `@this-server` comes off them with the others.
 
@@ -228,16 +270,19 @@ When 0.2.0 is published, `@this-server` comes off them with the others.
 
 1. Issue 1: the list's markup and CSS, and the phone test.
 2. Feature 1: the title, `.wordmark` in the panel and, with decision 1, in the portal, and the title test.
-3. Feature 2:
+3. Feature 3: the badge out of `.mark` and onto the pill's corner, and its checks in the unread test. This comes
+   first, since feature 2's pulse goes on `.mark`.
+4. Feature 2:
    - `heardAt` in `room.ts`, `drawMark()` in the panel, and the CSS;
    - the stand-in's colour in `index.ts`;
    - `hold()` in the lag proxy;
    - the two tests.
-4. The docs: `docs/play.md` and `docs/integrate.md`.
-5. The checks:
+5. The docs: `docs/play.md` and `docs/integrate.md`.
+6. The checks:
    - `npm run lint`, `npm run typecheck`, `npm test`, `npm run build`, `npm run size`;
    - `npm run test:pack`, `npm run e2e`, then `npm run e2e:all`.
-6. `ai/next_8.md`, with screenshots of the dashboard on a phone and of the mark in each state, described in words.
+7. `ai/next_8.md`, with screenshots of the dashboard on a phone, and of the mark and the badge in each state,
+   described in words.
 
 As always, I don't commit or push.
 
@@ -247,8 +292,6 @@ As always, I don't commit or push.
   but the client doesn't act on it. It keeps waiting for the browser to give up, and only then reconnects. It could
   close the connection itself after the same 12 s and reconnect at once. That changes how the room client behaves
   for every game, so it should have a plan of its own.
-- **Seen while mocking:** in a room, the red unread badge on the mark's corner sits over the start of the player
-  count beside it. Both stay readable. This is as it is now, not new.
 - **A switch in the panel to stop the pulse.** The system's "reduce motion" setting stops it, and a game that wants
   none can use its own button.
 - **Still waiting**, from `ai/next_7.md`:
