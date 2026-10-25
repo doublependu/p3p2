@@ -543,6 +543,9 @@ test('the chat opens with T, since Enter builds', async ({ browser, server }) =>
   await ada.keyboard.press('Enter')
   await expect.poll(() => grace.evaluate(() => (window as unknown as { p3p2: { room: { chat: { messages: { text: string }[] } } } }).p3p2.room.chat.messages.map((m) => m.text))).toEqual(['mind the wall'])
   expect(await world(grace, (w) => w.wallCount)).toBe(1)
+  // Enter takes down a wall Ada's page knows of. Her own op can reach her well after Grace: while keys come, Chrome
+  // takes them before a message that waits.
+  await expect.poll(() => world(ada, (w) => w.wallCount)).toBe(1)
   await ada.keyboard.press('Enter')
   await expect.poll(() => world(grace, (w) => w.wallCount)).toBe(0)
   await close(pages, owner)
