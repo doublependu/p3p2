@@ -76,9 +76,16 @@ and `room.end()` go, along with the error codes `room-url` and `room`.
 host's Remove and End. The protocol doesn't change.
 
 - Such a host had the owner's secret all along. Its panel keeps the field until the game moves to 0.2.
-- `e2e:all` runs every released client against this server. Keeping this path keeps the promise in `0aec7cf`:
-  every newer server takes every released client.
-- Or: the server refuses kick and end from games. A 0.1 host's buttons would then do nothing it could see.
+- `e2e:all` runs every released client against this server. Keeping this path keeps the promise in
+  `docs/protocol.md`, "Old clients" (`0aec7cf`): "a server never stops taking what a released client sends: protocol
+  1, and the REST calls under `/api/v1`."
+- Or: the server refuses room URLs: the room key in `hello`, `GET /api/v1/room` and `POST /api/v1/room/invite`.
+  - A 0.1 game still plays through invite links.
+  - Its room URL field stops working, with a misleading message: "That room doesn't exist (any more)."
+  - No 0.1 player is a mod any more, so their Remove and End buttons never show.
+  - This breaks the promise above, which would have to change first.
+- Refusing only kick and end, while still taking room URLs, is worse: a 0.1 host would see Remove and End buttons
+  that do nothing.
 
 **5. Games with their own `urlParam`.** Today a host's game tells the server its page and the URL parameter it
 reads invites from, and the portal builds the room's link with them. With `host()` gone, the portal builds every
@@ -458,7 +465,8 @@ With decision 0, plan 5's steps (`ai/plan_5.md`, "Releasing (yours)") are the st
 - **An invite that doesn't run out**, so that the owner's link works every evening without a visit to the portal.
 - **Pasting an invite link into the panel**, for a player who has the game open already: you chose words only
   (2026-10-25). Opening the link does it.
-- **Refusing room URLs from 0.1 games** (decision 4's alternative), once 0.1 is old enough to drop.
+- **Refusing room URLs from 0.1 games** (decision 4's alternative). It breaks the promise in `docs/protocol.md`,
+  "Old clients", so that promise would have to change first.
 - **Lookalike names across scripts** (decision 2).
 - **A helper in the library for things whose path can be worked out** (a ball between bounces), carried on from a
   dated report. Only host-ball needs it for now.
