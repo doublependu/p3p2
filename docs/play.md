@@ -15,6 +15,10 @@ A friend wants to play a game with you, and sent you a link to it. This is what 
 The window is behind the button with three players on it, in a corner of the game, or behind a button of the
 game's own (FRIENDS, say): open it again to see who is there, and to chat.
 
+The three players are gray while you play alone. In a room they are teal, and pulse gently while the connection to
+its server is live. Gray in a room, with the number of players still beside them, means the connection is down for
+now: the game is trying again.
+
 On a phone it is the same. A computer and a phone can play together, and so can different browsers.
 
 ## From the server's address

@@ -26,12 +26,17 @@ a { color: var(--accent); }
 @media (pointer: coarse) { input { font-size: 16px; } button { padding: 8px 12px; } }
 
 .pill {
-  display: flex; align-items: center; gap: 6px; padding: 8px 12px; border-radius: 99px; line-height: 1; font-size: 16px;
-  border: 1px solid #8888; background: var(--pill); color: var(--pill-ink);
+  position: relative; display: flex; align-items: center; gap: 6px; padding: 8px 12px; border-radius: 99px;
+  line-height: 1; font-size: 16px; border: 1px solid #8888; background: var(--pill); color: var(--pill-ink);
 }
-.mark { position: relative; }
+/* Gray alone; teal, pulsing, while the room's server is heard from. Not the theme's: the button is dark in both. */
+.mark { color: #a3a094; }
+.live .mark { color: #2cc7b1; animation: beat 2s ease-in-out infinite; }
+@keyframes beat { 50% { opacity: .5; } }
+@media (prefers-reduced-motion: reduce) { .live .mark { animation: none; } }
+/* On the button's top-right corner, clear of the count. */
 .unread {
-  position: absolute; top: -8px; right: -9px; min-width: 16px; padding: 0 4px; border-radius: 8px;
+  position: absolute; top: -8px; right: -8px; min-width: 16px; padding: 0 4px; border-radius: 8px;
   background: #e5484d; color: #fff; font: 700 10px/16px system-ui; text-align: center; box-shadow: 0 0 0 2px #1f201c;
 }
 
@@ -44,7 +49,7 @@ header { display: flex; align-items: center; gap: 8px; padding: 8px 8px 8px 12px
 header b { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 header .tail { font-weight: 400; font-size: 12px; color: var(--soft); }
 /* The name, as the portal sets it. */
-.wordmark { font: italic 700 16px/1 "Iowan Old Style", "Palatino Linotype", Palatino, P052, Georgia, serif; }
+.wordmark { font: 700 16px/1 "Iowan Old Style", "Palatino Linotype", Palatino, P052, Georgia, serif; }
 header button { border: 0; font-size: 18px; line-height: 1; padding: 4px 8px; }
 .body { padding: 12px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; min-height: 0; }
 /* A tall panel scrolls; its parts keep their size. */

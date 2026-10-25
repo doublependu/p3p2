@@ -29,17 +29,32 @@ export interface LagProxy {
   port: number
   /** Cuts every connection, the way a network change does. Returns how many there were. */
   drop(): number
+  /**
+   * Holds everything, both ways, on every connection and on new ones, the way a link that died without a word does:
+   * nothing is lost, and nothing is closed. Let go, what waited is sent, in order.
+   */
+  hold(on: boolean): void
   close(): Promise<void>
 }
 
+/** Whether the proxy holds what comes in, and the pumps that wait for it to let go. */
+interface Gate {
+  held: boolean
+  waiting: Set<() => void>
+}
+
 /** Forwards what `from` sends to `to`, late, and in the order it came. */
-function forward(from: Socket, to: Socket, delay: () => number): void {
+function forward(from: Socket, to: Socket, delay: () => number, gate: Gate): void {
   const queue: { at: number; chunk: Buffer | null }[] = []
   let timer: ReturnType<typeof setTimeout> | undefined
   let last = 0
 
   const pump = () => {
     timer = undefined
+    if (gate.held) {
+      gate.waiting.add(pump)
+      return
+    }
     while (queue.length && queue[0]!.at <= performance.now()) {
       const { chunk } = queue.shift()!
       if (to.destroyed) return
@@ -70,14 +85,15 @@ function forward(from: Socket, to: Socket, delay: () => number): void {
 export function startLagProxy(options: LagOptions): Promise<LagProxy> {
   const pairs = new Set<[Socket, Socket]>()
   const delay = () => options.latency + Math.random() * options.jitter
+  const gate: Gate = { held: false, waiting: new Set() }
 
   const server = createServer((client) => {
     const upstream = connect(options.to.port, options.to.host)
     const pair: [Socket, Socket] = [client, upstream]
     pairs.add(pair)
     for (const s of pair) s.setNoDelay(true)
-    forward(client, upstream, delay)
-    forward(upstream, client, delay)
+    forward(client, upstream, delay, gate)
+    forward(upstream, client, delay, gate)
     const gone = () => {
       if (client.destroyed && upstream.destroyed) pairs.delete(pair)
     }
@@ -99,6 +115,13 @@ export function startLagProxy(options: LagOptions): Promise<LagProxy> {
       resolve({
         port: typeof address === 'object' && address ? address.port : options.listen,
         drop,
+        hold: (on) => {
+          gate.held = on
+          if (on) return
+          const waiting = [...gate.waiting]
+          gate.waiting.clear()
+          for (const pump of waiting) pump()
+        },
         close: () =>
           new Promise((done) => {
             drop()

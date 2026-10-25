@@ -45,6 +45,9 @@ function readCode(text: string): string {
   return text.toLowerCase().replace(/\s+/g, '').replace(/o/g, '0').replace(/[il]/g, '1')
 }
 
+/** The server sends every room its round trips every 5 s: two missed, and some, and the room isn't live. */
+const LIVE_MS = 12_000
+
 const CLOSED: Record<CloseReason, string> = {
   left: '',
   kicked: 'You were removed from the room.',
@@ -60,7 +63,7 @@ export class PanelElement extends HTMLElement {
   private readonly root: ShadowRoot
   private readonly pill: HTMLButtonElement
   private readonly count: HTMLSpanElement
-  /** On the mark's corner: how many chat lines came from the others while the panel was closed. */
+  /** On the button's top-right corner: how many chat lines came from the others while the panel was closed. */
   private readonly badge: HTMLSpanElement
   private unread = 0
   private readonly card: HTMLElement
@@ -81,7 +84,7 @@ export class PanelElement extends HTMLElement {
     this.root = this.attachShadow({ mode: 'open' })
     this.count = h('span')
     this.badge = h('span', { class: 'unread', hidden: true })
-    this.pill = h('button', { class: 'pill', type: 'button', 'aria-label': 'Multiplayer', title: 'Multiplayer' }, h('span', { class: 'mark' }, logo(), this.badge), this.count)
+    this.pill = h('button', { class: 'pill', type: 'button', 'aria-label': 'Multiplayer', title: 'Multiplayer' }, h('span', { class: 'mark' }, logo()), this.count, this.badge)
     this.title_ = h('b', {}, 'Multiplayer')
     const close = h('button', { type: 'button', 'aria-label': 'Close', title: 'Close' }, '×')
     this.body = h('div', { class: 'body' })
@@ -156,6 +159,12 @@ export class PanelElement extends HTMLElement {
     if (active instanceof HTMLElement) active.blur()
   }
 
+  /** Teal and pulsing while in a room whose server was heard from lately; gray alone, and while it can't be. */
+  private drawMark(): void {
+    const room = this.room
+    this.pill.classList.toggle('live', !!room && room.status === 'open' && Date.now() - room.heardAt < LIVE_MS)
+  }
+
   private setUnread(n: number): void {
     this.unread = n
     this.badge.textContent = n > 9 ? '9+' : String(n)
@@ -194,7 +203,7 @@ export class PanelElement extends HTMLElement {
     // In a tab of its own: the game stays open.
     const site = h('a', { href: 'https://p3p2.me/', target: '_blank', rel: 'noopener' }, 'p3p2.me')
     this.setBody(
-      h('span', {}, 'Multiplayer ', h('span', { class: 'tail' }, '– Powered by '), h('span', { class: 'wordmark' }, 'p3p2.me')),
+      h('span', {}, 'Multiplayer ', h('span', { class: 'tail' }, '– Powered by '), h('span', { class: 'wordmark' }, 'p3p2')),
       ...(note ? [h('p', { class: 'status', role: 'status' }, note)] : []),
       h('p', {}, 'Share one small p3p2 relay server.'),
       h('p', {}, 'Already have one? Open the invite link from the server.'),
@@ -328,6 +337,7 @@ export class PanelElement extends HTMLElement {
 
     const drawMembers = () => {
       this.count.textContent = String(room.members.length)
+      this.drawMark()
       state.textContent = room.status === 'reconnecting' ? '· reconnecting…' : ''
       members.replaceChildren(
         ...room.members.map((m) => {
@@ -358,6 +368,8 @@ export class PanelElement extends HTMLElement {
     send.onclick = speak
     leave.onclick = () => room.leave()
 
+    // A server can go quiet without the connection closing: then only the clock says so.
+    const beat = setInterval(() => this.drawMark(), 1000)
     this.unsubscribe = [
       room.on('member-join', (m) => {
         note(`${m.name} joined`)
@@ -379,6 +391,7 @@ export class PanelElement extends HTMLElement {
         if (this.card.hidden && !m.self) this.setUnread(this.unread + 1)
       }),
       room.on('close', (reason) => this.hide(reason)),
+      () => clearInterval(beat),
     ]
 
     // Removing a player, and ending the game, are for the room's owner, in the server's portal.
@@ -394,6 +407,7 @@ export class PanelElement extends HTMLElement {
     this.unsubscribe = []
     this.room = null
     this.count.textContent = ''
+    this.drawMark()
     this.setUnread(0)
     this.renderSetup(CLOSED[reason])
     if (CLOSED[reason]) this.expand()

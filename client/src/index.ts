@@ -156,8 +156,9 @@ export class P3P2 {
     button.title = 'Multiplayer'
     // The mark has no words: this is the button's name.
     button.setAttribute('aria-label', 'Multiplayer')
+    // The mark in gray: the player is alone. The panel's button, in a room, turns it teal.
     button.style.cssText =
-      'font:16px/1 system-ui;padding:8px 12px;border-radius:99px;border:1px solid #8888;background:#1f201ccc;color:#fff;cursor:pointer'
+      'font:16px/1 system-ui;padding:8px 12px;border-radius:99px;border:1px solid #8888;background:#1f201ccc;color:#a3a094;cursor:pointer'
     button.onclick = () => void this.open()
     // A game that cancels touches page-wide would leave this button dead under a finger: see panel.ts.
     el.ontouchend = (e) => e.stopPropagation()

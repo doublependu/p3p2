@@ -131,12 +131,14 @@ export function dashboardPage(server: Server, rooms: RoomSummary[], form: NewRoo
 <div class="card">
   ${
     rooms.length
-      ? html`<ul class="list">${rooms.map(
+      ? html`<ul class="list rooms">${rooms.map(
           (r) => html`<li>
     <span class="grow"><a class="name" href="/room/${r.room.key}">${r.room.name}</a><br><span class="soft small">${host(r.room.gameUrl)}</span></span>
-    ${r.room.front !== null ? html`<span class="badge">on the front page</span>` : ''}
-    ${r.invited ? html`<span class="badge">invite open</span>` : ''}
-    <span class="badge ${r.online ? 'on' : ''}">${r.online} online</span>
+    <span class="badges">
+      ${r.room.front !== null ? html`<span class="badge">on the front page</span>` : ''}
+      ${r.invited ? html`<span class="badge">invite open</span>` : ''}
+      <span class="badge ${r.online ? 'on' : ''}">${r.online} online</span>
+    </span>
   </li>`,
         )}</ul>
   ${

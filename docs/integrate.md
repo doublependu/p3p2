@@ -11,7 +11,9 @@ players can reach, [p3p2.me](https://p3p2.me/) explains how to get a p3p2 server
 
 ## What the player gets
 
-A multiplayer button in a corner of your game, with the p3p2 mark on it: three players. Behind it:
+A multiplayer button in a corner of your game, with the p3p2 mark on it: three players, gray while the player is
+alone, and teal, pulsing gently, while they are in a room and its server is heard from. (A game with a button of its
+own can show the same, roughly, from `room.status` and the `'status'` event.) Behind it:
 
 1. for whoever opens a room's **invite link**, which the owner of a p3p2 server sends out, a question, *Join?*,
    and then the same room;

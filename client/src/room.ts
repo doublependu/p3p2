@@ -102,6 +102,8 @@ function chatMessage(from: number, pid: string, name: string, data: unknown, ts:
 export class RoomClient implements Room {
   name: string = ''
   status: RoomStatus = 'reconnecting'
+  /** When something last came from the server. Not in `Room`: the panel shows the room as live while it was lately. */
+  heardAt = 0
   self: Member
   members: Member[] = []
   host: Member | null = null
@@ -332,6 +334,7 @@ export class RoomClient implements Room {
     }
     ws.onmessage = (event) => {
       if (this.ws !== ws) return
+      this.heardAt = Date.now()
       if (typeof event.data !== 'string') return this.binary(event.data)
       const frame = parseServerFrame(event.data)
       if (frame) this.handle(frame)

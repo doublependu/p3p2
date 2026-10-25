@@ -22,7 +22,7 @@ header { display: flex; align-items: center; gap: 12px; padding: 12px 16px; bord
 header .brand { display: inline-flex; align-items: center; gap: 8px; font-weight: 700; color: var(--ink); text-decoration: none; }
 header .brand svg { width: 20px; height: 20px; }
 /* The name, as the client's panel sets it (client/src/ui/style.ts). */
-.wordmark { font: italic 700 1.2em/1 "Iowan Old Style", "Palatino Linotype", Palatino, P052, Georgia, serif; }
+.wordmark { font: 700 1.2em/1 "Iowan Old Style", "Palatino Linotype", Palatino, P052, Georgia, serif; }
 header .where { color: var(--soft); flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 main { max-width: 760px; margin: 0 auto; padding: 16px 16px 64px; }
 footer { max-width: 760px; margin: -48px auto 0; padding: 0 16px 24px; color: var(--soft); font-size: .875rem; }
@@ -76,12 +76,15 @@ button.link { border: 0; background: none; padding: 0; color: var(--accent); tex
 .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0 12px; }
 @media (max-width: 520px) { .grid { grid-template-columns: 1fr; } }
 .error { color: var(--danger); font-weight: 600; }
-.badge { display: inline-block; padding: 0 8px; border-radius: 999px; border: 1px solid var(--line); font-size: .75rem; color: var(--soft); }
+.badge { display: inline-block; padding: 0 8px; border-radius: 999px; border: 1px solid var(--line); font-size: .75rem; color: var(--soft); white-space: nowrap; }
 .badge.on { color: var(--ok); border-color: color-mix(in srgb, var(--ok) 50%, var(--line)); }
 ul.list { list-style: none; margin: 0; padding: 0; }
 ul.list > li { display: flex; gap: 8px; align-items: center; padding: 10px 0; border-top: 1px solid var(--line); }
 ul.list > li:first-child { border-top: 0; }
 ul.list .grow { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+/* A room's badges move as one. On a phone they go under the room's name and game, which keep the whole width. */
+.badges { display: flex; flex-wrap: wrap; gap: 8px; }
+@media (max-width: 520px) { ul.rooms > li { flex-wrap: wrap; } ul.rooms .grow { flex-basis: 100%; } }
 ul.list a.name { font-weight: 600; text-decoration: none; }
 .qr { display: block; width: 220px; max-width: 100%; height: auto; margin-top: 12px; border-radius: 8px; background: #fff; }
 /* The invite's words and Renew, with the QR code beside them on a wide screen, under them on a phone. */

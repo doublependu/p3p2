@@ -20,7 +20,12 @@ recommendations.
 
 ## Decided
 
-Nothing yet.
+- **Decisions 0 to 3 as recommended** ("Implement plan 8 with the recommendations", 2026-10-26):
+  - "p3p2" in the title in the same serif, bold and upright;
+  - the portal header's "p3p2" drops the italic too;
+  - a slow, soft pulse, 2 s a cycle, still under "reduce motion";
+  - live means in a room, the connection open, and the server heard from in the last 12 s; otherwise gray and
+    still.
 
 ## Decisions for you
 

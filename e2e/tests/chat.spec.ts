@@ -413,6 +413,16 @@ test('chat that comes while the panel is closed is counted on the multiplayer bu
   await ada.page.getByRole('button', { name: 'Close' }).click()
   const pill = (p: Player) => p.page.locator('p3p2-panel').getByRole('button', { name: /^Multiplayer/ })
   const badge = (p: Player) => p.page.locator('p3p2-panel .unread')
+  // On the button's top-right corner, clear of the count of players beside the mark.
+  const onCorner = async (p: Player) => {
+    const b = (await badge(p).boundingBox())!
+    const count = (await p.page.locator('p3p2-panel .mark + span').boundingBox())!
+    const button = (await pill(p).boundingBox())!
+    const apart = b.x >= count.x + count.width || count.x >= b.x + b.width || b.y >= count.y + count.height || count.y >= b.y + b.height
+    expect(apart).toBe(true)
+    expect(b.x + b.width).toBeGreaterThan(button.x + button.width)
+    expect(b.y).toBeLessThan(button.y)
+  }
   let said = 0
   const say = async (lines: number) => {
     for (let i = 0; i < lines; i++) {
@@ -425,6 +435,7 @@ test('chat that comes while the panel is closed is counted on the multiplayer bu
   await say(3)
   await expect(badge(grace)).toHaveText('3')
   await expect(pill(grace)).toHaveAccessibleName('Multiplayer, 3 unread messages')
+  await onCorner(grace)
   // Ada's own lines are no news to her.
   await expect(badge(ada)).toBeHidden()
   await expect(pill(ada)).toHaveAccessibleName('Multiplayer')
@@ -432,6 +443,7 @@ test('chat that comes while the panel is closed is counted on the multiplayer bu
   await say(7)
   await expect(badge(grace)).toHaveText('9+')
   await expect(pill(grace)).toHaveAccessibleName('Multiplayer, 10 unread messages')
+  await onCorner(grace)
 
   // Opening the panel reads them; closing it again starts from none.
   await pill(grace).click()
@@ -611,19 +623,19 @@ test('a game with a button of its own: the panel shows none, and opens when the 
   await context.close()
 })
 
-test('outside a room the panel is powered by p3p2.me, says to open an invite link from a server, has no room URL, and links to p3p2.me in a new tab', { tag: '@this-client' }, async ({ browser }) => {
+test('outside a room the panel is powered by p3p2, says to open an invite link from a server, has no room URL, and links to p3p2.me in a new tab', { tag: '@this-client' }, async ({ browser }) => {
   const context = await browser.newContext()
   const page = await context.newPage()
   await page.goto(CHAT)
   await page.getByRole('button', { name: 'Multiplayer' }).click()
   const panel = page.getByRole('dialog', { name: 'Multiplayer' })
-  await expect(panel.locator('header b')).toHaveText('Multiplayer – Powered by p3p2.me')
-  // The name in a face of its own: bold and italic, beside the panel's plain sans-serif.
+  await expect(panel.locator('header b')).toHaveText('Multiplayer – Powered by p3p2')
+  // The name in a face of its own: a bold serif, upright, beside the panel's plain sans-serif.
   const name = await panel.locator('header .wordmark').evaluate((el) => {
     const s = getComputedStyle(el)
-    return { style: s.fontStyle, weight: s.fontWeight }
+    return { style: s.fontStyle, weight: s.fontWeight, serif: s.fontFamily.endsWith('serif') && !s.fontFamily.endsWith('sans-serif') }
   })
-  expect(name).toEqual({ style: 'italic', weight: '700' })
+  expect(name).toEqual({ style: 'normal', weight: '700', serif: true })
   await expect(panel.locator('p')).toHaveText([
     'Share one small p3p2 relay server.',
     'Already have one? Open the invite link from the server.',

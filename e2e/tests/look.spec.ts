@@ -1,9 +1,11 @@
 // How the portal and the panel look, and what they show under the pointer and the keyboard: fields nobody can
-// change, the focus ring, a link too long for its field, phones, headings and colours.
+// change, the focus ring, a link too long for its field, phones, headings and colours, and the multiplayer
+// button's mark.
 
-import type { Browser, Locator } from '@playwright/test'
-import { GAME } from '../playwright.config.ts'
-import { closeEngines, createRoom, host, otherEngines, player } from './helpers.ts'
+import type { Browser, Locator, Page } from '@playwright/test'
+import { GAME, HOST, PROXY, serverAt } from '../playwright.config.ts'
+import { startLagProxy } from '../tools/lag-proxy.ts'
+import { closeEngines, createRoom, host, otherEngines, player, through } from './helpers.ts'
 import { expect, test } from './fixtures.ts'
 
 test.afterAll(closeEngines)
@@ -24,6 +26,18 @@ const cut = (field: Locator) => field.evaluate((el) => el.scrollWidth > el.clien
 
 /** The colour of a text, as drawn. */
 const colour = (text: Locator) => text.evaluate((el) => getComputedStyle(el).color)
+
+/** The mark on the panel's multiplayer button, as drawn: its colour, and whether it pulses. */
+const mark = (page: Page) =>
+  page.locator('p3p2-panel .mark').evaluate((el) => ({
+    colour: getComputedStyle(el).color,
+    pulse: el.getAnimations().some((a) => a.playState === 'running'),
+  }))
+const GRAY = 'rgb(163, 160, 148)'
+const TEAL = 'rgb(44, 199, 177)'
+
+/** The room's status, as the game sees it. */
+const status = (page: Page) => page.evaluate(() => (window as unknown as { p3p2: { room: { status: string } | null } }).p3p2.room?.status)
 
 test('in the portal, a field nobody can change looks unlike one the owner can, light and dark', { tag: '@this-server' }, async ({ browser, server }) => {
   const owner = await createRoom(browser, server, 'Look room')
@@ -99,7 +113,7 @@ test('in the portal, a click on an invite link draws no focus ring and Tab does,
   await owner.close()
 })
 
-test('in the portal on a phone, an invite link has a line of its own, with its buttons under it', { tag: '@this-server' }, async ({ browser, server }) => {
+test('in the portal on a phone, an invite link has a line of its own, with its buttons under it, and a room in the list its badges under its name', { tag: '@this-server' }, async ({ browser, server }) => {
   const owner = await createRoom(browser, server, 'Phone room', undefined, { front: 0 })
   const box = async (l: Locator) => (await l.boundingBox())!
   const alone = async (link: Locator, button: Locator, card: Locator) => {
@@ -110,6 +124,17 @@ test('in the portal on a phone, an invite link has a line of its own, with its b
   await owner.portal.setViewportSize({ width: 390, height: 844 })
   const portal = owner.portal
   await alone(portal.getByLabel('Invite link', { exact: true }), portal.getByRole('button', { name: 'Copy' }), portal.locator('.card').first())
+
+  // On the front page, with its invite open: three badges, which used to leave the name a few letters a line.
+  await portal.getByRole('link', { name: '← Rooms' }).click()
+  const room = portal.getByRole('listitem').filter({ hasText: 'Phone room' })
+  await expect(room.locator('.badge')).toHaveCount(3)
+  const [r, words, badges] = [await box(room), await box(room.locator('.grow')), await box(room.locator('.badges'))]
+  expect(words.width).toBeGreaterThan(r.width * 0.9)
+  expect(badges.y).toBeGreaterThanOrEqual(words.y + words.height)
+  const name = room.getByRole('link', { name: 'Phone room' })
+  const line = await name.evaluate((el) => Number.parseFloat(getComputedStyle(el).lineHeight))
+  expect((await box(name)).height).toBeLessThan(line * 1.5)
 
   const context = await browser.newContext({ viewport: { width: 390, height: 844 } })
   const front = await context.newPage()
@@ -186,4 +211,66 @@ test("in the panel, links are p3p2's teal and the host's tag the green of who is
   await expect(line.getByRole('button', { name: 'Leave' })).toBeVisible()
   await ada.context.close()
   await owner.close()
+})
+
+test("the multiplayer button's mark is gray while the player is alone, and teal and pulsing in a room", { tag: '@this-client' }, async ({ browser, server }) => {
+  const owner = await createRoom(browser, server, 'Mark room')
+  const ada = await player(browser)
+  const { page } = ada
+  // Before the panel's code loads: the button that stands in for it.
+  expect(await colour(page.getByRole('button', { name: 'Multiplayer', exact: true }))).toBe(GRAY)
+  await page.getByRole('button', { name: 'Multiplayer' }).click()
+  await page.getByRole('button', { name: 'Close' }).click()
+  expect(await mark(page)).toEqual({ colour: GRAY, pulse: false })
+
+  await host(page, owner.invite, 'Ada')
+  await page.getByRole('button', { name: 'Close' }).click()
+  await expect.poll(() => mark(page)).toEqual({ colour: TEAL, pulse: true })
+  // The system's "reduce motion": still, and still teal.
+  await page.emulateMedia({ reducedMotion: 'reduce' })
+  expect(await mark(page)).toEqual({ colour: TEAL, pulse: false })
+  await page.emulateMedia({ reducedMotion: 'no-preference' })
+  await expect.poll(() => mark(page)).toEqual({ colour: TEAL, pulse: true })
+
+  await page.getByRole('button', { name: 'Multiplayer' }).click()
+  await page.getByRole('button', { name: 'Leave' }).click()
+  await page.getByRole('button', { name: 'Close' }).click()
+  expect(await mark(page)).toEqual({ colour: GRAY, pulse: false })
+  await ada.context.close()
+  await owner.close()
+})
+
+test("the multiplayer button's mark goes gray while the server can't be heard, and teal again when it can", { tag: '@this-client' }, async ({ browser, server }) => {
+  test.skip(PROXY, 'the lag proxy forwards to the server on this machine, which the proxy setup puts behind Caddy')
+  test.setTimeout(90_000)
+  const proxy = await startLagProxy({ listen: 0, host: HOST, to: { host: '127.0.0.1', port: server.port }, latency: 0, jitter: 0 })
+  try {
+    const owner = await createRoom(browser, server, 'Quiet room')
+    const ada = await player(browser)
+    const { page } = ada
+    await host(page, through(owner.invite, server, serverAt(server.url, proxy.port)), 'Ada')
+    await page.getByRole('button', { name: 'Close' }).click()
+    const now = async () => ({ ...(await mark(page)), status: await status(page) })
+    const live = { colour: TEAL, pulse: true, status: 'open' }
+    await expect.poll(now).toEqual(live)
+
+    // Cut, and kept from coming back: reconnecting.
+    proxy.hold(true)
+    expect(proxy.drop()).toBeGreaterThanOrEqual(1)
+    await expect.poll(now).toEqual({ colour: GRAY, pulse: false, status: 'reconnecting' })
+    proxy.hold(false)
+    await expect.poll(now, { timeout: 20_000 }).toEqual(live)
+
+    // Held alone: nothing comes, nothing closes. The connection is open as far as the page knows, and the server
+    // has been quiet for 12 s.
+    proxy.hold(true)
+    await expect.poll(now, { timeout: 20_000 }).toEqual({ colour: GRAY, pulse: false, status: 'open' })
+    proxy.hold(false)
+    await expect.poll(now, { timeout: 30_000 }).toEqual(live)
+
+    await ada.context.close()
+    await owner.close()
+  } finally {
+    await proxy.close()
+  }
 })
