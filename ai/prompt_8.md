@@ -11,4 +11,6 @@
     - gray when it's single player mode
     - flashing green, use brand color here, when it's connected to a game room
         - this gives indication that the connection to relay server is live and healthy
+3. Move the unread badge to the top right corner of the p3p2 logo and player count
+    - it should not cover the start of the player count
 
