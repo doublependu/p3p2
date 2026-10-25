@@ -90,13 +90,15 @@ within protocol 1"); `api.md`.
   worlds before joining to compare; the test still checks that both end up in one.
 - **rally's refusal test** opens an invite to a server that isn't there, and one to a plain-http server from an
   https page, in place of the room URLs it pasted.
-- **`parseRoomUrl` and `roomUrl`** stay in `protocol/src/room-links.ts`, with their tests, though nothing uses them
-  now. They describe what 0.1 clients send. Say if they should go.
+- **`parseRoomUrl`, `roomUrl` and `RoomRef` are gone** from `@p3p2/protocol` (you, after the plan): nothing used them
+  once the panel had no room URL. `MAX_LINK`, `withScheme` and `normalizeServer` are private to `links.ts` now, where
+  `parseInvite` uses them. The protocol is still 1: what goes over the wire is the same, and the server still takes a
+  room key from 0.1 clients (`ROOM_KEY_RE`).
 
 ## The checks
 
-- `npm run lint`, `npm run typecheck`, `npm test` (server 111, protocol 25, client 16, e2e node 11, bench 10):
-  clean.
+- `npm run lint`, `npm run typecheck`, `npm test` (server 111, protocol 23, client 16, e2e node 11, bench 10):
+  clean. `tsc --noUnusedLocals --noUnusedParameters` finds nothing in any workspace.
 - `npm run size`: entry 1.92 KB of 2 (was 1.95); room client + panel 14.03 KB of 15 (was 14.79), so the panel has
   0.97 KB to spare again; one file 18.00 KB of 20 (was 18.64); local room 1.72 KB of 1.8; smooth 1.38 KB of 1.5.
 - `npm run test:pack`: 9 of 9.
@@ -113,6 +115,11 @@ within protocol 1"); `api.md`.
 
 - After `e2e:all`, two changes that do nothing: `handOff` moved above `elect`'s doc comment, and the panel's unused
   `.status.ok` rule went. Lint, typecheck, `npm test`, size and the chat spec (26 of 26) ran again, clean.
+- After removing the room URL helpers: the sizes are the same to the byte's hundredth, and `npm run e2e` had 98
+  passed, 1 known bug, and 1 failed: "the chat opens with T, since Enter builds" (`world.spec.ts`), with Grace still
+  counting 1 wall when the poll ran out. That is the failure `ai/next_5.md` describes, again without a cause I could
+  find: it passed in this iteration's other two main runs and in every run of `e2e:all`, 20 times of 20 alone, and in
+  3 runs of the whole world spec four at a time (78 of 78). It comes about once in ten main runs now.
 
 New e2e tests: "the ball moves as evenly on a guest as on the host, over a network like a LAN" (`@alone`), and in
 `chat.spec.ts` "outside a room the panel says to open an invite link, …" (`@this-client`), "two tabs of one browser
@@ -126,9 +133,12 @@ tests (`@this-server`, `@this-client`).
 3. **First after the tag:** `@this-server` comes off the tests that have it (plan 5's three, and plan 6's: the room
    page without a room URL, two tabs, names, the portal's look). `@this-client` stays while 0.1 clients are in the
    clients run.
-4. A dev server of yours that runs from this checkout gets migration 6 when it restarts. A 0.1 server refuses that
-   database afterwards, as with migration 5.
-5. Still waiting, from `ai/next_3.md` to `ai/next_5.md`: bug 1, saved values that change during a gap,
+4. `npm run dev` from this checkout keeps its database in `server/data/`, and that database gets migration 6 the
+   next time it starts. A 0.1 server refuses it afterwards, as with migration 5. (What was on port 8080 during this
+   iteration was a server my measuring script had left running, not yours. It is stopped.)
+5. **The chat-key test** in `world.spec.ts` fails about once in ten main runs (above). Its trace shows the test
+   before it; a run with `--repeat-each` of the whole spec under load, with traces kept, may catch it.
+6. Still waiting, from `ai/next_3.md` to `ai/next_5.md`: bug 1, saved values that change during a gap,
    `crypto.subtle` on plain http, the packing figures, what the other player sees of a hit, the unread count for
    games with their own button, rally asking for the characters left out, a setting for the number of tries. And
    plan 6's "Not in this plan": an invite that doesn't run out, refusing room URLs from 0.1 games, lookalike names

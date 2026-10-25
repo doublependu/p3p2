@@ -1,6 +1,6 @@
-// The two links people share: the room URL (owner → host) and the invite link (host → friends).
-// This module is imported by the client's entry chunk, so it stays tiny and dependency-free: it
-// holds only what reading the invite in a page's address needs. room-links.ts has the rest.
+// The invite link, which everybody joins a room with. This module is imported by the client's entry chunk, so it
+// stays tiny and dependency-free: it holds only what reading the invite in a page's address needs. room-links.ts
+// writes the link.
 
 export interface InviteRef {
   /** Server base URL without a trailing slash, e.g. `https://p3p2.example.com`. */
@@ -8,28 +8,24 @@ export interface InviteRef {
   code: string
 }
 
-export interface RoomRef {
-  server: string
-  key: string
-}
-
 // Crockford base32, lower case: no i, l, o, u. Literals, so bundlers can drop what a chunk does not use.
 export const INVITE_CODE_RE: RegExp = /^[0-9a-hjkmnp-tv-z]{10}$/
 // The code as a link carries it: a server's front page may leave its last characters out, a dash in place of each,
 // for the player to type. Ten characters in all, at least two of them the code's.
 const LINK_CODE_RE: RegExp = /^(?=.{10}$)[0-9a-hjkmnp-tv-z]{2,}-*$/
+// A room's key, which the server still takes from clients before 0.2.
 export const ROOM_KEY_RE: RegExp = /^[0-9a-hjkmnp-tv-z]{26}$/
 export const URL_PARAM_RE: RegExp = /^[A-Za-z][A-Za-z0-9_-]{0,31}$/
 
-export const MAX_LINK = 400
+const MAX_LINK = 400
 
 // `host:port/…` has no scheme; `ftp://…` has one, and prefixing it would turn `ftp` into the host.
-export function withScheme(text: string): string {
+function withScheme(text: string): string {
   return /^[a-z][a-z0-9+.-]*:\/\//i.test(text) ? text : `https://${text}`
 }
 
 /** Normalizes a server base URL, or returns null when it is not a plain http(s) URL. */
-export function normalizeServer(text: string): string | null {
+function normalizeServer(text: string): string | null {
   try {
     const u = new URL(withScheme(text.trim()))
     if (u.protocol !== 'https:' && u.protocol !== 'http:') return null

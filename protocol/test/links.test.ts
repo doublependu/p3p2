@@ -1,10 +1,9 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
 import { inviteFromUrl, parseInvite } from '../src/links.ts'
-import { formatInvite, inviteUrl, parseRoomUrl, roomUrl } from '../src/room-links.ts'
+import { formatInvite, inviteUrl } from '../src/room-links.ts'
 
 const CODE = '789xyz0abc'
-const KEY = '0123456789abcdefghjkmnpqrs'
 
 test('invite: https is implied, other schemes are written out', () => {
   assert.deepEqual(parseInvite(`p3p2.example.com/${CODE}`), { server: 'https://p3p2.example.com', code: CODE })
@@ -85,22 +84,4 @@ test('invite link: the parameter name is configurable', () => {
 test('invite link: no parameter, or a bad address', () => {
   assert.equal(inviteFromUrl('https://game.example.com/'), null)
   assert.equal(inviteFromUrl('not a url'), null)
-})
-
-test('room URL: parse and format', () => {
-  const ref = parseRoomUrl(`  https://p3p2.example.com/room/${KEY}  `)
-  assert.deepEqual(ref, { server: 'https://p3p2.example.com', key: KEY })
-  assert.equal(roomUrl(ref!), `https://p3p2.example.com/room/${KEY}`)
-  assert.deepEqual(parseRoomUrl(`p3p2.example.com/room/${KEY}/`), ref)
-  assert.deepEqual(parseRoomUrl(`http://192.168.1.118:8080/room/${KEY}`), {
-    server: 'http://192.168.1.118:8080',
-    key: KEY,
-  })
-  assert.deepEqual(parseRoomUrl(`https://example.com/p3p2/room/${KEY}`), { server: 'https://example.com/p3p2', key: KEY })
-})
-
-test('room URL: rejects junk', () => {
-  for (const v of ['', null, 'p3p2.example.com', `p3p2.example.com/${KEY}`, 'p3p2.example.com/room/abc', `x y/room/${KEY}`]) {
-    assert.equal(parseRoomUrl(v), null, String(v))
-  }
 })
