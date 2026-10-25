@@ -493,9 +493,10 @@ test('through the door: the cellar is the same room, as the same member, without
   expect(await self(grace)).toEqual(before)
   await expect(grace.locator('p3p2-panel').getByRole('button', { name: 'Join', exact: true })).toHaveCount(0)
   await expect(ada.locator('#who')).toContainText('Grace: cellar')
-  // The cellar's stones are the room's too: one taken there is taken for the yard's pages as well.
+  // The cellar's stones are the room's too: one taken there is taken for the yard's pages as well. Not a count: the
+  // tile beside the door can be a stone, which Grace takes as she comes in (a world in about 40).
   await world(grace, (w) => w.standOn(0))
-  await expect.poll(() => world(ada, (w) => w.taken.cellar.length)).toBe(1)
+  await expect.poll(() => world(ada, (w) => w.taken.cellar.find(([stone]) => stone === 0)?.[1])).toBe(before.pid)
   await agree([ada, grace, edsger])
 
   // Alone in the cellar, she moves its thing. Then Edsger comes down, and Ada: the longest in the room of those
