@@ -4,6 +4,7 @@ import assert from 'node:assert/strict'
 import { mkdtempSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join as joinPath } from 'node:path'
+import { DatabaseSync } from 'node:sqlite'
 import { after, test } from 'node:test'
 import {
   type BinaryOutHeader,
@@ -20,6 +21,7 @@ import { WebSocket } from 'ws'
 import type { Config } from '../src/config.ts'
 import { DEFAULT_LIMITS, type Limits } from '../src/core/limits.ts'
 import { type Running, startServer } from '../src/server.ts'
+import { MIGRATIONS } from '../src/store/migrations.ts'
 import { VERSION } from '../src/version.ts'
 import { untimed } from './helpers.ts'
 
@@ -32,7 +34,8 @@ after(async () => {
   for (const r of open) await r.close()
 })
 
-async function start(over: Partial<Config> = {}, limits: Partial<Limits> = {}): Promise<{ r: Running; base: string }> {
+/** `now`: the server's clock, for a test that moves time on itself. */
+async function start(over: Partial<Config> = {}, limits: Partial<Limits> = {}, now?: () => number): Promise<{ r: Running; base: string }> {
   const r = await startServer({
     publicUrl: 'https://p3p2.example.com',
     name: 'test server',
@@ -46,7 +49,7 @@ async function start(over: Partial<Config> = {}, limits: Partial<Limits> = {}): 
     statsToken: null,
     limits: { ...DEFAULT_LIMITS, ...limits },
     ...over,
-  })
+  }, now)
   open.push(r)
   return { r, base: `http://127.0.0.1:${r.port}` }
 }
@@ -358,6 +361,147 @@ test('portal: someone who is not the owner sees only what to do with a room URL'
   assert.equal((await owner.get(`/room/${key}`)).status, 200)
 })
 
+/** The room's current invite code, as the store has it. */
+function codeOf(r: Running, key: string): string | undefined {
+  const room = r.app.store.roomByKey(key)!
+  return r.app.store.currentInvite(room.id, r.app.now())?.code
+}
+
+test('portal: the front page lists the rooms put on it whose invite is open, with their links whole or without their last characters', async () => {
+  let time = Date.now()
+  const { base, r } = await start({}, {}, () => time)
+  const visitor = new Owner(base)
+  // No room is on it: the address is for logging in, as before.
+  assert.equal((await visitor.get('/')).headers.get('location'), '/login')
+
+  const owner = new Owner(base)
+  await owner.login()
+  const whole = await owner.room('game.example.com', { name: 'Friday games' })
+  const part = await owner.room('game.example.com', { name: 'Secret <b>room</b>' })
+  const off = await owner.room('other.example.com', { name: 'Not listed' })
+  // A room has its invite from the start, so its page has a link before anyone has hosted.
+  const page = await (await owner.get(`/room/${part}`)).text()
+  assert.ok(page.includes(`https://game.example.com/?room=p3p2.example.com/${codeOf(r, part)}`), page)
+  assert.match(page, /Renew invite/)
+  assert.match(page, /target="_blank"/)
+  assert.ok(codeOf(r, off))
+
+  await owner.post(`/room/${whole}/settings`, { front: '0' })
+  await owner.post(`/room/${part}/settings`, { front: '4' })
+  const dashboard = await (await owner.get('/')).text()
+  assert.equal(dashboard.match(/on the front page<\/span>/g)?.length, 2)
+  // The owner sees the characters left out, to pass on.
+  const code = codeOf(r, part)!
+  assert.ok((await (await owner.get(`/room/${part}`)).text()).includes(`without its last 4 characters: <b class="mono">${code.slice(-4)}</b>`))
+
+  const front = await visitor.get('/')
+  assert.equal(front.status, 200)
+  const html = await front.text()
+  assert.ok(html.includes(`https://game.example.com/?room=p3p2.example.com/${codeOf(r, whole)}`), html)
+  assert.ok(html.includes(`https://game.example.com/?room=p3p2.example.com/${code.slice(0, 6)}----`), html)
+  assert.match(html, /Secret &lt;b&gt;room&lt;\/b&gt;/)
+  assert.match(html, /0 of 16 playing/)
+  assert.match(html, /The game asks for the last 4 characters/)
+  assert.doesNotMatch(html, /Not listed/)
+  // Nothing on it that it does not show: no room key, no whole code of a room that leaves characters out.
+  for (const key of [whole, part, off]) assert.ok(!html.includes(key))
+  assert.ok(!html.includes(code))
+  assert.ok(!html.includes(codeOf(r, off)!))
+
+  // A full room says so.
+  await owner.post(`/room/${whole}/settings`, { front: '0', max: '1' })
+  const ada = await join(base, { key: whole }, 'Ada')
+  assert.match(await (await visitor.get('/')).text(), /game\.example\.com · full/)
+  ada.c.close()
+  await ada.c.untilClosed()
+
+  // A room whose session was ended drops off, and one whose invite expired.
+  await owner.post(`/room/${whole}/end`)
+  assert.doesNotMatch(await (await visitor.get('/')).text(), /Friday games/)
+  time += DEFAULT_LIMITS.inviteTtlMs
+  const none = await visitor.get('/')
+  assert.equal(none.status, 200)
+  assert.match(await none.text(), /No room is open right now/)
+  // Its next invite brings it back, with new characters.
+  await owner.post(`/room/${part}/invite`)
+  const next = codeOf(r, part)!
+  assert.notEqual(next, code)
+  assert.ok((await (await visitor.get('/')).text()).includes(`/${next.slice(0, 6)}----`))
+  // The owner still gets the dashboard.
+  assert.match(await (await owner.get('/')).text(), /New room/)
+})
+
+test('portal: hiding more of the link, or taking the room off the front page, makes a new invite; showing more keeps it', async () => {
+  const { base, r } = await start()
+  const owner = new Owner(base)
+  await owner.login()
+  const key = await owner.room()
+  const steps: [string | undefined, boolean][] = [
+    ['4', false], // on the front page: more is shown than before
+    ['2', false],
+    ['8', true],
+    ['0', false],
+    [undefined, false], // a form without the field: the room stays where it is
+    ['nonsense', false],
+    ['off', true],
+    ['off', false],
+  ]
+  for (const [front, renewed] of steps) {
+    const before = codeOf(r, key)
+    await owner.post(`/room/${key}/settings`, front === undefined ? {} : { front })
+    assert.equal(codeOf(r, key) !== before, renewed, `front: ${front}`)
+  }
+  assert.equal(r.app.store.roomByKey(key)!.front, null)
+  // A room without an invite gets none from its setting: the front page never makes one.
+  await owner.post(`/room/${key}/settings`, { front: '4' })
+  await owner.post(`/room/${key}/end`)
+  await owner.post(`/room/${key}/settings`, { front: '8' })
+  assert.equal(codeOf(r, key), undefined)
+  assert.equal(r.app.store.roomByKey(key)!.front, 8)
+})
+
+test('api and ws: ten wrong tries at the characters a room leaves out, then every try is refused for a while, the right one too', async () => {
+  let time = Date.now()
+  const { base } = await start({}, {}, () => time)
+  const owner = new Owner(base)
+  await owner.login()
+  const key = await owner.room('game.example.com', { name: 'Friday games' })
+  const other = await owner.room('game.example.com', { name: 'Whole link' })
+  await owner.post(`/room/${key}/settings`, { front: '2' })
+  await owner.post(`/room/${other}/settings`, { front: '0' })
+  const { code } = (await (await api(base, '/room/invite', key, GAME, { method: 'POST' })).json()) as InviteGrant
+  const { code: whole } = (await (await api(base, '/room/invite', other, GAME, { method: 'POST' })).json()) as InviteGrant
+  const ALPHABET = '0123456789abcdefghjkmnpqrstvwxyz'
+  const wrong = [...ALPHABET].map((c) => code.slice(0, 8) + c + c).filter((c) => c !== code)
+  const look = async (c: string) => (await api(base, '/invite', c, GAME)).status
+  const hello = async (c: string) => {
+    const client = new Client(base)
+    await client.opened()
+    client.hello({ invite: c }, 'Guesser')
+    const answer = await Promise.race([client.next('error').then((e) => e.code), client.next('welcome').then(() => 'welcome')])
+    client.close()
+    return answer
+  }
+
+  // Codes for no room, and for a room whose link is shown whole, are not tries for it.
+  for (const c of ['0000000000', '1111111111', whole.slice(0, 9) + (whole.endsWith('0') ? '1' : '0')]) assert.equal(await look(c), 401)
+  // Ten wrong ones, by both ways in.
+  for (const [i, c] of wrong.slice(0, 10).entries()) assert.equal(i % 2 ? await look(c) : await hello(c), i % 2 ? 401 : 'auth')
+  assert.equal(await look(code), 429)
+  assert.equal(((await (await api(base, '/invite', code, GAME)).json()) as { error: string }).error, 'rate')
+  assert.equal(await hello(code), 'rate')
+  // Another room, and the room's key, are not held up.
+  assert.equal(await look(whole), 200)
+  assert.equal((await join(base, { key }, 'Ada')).welcome.self.mod, true)
+
+  // One try every 6 minutes. A right try gives it back; a wrong one keeps it.
+  time += 6 * 60_000
+  assert.equal(await look(code), 200)
+  assert.equal(await hello(code), 'welcome')
+  assert.equal(await look(wrong[10]!), 401)
+  assert.equal(await look(code), 429)
+})
+
 test('api: CORS answers only origins that some room accepts', async () => {
   const { base } = await start()
   const owner = new Owner(base)
@@ -394,12 +538,15 @@ test('api: a room key works only from its own game', async () => {
   const res = await api(base, '/room', key, GAME)
   assert.equal(res.status, 200)
   assert.equal(res.headers.get('access-control-allow-origin'), GAME)
-  assert.deepEqual((await res.json()) as RoomInfo, {
+  const { invite, ...info } = (await res.json()) as RoomInfo
+  assert.deepEqual(info, {
     name: 'Friday games',
     game: { url: 'https://game.example.com/' },
     maxMembers: 16,
     members: 0,
   })
+  // A room has its invite from the start.
+  assert.match(invite!.code, /^[0-9a-hjkmnp-tv-z]{10}$/)
 
   // other.example.com is known to the server, so it may read the answer, and the answer is no.
   const wrong = await api(base, '/room', key, OTHER)
@@ -754,13 +901,16 @@ test('ws: ops come back numbered, and are on disk a moment later without anyone 
   for (const { c } of [ada, grace, late]) c.close()
 })
 
-test('saved room and player values, the log, and the owner survive a restart', async () => {
+test('saved room and player values, the log, the front page and the owner survive a restart', async () => {
   const dir = mkdtempSync(joinPath(tmpdir(), 'p3p2-test-'))
   try {
     const first = await start({ dataDir: dir })
     const owner = new Owner(first.base)
     await owner.login()
     const key = await owner.room()
+    await owner.post(`/room/${key}/settings`, { front: '4' })
+    const front = await (await new Owner(first.base).get('/')).text()
+    assert.match(front, /\?room=p3p2\.example\.com\/[0-9a-z]{6}----"/)
     const host = await join(first.base, { key }, 'Ada')
     host.c.send({ t: 'msg', ch: 'world', data: { seed: 42 }, retain: 'room' })
     host.c.send({ t: 'msg', ch: 'pos', data: { x: 3, z: -4 }, retain: 'player' })
@@ -772,6 +922,8 @@ test('saved room and player values, the log, and the owner survive a restart', a
     open.splice(open.indexOf(first.r), 1)
 
     const second = await start({ dataDir: dir })
+    // The same invite, so the same characters left out.
+    assert.equal(await (await new Owner(second.base).get('/')).text(), front)
     const again = await join(second.base, { key }, 'Ada')
     assert.deepEqual(again.welcome.retained.room, { world: { seed: 42 } })
     assert.deepEqual(again.welcome.retained.player, { [again.welcome.self.pid]: { pos: { x: 3, z: -4 } } })
@@ -784,6 +936,28 @@ test('saved room and player values, the log, and the owner survive a restart', a
     again.c.send({ t: 'op', op: { n: 4 } })
     assert.equal((await again.c.next('op')).seq, 4)
     again.c.close()
+  } finally {
+    rmSync(dir, { recursive: true, force: true })
+  }
+})
+
+test('a database from 0.1 opens with every room off the front page', async () => {
+  const dir = mkdtempSync(joinPath(tmpdir(), 'p3p2-test-'))
+  try {
+    // Schema 4, as 0.1 left it, with a room in it.
+    const old = new DatabaseSync(joinPath(dir, 'p3p2.sqlite'))
+    for (const [v, sql] of MIGRATIONS.slice(0, 4).entries()) old.exec(`BEGIN; ${sql}; PRAGMA user_version = ${v + 1}; COMMIT`)
+    old
+      .prepare("INSERT INTO rooms (key, name, game_url, origins, max_members, created_at) VALUES (?, 'Old room', ?, ?, 16, 0)")
+      .run('0'.repeat(26), `${GAME}/`, JSON.stringify([GAME]))
+    old.close()
+
+    const { base, r } = await start({ dataDir: dir })
+    assert.deepEqual(
+      r.app.store.listRooms().map((room) => [room.name, room.front]),
+      [['Old room', null]],
+    )
+    assert.equal((await new Owner(base).get('/')).headers.get('location'), '/login')
   } finally {
     rmSync(dir, { recursive: true, force: true })
   }

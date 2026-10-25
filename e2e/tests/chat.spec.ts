@@ -1,6 +1,6 @@
-import type { WebSocketRoute } from '@playwright/test'
+import type { Page, WebSocketRoute } from '@playwright/test'
 import { GAME, OTHER_SITE } from '../playwright.config.ts'
-import { accept, CHAT, createRoom, host, inInvite, join, player, scan, selfId } from './helpers.ts'
+import { accept, CHAT, createRoom, host, inInvite, join, type Player, player, scan, selfId } from './helpers.ts'
 import { expect, test } from './fixtures.ts'
 
 test('a normal visit loads only the entry file', async ({ browser }) => {
@@ -407,6 +407,144 @@ test('the invite link can be copied', async ({ browser, server }) => {
   const selected = await ada.page.getByLabel('Invite link', { exact: true }).evaluate((el: HTMLInputElement) => el.value.slice(el.selectionStart ?? 0, el.selectionEnd ?? 0))
   if (await ada.page.getByRole('button', { name: 'Selected' }).count()) expect(selected).toBe(invite)
   await ada.context.close()
+  await owner.close()
+})
+
+test('chat that comes while the panel is closed is counted on the multiplayer button', { tag: '@this-client' }, async ({ browser, server }) => {
+  const owner = await createRoom(browser, server, 'Unread room')
+  const ada = await player(browser)
+  const invite = await host(ada.page, owner.roomUrl, 'Ada')
+  const grace = await join(browser, invite, 'Grace')
+  await ada.page.getByRole('button', { name: 'Close' }).click()
+  const pill = (p: Player) => p.page.locator('p3p2-panel').getByRole('button', { name: /^Multiplayer/ })
+  const badge = (p: Player) => p.page.locator('p3p2-panel .unread')
+  let said = 0
+  const say = async (lines: number) => {
+    for (let i = 0; i < lines; i++) {
+      await ada.page.locator('#text').fill(`line ${++said}`)
+      await ada.page.locator('#send').click()
+    }
+    await expect(grace.page.locator('#log li')).toHaveCount(said)
+  }
+
+  await say(3)
+  await expect(badge(grace)).toHaveText('3')
+  await expect(pill(grace)).toHaveAccessibleName('Multiplayer, 3 unread messages')
+  // Ada's own lines are no news to her.
+  await expect(badge(ada)).toBeHidden()
+  await expect(pill(ada)).toHaveAccessibleName('Multiplayer')
+
+  await say(7)
+  await expect(badge(grace)).toHaveText('9+')
+  await expect(pill(grace)).toHaveAccessibleName('Multiplayer, 10 unread messages')
+
+  // Opening the panel reads them; closing it again starts from none.
+  await pill(grace).click()
+  await expect(grace.page.locator('p3p2-panel .log li', { hasText: 'line 10' })).toBeVisible()
+  await grace.page.getByRole('button', { name: 'Close' }).click()
+  await expect(badge(grace)).toBeHidden()
+  await expect(pill(grace)).toHaveAccessibleName('Multiplayer')
+  await say(1)
+  await expect(badge(grace)).toHaveText('1')
+  await expect(pill(grace)).toHaveAccessibleName('Multiplayer, 1 unread message')
+
+  for (const p of [ada, grace]) await p.context.close()
+  await owner.close()
+})
+
+/** Puts the room on the server's front page, without its link's last `hidden` characters, and returns them. */
+async function onFrontPage(portal: Page, hidden: number): Promise<string> {
+  await portal.getByLabel("On this server's front page").selectOption(String(hidden))
+  await portal.getByRole('button', { name: 'Save', exact: true }).click()
+  const chars = portal.locator('b.mono')
+  await expect(chars).toHaveText(new RegExp(`^[0-9a-z]{${hidden}}$`))
+  return (await chars.textContent())!
+}
+
+test("the owner's room page has an invite link before anyone has hosted, and it opens the game in a new tab", { tag: '@this-server' }, async ({ browser, server }) => {
+  const owner = await createRoom(browser, server, 'Fresh room')
+  const link = await owner.portal.getByLabel('Invite link', { exact: true }).inputValue()
+  expect(link).toMatch(new RegExp(`^${CHAT}\\?room=${inInvite(server.url)}/[0-9a-z]{10}$`))
+  const [tab] = await Promise.all([owner.portal.context().waitForEvent('page'), owner.portal.getByRole('link', { name: 'Open', exact: true }).click()])
+  await expect(tab).toHaveURL(link)
+  await expect(tab.locator('p3p2-panel')).toContainText('Join Fresh room on')
+  await expect(tab.locator('p3p2-panel')).toContainText('Nobody is here yet')
+  await accept(tab, 'Ada')
+  await owner.close()
+})
+
+test("a friend who opens the server's address finds the room, types the characters its link leaves out, and plays with the host", { tag: ['@this-server', '@this-client'] }, async ({ browser, server }) => {
+  const owner = await createRoom(browser, server, 'Friday night')
+  const hidden = await onFrontPage(owner.portal, 4)
+  const ada = await player(browser)
+  const invite = await host(ada.page, owner.roomUrl, 'Ada')
+  expect(invite.slice(-4)).toBe(hidden)
+  const shown = `${invite.slice(0, -4)}----`
+
+  // Only the server's address was passed on.
+  const grace = await player(browser, `${server.url}/`)
+  await expect(grace.page.getByRole('heading', { name: 'Friday night' })).toBeVisible()
+  await expect(grace.page.getByLabel('Invite link to Friday night')).toHaveValue(shown)
+  await expect(grace.page.getByText('The game asks for the last 4 characters.')).toBeVisible()
+  await grace.page.getByRole('link', { name: 'Play', exact: true }).click()
+  await expect(grace.page).toHaveURL(shown)
+
+  const chars = grace.page.getByLabel('The last 4 characters')
+  await expect(chars).toBeFocused()
+  const join = grace.page.getByRole('button', { name: 'Join', exact: true })
+  await chars.fill((hidden[0] === '0' ? '1' : '0') + hidden.slice(1))
+  await expect(grace.page.getByRole('status')).toHaveText("Those aren't the right characters.")
+  await expect(join).toBeDisabled()
+  // The right ones, as they might be read out over the phone: in capitals, with a space.
+  await chars.fill(`${hidden.slice(0, 2)} ${hidden.slice(2)}`.toUpperCase())
+  await expect(grace.page.locator('p3p2-panel')).toContainText('Join Friday night on')
+  await expect(grace.page.locator('p3p2-panel')).toContainText('Hosted by Ada · 1 player')
+  await accept(grace.page, 'Grace')
+  await expect(ada.page.locator('#state')).toContainText('2 here')
+  await expect(grace.page.locator('#world')).toHaveText((await ada.page.locator('#world').textContent())!)
+
+  // In the room, Grace has the whole link to pass on.
+  await grace.page.getByRole('button', { name: 'Multiplayer' }).click()
+  await expect(grace.page.getByLabel('Invite link', { exact: true })).toHaveValue(invite)
+
+  for (const p of [ada, grace]) await p.context.close()
+  await owner.close()
+})
+
+test('a game with its own Join? puts in the characters the link leaves out itself', { tag: ['@this-server', '@this-client'] }, async ({ browser, server }) => {
+  const owner = await createRoom(browser, server, 'Own menu room')
+  const hidden = await onFrontPage(owner.portal, 4)
+  const ada = await player(browser)
+  await host(ada.page, owner.roomUrl, 'Ada')
+  const visitor = await player(browser, `${server.url}/`)
+  const shown = new URL(await visitor.page.getByLabel('Invite link to Own menu room').inputValue()).searchParams.get('room')!
+
+  // A page of the game's site with a menu of its own, opened with what the front page shows.
+  const context = await browser.newContext()
+  const page = await context.newPage()
+  await page.goto(`${GAME}/index.html?room=${shown}`)
+  await page.addScriptTag({ url: '/dist/p3p2.iife.js' })
+  const result = await page.evaluate(async (chars) => {
+    type Invite = { server: string; code: string }
+    type Room = { self: { name: string }; members: unknown[]; inviteUrl: string }
+    type Client = { invite: Invite | null; peek(i: Invite): Promise<unknown>; join(i: Invite, o: object): Promise<Room> }
+    const P3P2 = (window as unknown as { P3P2: new (o: object) => Client }).P3P2
+    const p3p2 = new P3P2({ game: { id: 'chat-example', version: '1.0.0' }, ui: false })
+    const invite = p3p2.invite!
+    const code = (e: { code: string }) => e.code
+    const peek = await p3p2.peek(invite).then(() => '', code)
+    const join = await p3p2.join(invite, { ask: false }).then(() => '', code)
+    // As docs/api.md says: the characters in place of the dashes.
+    const room = await p3p2.join({ ...invite, code: invite.code.replace(/-+$/, '') + chars }, { ask: false, name: 'Grace' })
+    return { code: invite.code, peek, join, name: room.self.name, members: room.members.length, inviteUrl: room.inviteUrl }
+  }, hidden)
+  expect(result.code).toMatch(/^[0-9a-z]{6}----$/)
+  expect([result.peek, result.join]).toEqual(['hidden', 'hidden'])
+  expect([result.name, result.members]).toEqual(['Grace', 2])
+  expect(result.inviteUrl).toBe(`${GAME}/index.html?room=${inInvite(server.url)}/${result.code.slice(0, 6)}${hidden}`)
+  await expect(ada.page.locator('#state')).toContainText('2 here')
+
+  for (const c of [ada.context, visitor.context, context]) await c.close()
   await owner.close()
 })
 

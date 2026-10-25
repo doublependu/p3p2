@@ -3,9 +3,10 @@
 // A report says where something was when it was sent. Drawn as it arrives, the thing stands
 // still and then jumps, ten or twenty times a second. `Smooth` keeps the last few reports of
 // each thing and draws it a little in the past, where there is a report on either side of the
-// moment to draw between. When the reports stop for a moment the thing carries on the way it
-// was going for a little while, and waits; when they have stopped for a second, it goes back to the
-// last report and stands there.
+// moment to draw between. By default it only ever draws between reports: when they stop, the thing
+// stands at the last one until the next comes. A game that would rather guess ahead for a moment
+// gives it `coast`: the thing then carries on the way it was going for a little while, and waits;
+// when the reports have stopped for a second, it goes back to the last one and stands there.
 //
 // It knows nothing of rooms. Feed it from wherever the reports come: presence, for the other
 // players; a host's messages, for what the host simulates. Give it the time each report was
@@ -31,8 +32,10 @@ export interface SmoothOptions {
    */
   delay?: number
   /**
-   * For how long, in ms, a thing carries on the way it was going when no report comes. Default 250. A second after the
-   * last report it goes back to it, over as long again, and stands there.
+   * For how long, in ms, a thing carries on the way it was going when no report comes. Default 0: it stands at the
+   * last report, and nothing is ever drawn where no report said it was. For a game that would rather guess ahead for
+   * a moment when a report is late. A second after the last report it goes back to it, over as long again, and
+   * stands there.
    */
   coast?: number
   /** The positions, among the values, of angles in radians. They turn the short way round. */
@@ -96,7 +99,7 @@ export class Smooth<K = number> {
 
   constructor(options: SmoothOptions = {}) {
     this.delay = options.delay ?? 120
-    this.coast = options.coast ?? 250
+    this.coast = options.coast ?? 0
     this.angles = options.angles ?? []
     this.quaternions = options.quaternions ?? []
     this.jump = options.jump ?? Number.POSITIVE_INFINITY
@@ -149,10 +152,10 @@ export class Smooth<K = number> {
     let to = last
     let u = 0
     if (when >= last.at) {
-      // Past the last report: on along the way it was going, for a while, and there it waits for the next. A report
-      // that is late is bridged so. One that has not come for a second is not late: the thing stopped (and says
-      // nothing more, since nothing changed), so it goes back, as gently as it went on, to where it was last said to
-      // be, and is not left standing where it never was.
+      // Past the last report: there it stands. With `coast`, it goes on along the way it was going, for a while, and
+      // there it waits for the next: a report that is late is bridged so. One that has not come for a second is not
+      // late: the thing stopped (and says nothing more, since nothing changed), so it goes back, as gently as it went
+      // on, to where it was last said to be, and is not left standing where it never was.
       const before = reports.at(-2)
       if (before && this.coast > 0) {
         const past = when - last.at

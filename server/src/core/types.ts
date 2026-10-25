@@ -3,6 +3,9 @@ export type VersionPolicy = 'exact' | 'major' | 'off'
 
 export const VERSION_POLICIES: readonly VersionPolicy[] = ['exact', 'major', 'off']
 
+/** How many of the invite code's last characters the front page may leave out of a room's link. */
+export const FRONT_HIDDEN: readonly number[] = [0, 2, 3, 4, 8]
+
 export interface RoomRecord {
   id: number
   key: string
@@ -13,6 +16,11 @@ export interface RoomRecord {
   versionPolicy: VersionPolicy
   /** The game id the room was first played with, which it is held to; null until then. */
   gameId: string | null
+  /**
+   * Null when the room is not on the server's front page. Otherwise how many of its invite code's last characters
+   * the link there leaves out, for the player to type: one of `FRONT_HIDDEN`.
+   */
+  front: number | null
   createdAt: number
 }
 
@@ -68,6 +76,11 @@ export interface HubStore {
   inviteByCode(code: string, now: number): InviteRecord | null
   /** The room an invite code was issued for, even if the code has since expired or been revoked. */
   roomIdOfInvite(code: string): number | null
+  /**
+   * The rooms a code is a try for: those on the front page whose link there leaves characters out, and whose valid
+   * invite starts with the characters the link shows of it, as the code does.
+   */
+  roomsTried(code: string, now: number): number[]
   /** Trust on first use: registers an unknown pid, afterwards accepts it only with the same secret. */
   checkPlayer(pid: string, secretHash: string, now: number): boolean
   /** Holds a room to a game id, or (null) lets any game in. */

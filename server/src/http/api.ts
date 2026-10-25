@@ -3,7 +3,6 @@
 
 import {
   type ApiError,
-  INVITE_CODE_RE,
   type InviteGrant,
   type InviteInfo,
   PROTO,
@@ -140,8 +139,9 @@ export function apiRoutes(app: App): Hono {
   )
 
   api.get('/invite', (c) => {
-    const code = bearer(c).toLowerCase()
-    const invite = INVITE_CODE_RE.test(code) ? app.store.inviteByCode(code, app.now()) : null
+    // Through the hub, which counts the wrong tries at the characters the front page leaves out.
+    const invite = app.hub.lookUpInvite(bearer(c).toLowerCase(), app.now())
+    if (invite === 'rate') return problem(c, 429, 'rate', 'Too many wrong tries for this room. Try again later')
     const room = invite ? app.store.roomById(invite.roomId) : null
     if (!room) return problem(c, 401, 'auth', 'This invite is not valid any more')
     if (!room.origins.includes(c.req.header('origin') ?? '')) {

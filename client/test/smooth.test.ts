@@ -49,6 +49,36 @@ test('when reports stop it carries on the way it was going, for a while, waits, 
   assert.deepEqual(still.get(1, 400), [10])
 })
 
+test('by default nothing is drawn past the last report, whether the reports stop or come late', () => {
+  const s = new Smooth({ ...GIVEN, delay: 0 })
+  s.set(1, [0], 0)
+  s.set(1, [10], 100)
+  for (const t of [100, 150, 300, 900, 1200, 3000]) assert.deepEqual(s.get(1, t), [10])
+
+  // A thing moving at 1 a ms, reported every 50 ms. Every seventh report comes 300 ms after it was made, later than
+  // the delay, and holds up the ones after it, as over one connection.
+  const draw = (coast?: number) => {
+    let now = 0
+    const late = new Smooth({ delay: 100, coast, clock: () => now })
+    const due: { at: number; arrives: number }[] = []
+    for (let at = 0, i = 0; at < 3000; at += 50, i++) due.push({ at, arrives: Math.max(due.at(-1)?.arrives ?? 0, at + (i % 7 === 6 ? 300 : 20)) })
+    let newest = Number.NEGATIVE_INFINITY
+    let ahead = 0
+    for (now = 0; now < 3000; now += 16) {
+      for (const d of due.filter((d) => d.arrives <= now && d.arrives > now - 16)) {
+        late.set(1, [d.at], d.at)
+        newest = Math.max(newest, d.at)
+      }
+      const v = late.get(1, now)
+      if (v) ahead = Math.max(ahead, v[0]! - newest)
+    }
+    return ahead
+  }
+  assert.equal(draw(), 0)
+  // With coast it guesses ahead while a report is late.
+  assert.ok(draw(250) > 0)
+})
+
 test('angles turn the short way round', () => {
   const s = new Smooth({ ...GIVEN, delay: 0, angles: [1] })
   s.set(1, [0, 3.0], 0)

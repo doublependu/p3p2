@@ -70,6 +70,15 @@ function randomId(): string {
   return Array.from(crypto.getRandomValues(new Uint8Array(16)), (b) => b.toString(16).padStart(2, '0')).join('')
 }
 
+/**
+ * The invite's code, whole. A link from a server's front page may leave its last characters out, a dash in place of
+ * each: the game puts them in first.
+ */
+function wholeCode(invite: Invite): string {
+  if (invite.code.includes('-')) throw new Failure('hidden', invite.server)
+  return invite.code
+}
+
 function count(value: unknown): number {
   return typeof value === 'number' && Number.isFinite(value) && value >= 0 ? Math.floor(value) : 0
 }
@@ -157,7 +166,7 @@ export class Controller {
   }
 
   async peek(invite: Invite): Promise<InviteDetails> {
-    const data = await this.call(invite.server, '/invite', invite.code)
+    const data = await this.call(invite.server, '/invite', wholeCode(invite))
     const room = typeof data.room === 'object' && data.room !== null ? (data.room as Record<string, unknown>) : {}
     return {
       roomName: cleanText(room.name, 60) || 'a room',
@@ -215,8 +224,8 @@ export class Controller {
     return this.enterInvite(invite)
   }
 
-  enterInvite(invite: Invite): Promise<Room> {
-    return this.enter(invite.server, { invite: invite.code }, invite, null)
+  async enterInvite(invite: Invite): Promise<Room> {
+    return this.enter(invite.server, { invite: wholeCode(invite) }, invite, null)
   }
 
   /** Comes back to the room this tab was in before a reload. Null if that is no longer possible. */

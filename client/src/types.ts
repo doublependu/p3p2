@@ -26,6 +26,11 @@ export interface P3P2Options {
 /** An invite link, taken apart: which server, and which invite code on it. */
 export interface Invite {
   server: string
+  /**
+   * 10 characters. A link from a server's front page may leave the last few out, a dash in place of each
+   * (`789xyz----`), for the player to type. Put them in place of the dashes before `peek` or `join`, which otherwise
+   * reject with `hidden`. The panel asks for them itself.
+   */
   code: string
 }
 

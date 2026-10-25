@@ -30,7 +30,8 @@ export async function createRoom(
 ): Promise<{ portal: Page; roomUrl: string; close: () => Promise<void> }> {
   const context = await browser.newContext()
   const portal = await context.newPage()
-  await portal.goto(`${server.url}/`)
+  // Not the server's address: once a room is on its front page, that is the front page.
+  await portal.goto(`${server.url}/login`)
   await portal.getByLabel('Password').fill(PASSWORD)
   await portal.getByRole('button', { name: 'Log in' }).click()
   await portal.getByLabel('Game URL').fill(game)

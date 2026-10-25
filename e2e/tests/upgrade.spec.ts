@@ -149,6 +149,12 @@ test('the published image\'s data, opened by this checkout\'s server: worlds, a 
   await expect(settled.portal.getByLabel('Sites that may use this room')).toHaveValue(`${GAME}\n${OTHER_SITE}`)
   await expect(settled.portal.getByLabel('Players on different versions of the game')).toHaveValue('major')
 
+  // No room was on a front page before the update, and none is after it: the server's address is for logging in.
+  await expect(settled.portal.getByLabel("On this server's front page")).toHaveValue('off')
+  const visitor = await opened(adas, `${server.url}/`)
+  await expect(visitor).toHaveURL(`${server.url}/login`)
+  await visitor.close()
+
   for (const c of contexts) await c.close()
   for (const owner of [kept, duelRoom, settled]) await owner.close()
 })

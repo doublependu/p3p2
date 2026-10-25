@@ -207,6 +207,7 @@ const WORDS = {
   'room-url': "That is not a room URL. Copy it whole from the server's portal.",
   room: 'There is no such room on that server.',
   auth: 'That invite has run out, or was replaced by a new one.',
+  hidden: 'That link leaves out the last characters of its invite. Ask whoever sent it for the whole link.',
   full: 'That game is full.',
   rate: 'Too many tries from here just now. Wait a little, and try again.',
   proto: 'That server is too old for this game. Its owner has to update it.',

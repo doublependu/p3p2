@@ -3,7 +3,7 @@
 import { html, raw } from 'hono/html'
 import type { HtmlEscapedString } from 'hono/utils/html'
 import type { LiveInfo } from '../core/hub.ts'
-import type { InviteRecord, RoomRecord, VersionPolicy } from '../core/types.ts'
+import { FRONT_HIDDEN, type InviteRecord, type RoomRecord, type VersionPolicy } from '../core/types.ts'
 import { VERSION } from '../version.ts'
 import { MARK } from './assets.ts'
 import { PASSWORD_MIN } from './password.ts'
@@ -125,10 +125,16 @@ export function dashboardPage(server: Server, rooms: RoomSummary[], form: NewRoo
       ? html`<ul class="list">${rooms.map(
           (r) => html`<li>
     <span class="grow"><a class="name" href="/room/${r.room.key}">${r.room.name}</a><br><span class="soft small">${host(r.room.gameUrl)}</span></span>
+    ${r.room.front !== null ? html`<span class="badge">on the front page</span>` : ''}
     ${r.invited ? html`<span class="badge">invite open</span>` : ''}
     <span class="badge ${r.online ? 'on' : ''}">${r.online} online</span>
   </li>`,
-        )}</ul>`
+        )}</ul>
+  ${
+    rooms.some((r) => r.room.front !== null)
+      ? html`<p class="soft small hint">The rooms on the front page are listed at this server's address, for anyone who isn't logged in, while their invite is open.</p>`
+      : ''
+  }`
       : html`<p class="soft">No rooms yet.</p>`
   }
 </div>
@@ -162,6 +168,19 @@ const VERSION_CHOICES: [VersionPolicy, string][] = [
   ['major', 'Let them play together if the first number matches (1.2 with 1.5)'],
   ['off', 'Let everyone play together'],
 ]
+
+const FRONT_CHOICES: [string, string][] = [
+  ['off', 'Not shown'],
+  ['0', 'Shown, with the whole invite link'],
+  ...FRONT_HIDDEN.filter((n) => n > 0).map((n): [string, string] => [String(n), `Shown, without the link's last ${n} characters`]),
+]
+
+/** Under the invite link: how the front page shows it, and the characters it leaves out, which the host passes on. */
+function frontNote(room: RoomRecord, invite: InviteRecord): Page | '' {
+  if (room.front === null) return ''
+  if (room.front === 0) return html`<p class="soft small">The front page shows this link whole.</p>`
+  return html`<p class="small">On the front page the link is shown without its last ${room.front} characters: <b class="mono">${invite.code.slice(-room.front)}</b>. Friends who come that way type them. They change with every new invite.</p>`
+}
 
 export interface RoomView {
   room: RoomRecord
@@ -201,8 +220,10 @@ ${v.error ? html`<p class="error" role="alert">${v.error}</p>` : ''}
       ? html`<div class="row">
     <input class="mono" id="invite-url" type="text" readonly value="${v.inviteLink}" aria-label="Invite link">
     <button type="button" data-copy="invite-url">Copy</button>
+    <a class="button" href="${v.inviteLink}" target="_blank" rel="noreferrer" title="Open the game in a new tab">Open</a>
   </div>
   <p class="soft small hint">${v.expiry} Friends who open it join this room.</p>
+  ${frontNote(room, v.invite)}
   <img class="qr" src="${base}/qr.svg?c=${v.invite.code.slice(0, 4)}" width="220" height="220" alt="QR code of the invite link">
   <div class="actions">
     <form method="post" action="${base}/invite" data-confirm="Make a new invite link? The current one stops working for new players.">
@@ -262,6 +283,11 @@ ${v.error ? html`<p class="error" role="alert">${v.error}</p>` : ''}
       ([value, text]) => html`<option value="${value}" ${value === room.versionPolicy ? 'selected' : ''}>${text}</option>`,
     )}</select>
     <p class="soft small">The room's version is that of the players already in it. A player who is refused has to reload the game.</p>
+    <label for="front">On this server's front page</label>
+    <select id="front" name="front">${FRONT_CHOICES.map(
+      ([value, text]) => html`<option value="${value}" ${value === String(room.front ?? 'off') ? 'selected' : ''}>${text}</option>`,
+    )}</select>
+    <p class="soft small">The front page is this server's address, for anyone who isn't logged in. Hiding more of the link, or taking the room off, makes a new invite. Only games on p3p2 0.2 or later ask for the characters left out.</p>
     <div class="actions"><button type="submit">Save</button></div>
   </form>
   <h3>The game</h3>
@@ -289,6 +315,45 @@ ${v.error ? html`<p class="error" role="alert">${v.error}</p>` : ''}
     </form>
   </div>
 </div>`,
+  )
+}
+
+/** A room on the front page. `link` leaves out the last `hidden` characters of the code, a dash in place of each. */
+export interface FrontRoom {
+  name: string
+  game: string
+  members: number
+  maxMembers: number
+  link: string
+  hidden: number
+}
+
+/** The server's address, for anyone who isn't logged in, once its owner has put a room on it. */
+export function frontPage(server: Server, rooms: FrontRoom[]): Page {
+  return layout(
+    { title: 'Rooms', server, owner: false },
+    html`<h1>Rooms</h1>
+<p class="soft">Rooms on this server that friends can join. <b>Play</b> opens the game, which asks whether to join.</p>
+${
+  rooms.length
+    ? rooms.map(
+        (r) => html`<div class="card">
+  <h2>${r.name}</h2>
+  <p class="soft small">${host(r.game)} · ${r.members >= r.maxMembers ? 'full' : `${r.members} of ${r.maxMembers} playing`}</p>
+  <div class="row">
+    <input class="mono" type="text" readonly value="${r.link}" aria-label="Invite link to ${r.name}">
+    <a class="button primary" href="${r.link}">Play</a>
+  </div>
+  ${
+    r.hidden
+      ? html`<p class="soft small hint">The game asks for the last ${r.hidden} characters. Whoever invited you has them. If the game doesn't ask, ask them for the whole link.</p>`
+      : ''
+  }
+</div>`,
+      )
+    : html`<div class="card"><p class="soft">No room is open right now.</p></div>`
+}
+<p class="soft small"><a href="/login">Owner log in</a></p>`,
   )
 }
 

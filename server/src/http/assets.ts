@@ -38,13 +38,13 @@ input[type=text], input[type=password], input[type=number], input[type=url], tex
   width: 100%; padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--field);
 }
 textarea { min-height: 5em; resize: vertical; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: .875rem; }
-input.mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: .875rem; }
+input.mono, .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: .875rem; }
 input:focus-visible, textarea:focus-visible, select:focus-visible, button:focus-visible, a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 button, .button {
   display: inline-block; padding: 8px 14px; border: 1px solid var(--line); border-radius: 8px;
   background: var(--card); cursor: pointer; text-decoration: none; color: var(--ink); white-space: nowrap;
 }
-button.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); font-weight: 600; }
+button.primary, .button.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); font-weight: 600; }
 button.danger { color: var(--danger); border-color: color-mix(in srgb, var(--danger) 45%, var(--line)); }
 button.link { border: 0; background: none; padding: 0; color: var(--accent); text-decoration: underline; }
 .row { display: flex; gap: 8px; align-items: center; }

@@ -88,7 +88,8 @@ The first start pulls two images, the server's (`p3p2/p3p2:0.1`) and Caddy's (`c
 
 The log ends with a link, `https://p3p2.example.com/setup?token=…`. Open it once and choose the
 owner password. From then on `https://p3p2.example.com/` is the portal, where you log in and
-create rooms.
+create rooms. Anybody else who opens it gets the log-in page, until you put a room on the server's front page:
+then they see the rooms you put there, with their invite links ([host.md](host.md#friends-who-come-to-the-server)).
 
 `https://p3p2.example.com/healthz` answers `ok` once Caddy has the certificate, a moment after
 the first start.
@@ -174,8 +175,8 @@ themselves once the name points at the new one and their browsers learn it.
 As the one who runs the server, you can read everything that passes through it, and everything it saved: names,
 chat, what the games send and save. Its log records joins and leaves (a player's id, a room, a time), not what was
 sent. The players' IP addresses reach the server; it uses them for the rate limits, and writes one to its log only
-for a join refused for a wrong key or invite. The
-players see only the server's address, not each other's. [security.md](security.md) says what the room keys and
+for a join it refused (a wrong key or invite, or too many wrong tries at a room's characters) and for a wrong portal
+password. The players see only the server's address, not each other's. [security.md](security.md) says what the room keys and
 invites protect.
 
 ## Removing it all

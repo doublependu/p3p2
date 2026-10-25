@@ -45,6 +45,19 @@ test('invite: rejects junk', () => {
   }
 })
 
+test('invite: a link from a front page may leave the code\'s last characters out, a dash for each', () => {
+  for (const code of ['789xyz0a--', '789xyz----', '78--------', '789xyz0ab-']) {
+    const link = inviteUrl('https://game.example.com/', { server: 'https://p3p2.example.com', code })
+    assert.equal(link, `https://game.example.com/?room=p3p2.example.com/${code}`)
+    assert.deepEqual(inviteFromUrl(link), { server: 'https://p3p2.example.com', code })
+  }
+  assert.equal(parseInvite('p3p2.example.com/789XYZ----')?.code, '789xyz----')
+  // Ten in all, at least two of them the code's, and the dashes only at the end.
+  for (const code of ['7---------', '----------', '789xyz---', '789xyz-----', '789-yz0abc', '-89xyz0abc']) {
+    assert.equal(parseInvite(`p3p2.example.com/${code}`), null, code)
+  }
+})
+
 test('invite: codes are case-insensitive', () => {
   assert.equal(parseInvite(`p3p2.example.com/${CODE.toUpperCase()}`)?.code, CODE)
 })

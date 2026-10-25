@@ -15,6 +15,9 @@ export interface RoomRef {
 
 // Crockford base32, lower case: no i, l, o, u. Literals, so bundlers can drop what a chunk does not use.
 export const INVITE_CODE_RE: RegExp = /^[0-9a-hjkmnp-tv-z]{10}$/
+// The code as a link carries it: a server's front page may leave its last characters out, a dash in place of each,
+// for the player to type. Ten characters in all, at least two of them the code's.
+const LINK_CODE_RE: RegExp = /^(?=.{10}$)[0-9a-hjkmnp-tv-z]{2,}-*$/
 export const ROOM_KEY_RE: RegExp = /^[0-9a-hjkmnp-tv-z]{26}$/
 export const URL_PARAM_RE: RegExp = /^[A-Za-z][A-Za-z0-9_-]{0,31}$/
 
@@ -37,7 +40,10 @@ export function normalizeServer(text: string): string | null {
   }
 }
 
-/** Parses the value of the invite parameter: `<server>/<code>`, with `https://` implied. */
+/**
+ * Parses the value of the invite parameter: `<server>/<code>`, with `https://` implied. The code may end in dashes,
+ * one for each character the link leaves out.
+ */
 export function parseInvite(value: string | null | undefined): InviteRef | null {
   if (!value) return null
   const v = value.trim()
@@ -45,7 +51,7 @@ export function parseInvite(value: string | null | undefined): InviteRef | null 
   const cut = v.lastIndexOf('/')
   if (cut < 1) return null
   const code = v.slice(cut + 1).toLowerCase()
-  if (!INVITE_CODE_RE.test(code)) return null
+  if (!LINK_CODE_RE.test(code)) return null
   const server = normalizeServer(v.slice(0, cut))
   return server ? { server, code } : null
 }

@@ -9,7 +9,8 @@ not, so that nobody counts on more than there is.
 |---|---|---|---|
 | **The owner's password** (`P3P2_OWNER_PASSWORD`) | Whoever runs the server | The portal: creating, changing and deleting rooms, renewing invites, clearing what a room saved | Nothing in a room by itself |
 | **A room URL** (its key, 130 random bits) | The owner, and whoever the owner gives it to | Hosting in that room: joining it, creating its invite link, kicking a member, ending the session (a *mod*) | Other rooms. The owner can change a room's key or delete the room. |
-| **An invite link** (its code, 50 random bits) | Everybody the host sends it to | Joining the room, as a player who cannot kick or end | Hosting. An invite lasts 12 hours after the room empties, and the owner (or a mod) can renew it, which ends the old one. Join attempts are rate-limited per address. |
+| **An invite link** (its code, 50 random bits) | Everybody the host sends it to, and everybody who has the server's address when the owner shows the room's link on the front page | Joining the room, as a player who cannot kick or end | Hosting. An invite lasts 12 hours after the room empties, and the owner (or a mod) can renew it, which ends the old one. Join attempts are rate-limited per address. |
+| **The characters a front-page link leaves out** (the code's last 2, 3, 4 or 8: 10, 15, 20 or 40 random bits) | Whoever the host or the owner tells | With what the front page shows, joining the room | Much on their own: they are short. A room takes ten wrong tries at them, then one every 6 minutes, whoever makes them; with none left, every try for the room is refused, the right one too. Two characters then last two days on average, four six years. While somebody keeps trying, nobody new gets in through the invite; the owner can show the link whole, or take it off the front page. |
 | **A player's secret** | The player's browser, kept in its storage | Being the same player next time: their saved values are theirs | Proving who somebody is. It is "trust on first use": the first browser to use a player id owns it. Clearing the browser's storage makes a new player. |
 | **The stats token** (`P3P2_STATS_TOKEN`) | Whoever runs the server | `/api/v1/stats`: the server's counters | Anything in a room |
 
@@ -57,5 +58,6 @@ Per member: 90 frames a second (with a burst of 120) and 256 KB a second; a fram
 most 1 KB. Per room: 256 KB of saved values, 1 MB of log, 64 KB of message tails, 16 members by default. Per
 address: one new connection a second with a burst of 40, and five portal or API calls a second. All of them are
 server settings ([README](../README.md#server-settings)). Two more are fixed: per address, five wrong portal
-passwords and then one every 12 seconds, counted before the password is checked; and a request body of at most
-64 KB, refused or ignored before it is read.
+passwords and then one every 12 seconds, counted before the password is checked; per room whose front-page link
+leaves characters out, ten wrong tries at them and then one every 6 minutes, from any address; and a request body
+of at most 64 KB, refused or ignored before it is read.

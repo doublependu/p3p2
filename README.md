@@ -13,8 +13,8 @@ Multiplayer for static web games, through a small server of your own.
 
 **A player** opens a game, presses the multiplayer button (or a button of the game's own), pastes a room URL from the
 server's portal, and sends the invite link it gives them. Whoever opens the link is asked *Join?*,
-and is in the same game. A reload, a dropped connection, or a phone switching networks comes back
-by itself.
+and is in the same game. Friends can also open the server's address, and pick the room there. A reload, a dropped
+connection, or a phone switching networks comes back by itself.
 
 **A game** adds a few lines:
 

@@ -24,6 +24,7 @@ function room(r: Row): RoomRecord {
     maxMembers: r.max_members as number,
     versionPolicy: r.version_policy as VersionPolicy,
     gameId: (r.game_id as string | null) ?? null,
+    front: (r.front as number | null) ?? null,
     createdAt: r.created_at as number,
   }
 }
@@ -163,6 +164,11 @@ export class Store implements HubStore {
     return this.all('SELECT * FROM rooms ORDER BY created_at DESC, id DESC').map(room)
   }
 
+  /** The rooms the owner put on the front page, in the dashboard's order. */
+  frontRooms(): RoomRecord[] {
+    return this.all('SELECT * FROM rooms WHERE front IS NOT NULL ORDER BY created_at DESC, id DESC').map(room)
+  }
+
   countRooms(): number {
     return this.get('SELECT count(*) AS n FROM rooms')!.n as number
   }
@@ -177,13 +183,17 @@ export class Store implements HubStore {
     return r ? room(r) : null
   }
 
-  updateRoom(id: number, r: { name: string; origins: string[]; maxMembers: number; versionPolicy: VersionPolicy }): void {
+  updateRoom(
+    id: number,
+    r: { name: string; origins: string[]; maxMembers: number; versionPolicy: VersionPolicy; front: number | null },
+  ): void {
     this.run(
-      'UPDATE rooms SET name = ?, origins = ?, max_members = ?, version_policy = ? WHERE id = ?',
+      'UPDATE rooms SET name = ?, origins = ?, max_members = ?, version_policy = ?, front = ? WHERE id = ?',
       r.name,
       JSON.stringify(r.origins),
       r.maxMembers,
       r.versionPolicy,
+      r.front,
       id,
     )
   }
@@ -218,6 +228,16 @@ export class Store implements HubStore {
 
   roomIdOfInvite(code: string): number | null {
     return (this.get('SELECT room_id FROM invites WHERE code = ?', code)?.room_id as number | undefined) ?? null
+  }
+
+  roomsTried(code: string, now: number): number[] {
+    return this.all(
+      `SELECT DISTINCT r.id FROM rooms r JOIN invites i ON i.room_id = r.id
+       WHERE r.front > 0 AND i.revoked_at IS NULL AND (i.expires_at IS NULL OR i.expires_at > ?)
+         AND substr(i.code, 1, length(i.code) - r.front) = substr(?, 1, length(i.code) - r.front)`,
+      now,
+      code,
+    ).map((r) => r.id as number)
   }
 
   /** The room's valid invite, if it has one. A room has at most one. */

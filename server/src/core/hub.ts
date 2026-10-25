@@ -27,11 +27,18 @@ import {
   type WelcomeFrame,
 } from '@p3p2/protocol'
 import { newToken, safeEqual, sha256 } from './ids.ts'
-import { Bucket, type Limits } from './limits.ts'
-import type { Conn, HubStore, OpBatch, OpRecord, RetainScope, RoomRecord, VersionPolicy } from './types.ts'
+import { Bucket, KeyedLimiter, type Limits } from './limits.ts'
+import type { Conn, HubStore, InviteRecord, OpBatch, OpRecord, RetainScope, RoomRecord, VersionPolicy } from './types.ts'
 
 /** How much earlier than its arrival a presence value may say it was set, ms. */
 const PRESENCE_SAID_MS = 1000
+
+/**
+ * Wrong tries at the characters the front page leaves out of a room's link: 10 at once, then one every 6 minutes,
+ * per room. 2 left out are 1,024 possibilities, which then last two days on average; 4, six years.
+ */
+const TRIES = 10
+const TRY_EVERY_S = 360
 
 interface Member {
   id: number
@@ -213,6 +220,13 @@ export class Hub {
   private readonly presenceDue = new Set<LiveRoom>()
   /** Rooms with ops that storage does not have yet. */
   private readonly logDue = new Set<LiveRoom>()
+  /**
+   * The wrong tries left to each room whose front-page link leaves characters out, by its id. In memory: a restart,
+   * which only the owner can make, refills them.
+   */
+  private readonly tries = new KeyedLimiter(1 / TRY_EVERY_S, TRIES)
+  /** Rooms that have run out of tries, so that the log says so once, and not at every try after. */
+  private readonly triedOut = new Set<number>()
   readonly counters: HubCounters = {
     framesIn: 0,
     framesOut: 0,
@@ -384,6 +398,7 @@ export class Hub {
       // A host that has not been heard from for a while gives way before its slot does.
       if (room.members.size) this.elect(room, now)
     }
+    this.tries.sweep(now)
   }
 
   /** Writes the ops that arrived since the last call to storage, together. The socket layer calls it a few times a second. */
@@ -458,6 +473,38 @@ export class Hub {
     return { host: room.host, members }
   }
 
+  /**
+   * The invite a code names, for a look-up or a `hello`, or `rate`. A code is a try for each room whose link on the
+   * front page leaves characters out, and whose invite starts as the code does (`HubStore.roomsTried`). A wrong try
+   * uses one of the room's tries up. With none left, every try for the room is refused, the right one too:
+   * answering it would tell a guesser which one was right.
+   */
+  lookUpInvite(code: string, now: number): InviteRecord | null | 'rate' {
+    if (!INVITE_CODE_RE.test(code)) return null
+    const invite = this.store.inviteByCode(code, now)
+    // The right code is a try for its own room only: another room whose link happens to show the same first
+    // characters, and has no tries left, does not keep it out.
+    const rooms = this.store.roomsTried(code, now).filter((id) => !invite || id === invite.roomId)
+    // As with a password, a try is taken before the answer is known, so that tries sent all at once count as tries
+    // one after another do. The right code gives it back.
+    const took: number[] = []
+    for (const id of rooms) {
+      if (this.tries.take(String(id), now)) {
+        took.push(id)
+        this.triedOut.delete(id)
+        continue
+      }
+      for (const back of took) this.tries.give(String(back), now)
+      if (!this.triedOut.has(id)) {
+        this.triedOut.add(id)
+        this.log('tried-out', { room: id })
+      }
+      return 'rate'
+    }
+    if (invite) for (const id of took) this.tries.give(String(id), now)
+    return invite
+  }
+
   memberCount(roomId: number): number {
     return this.rooms.get(roomId)?.members.size ?? 0
   }
@@ -511,12 +558,18 @@ export class Hub {
     const mod = 'key' in f.auth
     if ('key' in f.auth) {
       if (ROOM_KEY_RE.test(f.auth.key)) rec = this.store.roomByKey(f.auth.key)
-    } else if (INVITE_CODE_RE.test(f.auth.invite)) {
-      const invite = this.store.inviteByCode(f.auth.invite, now)
-      if (invite) rec = this.store.roomById(invite.roomId)
-      // Renewing an invite must not cut off the members who joined with the old one: a member
-      // coming back with its resume token is let in on the strength of the token.
-      else if (f.resume) rec = this.resumable(f)
+    } else {
+      // A member coming back with its resume token is let in on the strength of the token. Renewing an invite must
+      // not cut off the members who joined with the old one, and a stranger's wrong tries must not either.
+      rec = this.resumable(f)
+      if (!rec) {
+        const invite = this.lookUpInvite(f.auth.invite, now)
+        if (invite === 'rate') {
+          this.log('refused', { code: 'rate', ip: s.ip })
+          return this.fail(s, 'rate', 'Too many wrong tries for this room. Try again later')
+        }
+        if (invite) rec = this.store.roomById(invite.roomId)
+      }
     }
     if (!rec) {
       this.log('refused', { code: 'auth', ip: s.ip })
@@ -650,7 +703,7 @@ export class Hub {
   }
 
   private resumable(f: HelloFrame): RoomRecord | null {
-    if (!('invite' in f.auth) || !f.resume) return null
+    if (!('invite' in f.auth) || !f.resume || !INVITE_CODE_RE.test(f.auth.invite)) return null
     const roomId = this.store.roomIdOfInvite(f.auth.invite)
     const m = roomId === null ? undefined : this.rooms.get(roomId)?.members.get(f.resume.member)
     if (!m || m.pid !== f.player.pid || !safeEqual(m.token, f.resume.token)) return null

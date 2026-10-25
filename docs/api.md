@@ -39,7 +39,7 @@ const p3p2 = new P3P2({ game: { id: 'my-game', version: '1.4.0' } })
 |---|---|
 | `p3p2.start()` | Call once when the game starts. Back into the room after a reload; "Join?" for a page opened from an invite. On an ordinary visit it resolves to `null` at once and loads nothing. Resolves to the `Room`, or `null`. |
 | `p3p2.resume()` | The first half of `start()`: back into this tab's room after a reload, without asking. |
-| `p3p2.invite` | The invite in the page's address (`{ server, code }`), or `null`. No network. |
+| `p3p2.invite` | The invite in the page's address (`{ server, code }`), or `null`. No network. A link from a server's front page may leave the code's last characters out: `code` then ends in a dash for each (see below). |
 | `p3p2.peek(invite)` | Who is behind an invite, without joining: `{ roomName, hostName, members, maxMembers }`. For a game that asks "Join?" in its own words ([rally](../examples/rally/rally.js)). |
 | `p3p2.join(invite, options)` | Joins through an invite. `options.ask`: ask the player in the panel first (default: when the panel is on). `options.name`: the player's name. Resolves to `null` if the player chose to play alone. |
 | `p3p2.host(roomUrl, options)` | Hosts in the room behind a room URL from the portal, and creates the invite link. `options.name`: the player's name. |
@@ -54,8 +54,19 @@ const p3p2 = new P3P2({ game: { id: 'my-game', version: '1.4.0' } })
 
 Errors that these reject with carry a `code` next to the message (`P3P2Error`): `unreachable`, `mixed` (an https
 page and an http server), `origin` (the room does not allow this site), `room-url`, `room`, `auth` (the invite
-expired), `full`, `rate`, `proto`, `player`, `version`. [`examples/rally/`](../examples/rally/rally.js) says each in
-its own words.
+expired, or the characters put in for the dashes are wrong), `hidden` (the code still ends in dashes), `full`,
+`rate` (too many tries, from this address or for the room), `proto`, `player`, `version`.
+[`examples/rally/`](../examples/rally/rally.js) says each in its own words.
+
+A link from a server's front page may leave the code's last characters out, for the player to type: `p3p2.invite`
+is then `{ server, code: '789xyz----' }`. The panel asks for them. A game with its own *Join?* asks, and puts them in
+place of the dashes before `peek` or `join`:
+
+```js
+const invite = p3p2.invite
+const missing = invite?.code.match(/-+$/)?.[0].length ?? 0      // how many to ask the player for
+if (invite && missing) invite.code = invite.code.slice(0, -missing) + (await askThePlayer(missing))
+```
 
 ## `Room`
 
@@ -167,7 +178,7 @@ two reports. [`examples/arena/`](../examples/arena/arena.js) draws the others' f
 
 | | |
 |---|---|
-| `new Smooth(options)` | `delay`: how far in the past, ms (120). `coast`: how long a thing carries on when no report comes, ms (250). `angles`: the positions of angles among the values, which turn the short way round. `quaternions`: the positions of the first of four values that are a rotation. `jump`: a change larger than this is a jump, with nothing drawn in between. `clock`: the clock read when no time is given (`performance.now`; for tests). It also draws further back by how late dated reports arrive, the most in the last second. |
+| `new Smooth(options)` | `delay`: how far in the past, ms (120). `coast`: how long a thing carries on the way it was going when no report comes, ms (0: it stands at the last report, and is only ever drawn between reports). `angles`: the positions of angles among the values, which turn the short way round. `quaternions`: the positions of the first of four values that are a rotation. `jump`: a change larger than this is a jump, with nothing drawn in between. `clock`: the clock read when no time is given (`performance.now`; for tests). It also draws further back by how late dated reports arrive, the most in the last second. |
 | `smooth.set(key, values, at)` | A report: an array of numbers, made at `at` on the `performance.now()` clock (now by default). For presence, the `at` that `presence.on` gives. |
 | `smooth.get(key, now, out)` | The values to draw with now, or `null`. |
 | `smooth.has(key)`, `smooth.delete(key)`, `smooth.clear()` | |

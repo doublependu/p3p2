@@ -15,6 +15,15 @@ game's own (FRIENDS, say): open it again to see who is there, and to chat.
 
 On a phone it is the same. A computer and a phone can play together, and so can different browsers.
 
+## From the server's address
+
+A friend may send you the address of their p3p2 server instead (`https://p3p2.example.com/`). It lists the rooms
+they opened to friends. Press **Play** beside the one they meant: the game opens, and asks *Join?*.
+
+If the link there ends in dashes, the game first asks for the last few characters of it. Your friend has them:
+type them as they say them, in capitals or not. If the game doesn't ask, it is older than that: ask your friend for
+the whole link.
+
 ## While you play
 
 - **If your connection drops**, the game tries to get you back by itself. For the next 30 seconds your place in
@@ -44,6 +53,8 @@ for 30 seconds, in case you come back, and then tells the others you left.
 | It says | What it means | What to do |
 |---|---|---|
 | *This invite has expired or was replaced.* | The link is old: links last 12 hours after everybody has left, and the host can make a new one, which ends the old one. | Ask for a new link. |
+| *Those aren't the right characters.* | They are not the ones the link left out. They change with every new invite. | Ask your friend for them again, or for the whole link. |
+| *Too many tries. Wait a moment and try again.* | Somebody tried too many wrong characters for this room, perhaps not you. | Wait a few minutes, or ask your friend: the room's owner can show the whole link. |
 | *The room is full.* | Every place is taken. | Wait for somebody to leave, or ask the host. |
 | *The players in this room have a different version of the game.* | Your copy of the game and theirs differ, often because one of you loaded it before an update. | Reload the page. If that changes nothing, they need to reload. |
 | *Can't reach …* | The server is not answering. | Check your connection; if it is fine, tell your friend. |

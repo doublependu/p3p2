@@ -7,12 +7,13 @@ import { deleteCookie, getCookie, setCookie } from 'hono/cookie'
 import { generate } from 'lean-qr'
 import { toSvgSource } from 'lean-qr/extras/svg'
 import { newRoomKey, newToken, safeEqual, sha256 } from '../core/ids.ts'
-import { type InviteRecord, type RoomRecord, VERSION_POLICIES, type VersionPolicy } from '../core/types.ts'
+import { FRONT_HIDDEN, type InviteRecord, type RoomRecord, VERSION_POLICIES, type VersionPolicy } from '../core/types.ts'
 import { ensureInvite } from './api.ts'
 import { FAVICON, PORTAL_CSS, PORTAL_JS } from './assets.ts'
 import { type App, clientIp, MAX_BODY_BYTES } from './context.ts'
 import {
   dashboardPage,
+  frontPage,
   loginPage,
   messagePage,
   type NewRoomForm,
@@ -70,6 +71,16 @@ function roomName(text: string, fallback: string): string {
 function field(form: Record<string, unknown>, name: string): string {
   const v = form[name]
   return typeof v === 'string' ? v : ''
+}
+
+/** The invite code as the front page shows it: without its last `hidden` characters, a dash in place of each. */
+function shownCode(code: string, hidden: number): string {
+  return hidden ? code.slice(0, -hidden) + '-'.repeat(hidden) : code
+}
+
+/** How much of a room's link the front page leaves out: everything, when the room is not on it. */
+function hiddenOf(front: number | null): number {
+  return front ?? Number.POSITIVE_INFINITY
 }
 
 export function expiryText(invite: InviteRecord, now: number): string {
@@ -219,8 +230,31 @@ export function portalRoutes(app: App): Hono<Env> {
 
   portal.get('/', (c) => {
     if (!store.ownerHash()) return c.html(setupNeededPage(server))
-    if (!c.get('owner')) return c.redirect('/login')
-    return dashboard(c)
+    if (c.get('owner')) return dashboard(c)
+    // The address of a server whose owner shows no room on it is for logging in, as it always was.
+    const shown = store.frontRooms()
+    if (!shown.length) return c.redirect('/login')
+    // What it shows is public, but each look costs a query per room: rate-limited like the room page.
+    const now = app.now()
+    if (!app.limiters.api.take(clientIp(c, app), now)) {
+      return c.html(messagePage(server, false, 'Slow down', 'Too many requests. Try again in a moment.'), 429)
+    }
+    const open = []
+    for (const room of shown) {
+      // Only rooms with an invite open. The front page never makes one: the host does, or the owner.
+      const invite = store.currentInvite(room.id, now)
+      if (!invite) continue
+      const hidden = room.front ?? 0
+      open.push({
+        name: room.name,
+        game: room.gameUrl,
+        members: hub.memberCount(room.id),
+        maxMembers: Math.min(room.maxMembers, config.limits.maxMembersCap),
+        link: inviteLinkFor(room, { ...invite, code: shownCode(invite.code, hidden) }),
+        hidden,
+      })
+    }
+    return c.html(frontPage(server, open))
   })
 
   function memberLimit(text: string): number | null {
@@ -262,6 +296,8 @@ export function portalRoutes(app: App): Hono<Env> {
       app.now(),
     )
     app.origins.refresh()
+    // With its invite, so that its page has a link to send before anyone has hosted.
+    ensureInvite(app, room, false)
     app.log('info', 'room-created', { room: room.id, game: game.origin })
     return c.redirect(`/room/${room.key}`)
   })
@@ -344,11 +380,18 @@ export function portalRoutes(app: App): Hono<Env> {
     if (maxMembers === null) {
       return showRoom(c, room, `Players must be a number from 1 to ${config.limits.maxMembersCap}.`, 400)
     }
-    // A form without the field (an older page still open) keeps the room's policy.
+    // A form without a field (an older page still open) keeps what the room has: its policy, its place on the front
+    // page.
     const versions = field(form, 'versions') as VersionPolicy
     const versionPolicy = VERSION_POLICIES.includes(versions) ? versions : room.versionPolicy
-    store.updateRoom(room.id, { name: roomName(field(form, 'name'), room.name), origins, maxMembers, versionPolicy })
+    const shown = field(form, 'front')
+    const front = shown === 'off' ? null : (FRONT_HIDDEN.find((n) => String(n) === shown) ?? room.front)
+    store.updateRoom(room.id, { name: roomName(field(form, 'name'), room.name), origins, maxMembers, versionPolicy, front })
     app.origins.refresh()
+    // Hiding more of the link, or taking the room off the front page, makes a new invite: what is hidden now was
+    // public until now, and would be easier to guess than the setting says. Showing more keeps the invite, and the
+    // links already sent.
+    if (hiddenOf(front) > hiddenOf(room.front) && store.currentInvite(room.id, app.now())) ensureInvite(app, room, true)
     return c.redirect(`/room/${room.key}`)
   })
 

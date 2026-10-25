@@ -23,6 +23,8 @@ function describe(code: string, server: string): string {
       return "That room doesn't exist (any more). Check the URL in the portal."
     case 'auth':
       return 'This invite has expired or was replaced. Ask for a new link.'
+    case 'hidden':
+      return 'This invite link leaves out the last characters of its code. Type them in, or ask whoever invited you for the whole link.'
     case 'full':
       return 'The room is full.'
     case 'rate':

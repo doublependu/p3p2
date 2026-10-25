@@ -35,6 +35,10 @@ recommendations.
   - 0.1.2 brings plan 4's fixes (and the logo) to `@0.1` and to `p3p2/p3p2:0.1`.
   - 0.1 clients keep working with a 0.2 server, but only 0.2 clients ask for hidden characters: see "Clients from
     0.1".
+- **1, 3 and 5 as recommended** ("implement this", 2026-10-24): every room starts off the front page; a room takes
+  10 wrong tries, then one every 6 minutes; arena, rally and world take `coast: 0` with no change to their code.
+- **The logo's first tidy-up as recommended**: inline styles for the mark's paint. The second (the comment naming
+  p3p2.me) waits for your word.
 
 ## 0. The logo commit: checked
 

@@ -13,8 +13,8 @@ const THEM =
 export function logo(): SVGSVGElement {
   const svg = document.createElementNS(NS, 'svg')
   svg.setAttribute('viewBox', '0 0 16 16')
-  svg.setAttribute('fill', 'currentColor')
-  // Sized here, not in a stylesheet: the button that stands in for the panel lives under the game's CSS.
+  // Sized and painted in inline styles, not in attributes or a stylesheet: the button that stands in for the panel
+  // lives under the game's CSS, and a rule there (`path { fill: #333 }`) beats an attribute, but not an inline style.
   svg.style.cssText = 'display:block;width:16px;height:16px'
   for (const [d, opacity] of [
     [THEM, '.55'],
@@ -22,7 +22,7 @@ export function logo(): SVGSVGElement {
   ] as const) {
     const path = document.createElementNS(NS, 'path')
     path.setAttribute('d', d)
-    path.setAttribute('opacity', opacity)
+    path.style.cssText = `fill:currentColor;opacity:${opacity}`
     svg.append(path)
   }
   return svg

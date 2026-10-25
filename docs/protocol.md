@@ -26,6 +26,13 @@ only for what may change within it. Everything described here is implemented. Wh
 - The invite link is the game's own address plus one query parameter, `room` unless the game
   picks another name. Its value is `<server>/<code>`. `https://` is left out; any other scheme
   is written out, as in `?room=http://192.168.1.118:8080/789xyz0abc`.
+- On a server's front page a room's link may leave the code's last characters out, a dash in place of each:
+  `?room=p3p2.example.com/789xyz----`. At least two characters are the code's. The client asks the player for the
+  rest, and puts them in before it sends the code: the server only ever gets whole codes.
+- A code is a **try** for each room whose front-page link leaves characters out, and whose current invite has the
+  characters the link shows, as the code does. Each such room takes 10 wrong tries, through `GET /invite` and
+  `hello` together, then one every 6 minutes. With none left, every try for the room is refused with `rate`, the
+  right code included. A member coming back with its resume token is not a try.
 - A room accepts requests only from its game's origin, plus origins the owner added.
 
 ## REST API
@@ -59,7 +66,7 @@ Errors are `{error, message}` with one of these codes:
 | 401 | `auth` | Unknown room key; unknown, expired or revoked invite; wrong stats token |
 | 403 | `origin` | The request's `Origin` is not one of the room's origins |
 | 404 | `not-found` | No such endpoint |
-| 429 | `rate` | Too many requests from this address |
+| 429 | `rate` | Too many requests from this address; or, from `GET /invite`, too many wrong tries for the room (see "The two links") |
 
 **CORS.** `/info` answers every origin. For the other endpoints the server reflects `Origin`
 only when *some* room accepts it; a preflight carries no credentials, so it cannot be checked
@@ -444,6 +451,7 @@ Every `msg` carries `ts`, the server time when it was relayed. `pres` carries no
 | `version` | closed | The room's members run another version of the game |
 | `game` | closed | The room is held to another game (another `game.id`) |
 | `rate` | kept | Over the rate limit; the frames were dropped |
+| `rate` | closed | In answer to `hello`: too many wrong tries for the room (see "The two links") |
 | `too-big` | kept | Saved values or the log over the room's cap, or a presence value over its limit; ignored |
 | `forbidden` | kept | `kick` or `end` from a member who is not a mod, or `snap` from one who is not the host |
 | `seq` | kept | A snapshot that ends before the last one, or after the last op; ignored |
@@ -467,6 +475,7 @@ Defaults; all can be changed with `P3P2_*` environment variables.
 | Grace period after a disconnect | 30 s for the slot, 5 s for the host role |
 | Silence, connected and in front, before a member is `lost` and a host gives up the role | 3 s |
 | Invite lifetime after the room empties | 12 h |
+| Wrong tries for a room whose front-page link leaves characters out (fixed) | 10 at once, then 1 every 6 minutes |
 | WebSocket connects per address | 40 at once, then 1 per second |
 | REST calls per address | 40 at once, then 5 per second |
 
@@ -520,3 +529,4 @@ These need **protocol 2**, taken beside protocol 1 (see "Old clients"):
 | 2026-10-13 | A room held to its game: error code `game` | Another game on the same site read a room's log and values |
 | 2026-10-13 | `welcome.limits.maxLogBytes`, the room's log cap | A game that keeps "the newest so many things" learned the cap from a refusal |
 | 2026-10-15 | `source` in `/info`: where the server's source code is | The AGPL asks a server that runs changed code to offer its users that code |
+| 2026-10-24 | An invite link whose code ends in dashes, and `rate` for too many wrong tries for a room, from `GET /invite` and in answer to `hello` | A server's front page shows a room's link without its last characters, for friends to type; an older client opens such a link as if there were none |

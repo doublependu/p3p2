@@ -953,6 +953,41 @@ test('a member who joined with an invite that was renewed since can still resume
   assert.equal(late.conn.of('error')[0]?.code, 'auth')
 })
 
+test('wrong tries at the characters the front page leaves out: ten per room, then nobody new comes in for a while', () => {
+  const w = new World()
+  const room = w.room()
+  w.store.updateRoom(room.id, { ...room, front: 2 })
+  const code = w.invite(room)
+  const other = w.room({ name: 'Another' })
+  const otherCode = w.invite(other)
+  const guest = w.join({ invite: code })
+  const host = w.join({ key: room.key })
+  const tries = [...'0123456789abcdefghjkmnpqrstvwxyz'].map((c) => code.slice(0, 8) + c + c).filter((c) => c !== code)
+  const answer = (c: string) => w.join({ invite: c }).conn.of('error')[0]?.code ?? 'welcome'
+
+  // A code that does not start as the room's does is no try for it, however many come.
+  for (let i = 0; i < 20; i++) assert.equal(w.hub.lookUpInvite(`${i}`.padStart(10, 'z'), w.time), null)
+  for (const c of tries.slice(0, 5)) assert.equal(w.hub.lookUpInvite(c, w.time), null)
+  for (const c of tries.slice(5, 10)) assert.equal(answer(c), 'auth')
+  assert.equal(w.hub.lookUpInvite(code, w.time), 'rate')
+  assert.equal(answer(code), 'rate')
+
+  // Who is in the room stays, and comes back after a drop; whoever has the key comes in; other rooms take theirs.
+  assert.equal(guest.conn.closed, false)
+  w.drop(guest)
+  const back = w.join({ invite: code }, { pid: guest.pid, resume: { member: guest.id, token: guest.token } })
+  assert.equal(back.id, guest.id)
+  assert.ok(w.join({ key: room.key }).id)
+  assert.equal(answer(otherCode), 'welcome')
+  assert.equal(host.conn.closed, false)
+
+  // Six minutes later a try has come back. The right code gives it back; a wrong one uses it up.
+  w.advance(6 * 60_000)
+  assert.equal(answer(code), 'welcome')
+  assert.equal(w.hub.lookUpInvite(tries[10]!, w.time), null)
+  assert.equal(answer(code), 'rate')
+})
+
 test('rate limit: frames past the burst are dropped, with one warning a second', () => {
   const w = new World({ msgRate: 10, msgBurst: 20 })
   const room = w.room()

@@ -28,6 +28,40 @@ it cannot host, remove anybody or end anything. It lasts 12 hours after the room
 
 If you reload the page, you are back in the room. Next time, paste the room URL again.
 
+The room's page in the portal shows the same link from the moment the room is created, before anyone has hosted:
+**Open** opens the game with it, in a new tab.
+
+## Friends who come to the server
+
+Instead of a link each time, friends can have the server's address (`https://p3p2.example.com/`) once. Whoever opens
+it without logging in sees the rooms its owner put on its **front page**, each with its invite link, and **Play**
+opens the game.
+
+On the room's page in the portal, **On this server's front page** says how much of the room it shows:
+
+- **Not shown**, which every room starts with. While no room is shown, the address is the log-in page, as before.
+- **Shown, with the whole invite link**: anybody who has the server's address can join.
+- **Shown, without the link's last 2, 3, 4 or 8 characters**: the game asks for them, and the friends who come
+  that way type them. Fewer are easier to read out over the phone; more are harder to guess. The room's page shows
+  them under the invite link, for you to pass on.
+
+A room is on the front page only while it has an invite: from when it is created, or someone hosts, until 12 hours
+after it empties, or **End session**. The front page never shows the room URL, the characters it leaves out, or who
+is playing.
+
+The characters left out are the end of the room's invite, so they change with it: **Renew invite**, **End
+session**, the invite running out, and hiding more of the link or taking the room off the front page, which makes a
+new invite. Showing more of it keeps the invite, and the links already sent.
+
+Only games on p3p2 0.2 or later ask for the characters. A game on an older version opens as if there were no
+invite: send those friends the whole link.
+
+**Someone who keeps guessing.** A room takes ten wrong tries at its characters, and then one more every 6 minutes.
+While somebody keeps trying, nobody new gets in through the room's invite, with the right characters or with the
+whole link. The players in the room stay, and whoever has the room URL still gets in. The server's log says
+`tried-out` when a room has no tries left. Show the room with its whole link, or take it off the front page, and its
+invite works again: nothing is left to guess.
+
 ## While it runs
 
 - **Who is there**: the window lists everybody, in the order they came. The room's page in the portal also shows

@@ -26,7 +26,11 @@ input { width: 100%; min-width: 0; padding: 6px 8px; border: 1px solid var(--lin
   display: flex; align-items: center; gap: 6px; padding: 8px 12px; border-radius: 99px; line-height: 1; font-size: 16px;
   border: 1px solid #8888; background: var(--pill); color: var(--pill-ink);
 }
-.dot { width: 8px; height: 8px; border-radius: 50%; background: #ff9f43; }
+.mark { position: relative; }
+.unread {
+  position: absolute; top: -8px; right: -9px; min-width: 16px; padding: 0 4px; border-radius: 8px;
+  background: #e5484d; color: #fff; font: 700 10px/16px system-ui; text-align: center; box-shadow: 0 0 0 2px #1f201c;
+}
 
 .card {
   width: 300px; max-width: calc(100vw - 24px); max-height: calc(100vh - 24px); max-height: calc(100dvh - 24px);

@@ -80,4 +80,9 @@ export const MIGRATIONS: string[] = [
   -- lets another game in, or clears what it saved.
   ALTER TABLE rooms ADD COLUMN game_id TEXT;
   `,
+  /* 5 */ `
+  -- Whether the room is on the server's front page, and how much of its invite link is shown there: NULL when it is
+  -- not, otherwise how many of the code's last characters are left out (0 for none).
+  ALTER TABLE rooms ADD COLUMN front INTEGER;
+  `,
 ]

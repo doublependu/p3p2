@@ -3,6 +3,7 @@
 
 import { NAME_MAX } from '@p3p2/protocol'
 import type { Controller } from '../core.ts'
+import type { Failure } from '../errors.ts'
 import type { Bridge } from '../index.ts'
 import { logo } from '../logo.ts'
 import { CHAT_MAX, type RoomClient, SYNC } from '../room.ts'
@@ -36,6 +37,14 @@ function serverName(server: string): string {
   }
 }
 
+/**
+ * Characters of an invite code as a player types them, read the way its alphabet reads them: capitals as small
+ * letters, o as 0, i and l as 1, without spaces. "K3 F9", read out over the phone, is k3f9.
+ */
+function readCode(text: string): string {
+  return text.toLowerCase().replace(/\s+/g, '').replace(/o/g, '0').replace(/[il]/g, '1')
+}
+
 const CLOSED: Record<CloseReason, string> = {
   left: '',
   kicked: 'You were removed from the room.',
@@ -51,7 +60,9 @@ export class PanelElement extends HTMLElement {
   private readonly root: ShadowRoot
   private readonly pill: HTMLButtonElement
   private readonly count: HTMLSpanElement
-  private readonly dot: HTMLSpanElement
+  /** On the mark's corner: how many chat lines came from the others while the panel was closed. */
+  private readonly badge: HTMLSpanElement
+  private unread = 0
   private readonly card: HTMLElement
   private readonly title_: HTMLElement
   private readonly body: HTMLElement
@@ -67,8 +78,8 @@ export class PanelElement extends HTMLElement {
     super()
     this.root = this.attachShadow({ mode: 'open' })
     this.count = h('span')
-    this.dot = h('span', { class: 'dot', hidden: true })
-    this.pill = h('button', { class: 'pill', type: 'button', 'aria-label': 'Multiplayer', title: 'Multiplayer' }, logo(), this.count, this.dot)
+    this.badge = h('span', { class: 'unread', hidden: true })
+    this.pill = h('button', { class: 'pill', type: 'button', 'aria-label': 'Multiplayer', title: 'Multiplayer' }, h('span', { class: 'mark' }, logo(), this.badge), this.count)
     this.title_ = h('b', {}, 'Multiplayer')
     const close = h('button', { type: 'button', 'aria-label': 'Close', title: 'Close' }, '×')
     this.body = h('div', { class: 'body' })
@@ -125,7 +136,7 @@ export class PanelElement extends HTMLElement {
   expand(): void {
     this.card.hidden = false
     this.pill.hidden = true
-    this.dot.hidden = true
+    this.setUnread(0)
     // A game that holds the pointer would leave the player without a cursor to use the panel.
     if (document.pointerLockElement) document.exitPointerLock()
     const log = this.body.querySelector('.log')
@@ -139,6 +150,14 @@ export class PanelElement extends HTMLElement {
     // Hand the keyboard back to the game.
     const active = this.root.activeElement
     if (active instanceof HTMLElement) active.blur()
+  }
+
+  private setUnread(n: number): void {
+    this.unread = n
+    this.badge.textContent = n > 9 ? '9+' : String(n)
+    this.badge.hidden = n === 0
+    // The badge has no words of its own: they are in the button's name.
+    this.pill.setAttribute('aria-label', n ? `Multiplayer, ${n} unread message${n === 1 ? '' : 's'}` : 'Multiplayer')
   }
 
   private onKey(e: KeyboardEvent): void {
@@ -233,12 +252,19 @@ export class PanelElement extends HTMLElement {
   offer(invite: Invite): Promise<Room | null> {
     return new Promise((resolve) => {
       const where = serverName(invite.server)
-      const lead = h('p', {}, 'Looking up the invite…')
+      const invited = `You were invited to a room on ${where}.`
+      // A link from the server's front page leaves the code's last characters out, a dash for each: the player
+      // types them, and the invite is looked up once they are all there.
+      const known = invite.code.replace(/-+$/, '')
+      const missing = invite.code.length - known.length
+      const lead = h('p', {}, missing ? invited : 'Looking up the invite…')
       const detail = h('p', { class: 'soft' })
       const name = this.nameField()
       const status = h('p', { class: 'status bad', role: 'status' })
       const join = h('button', { class: 'primary grow', type: 'button', disabled: true }, 'Join')
       const alone = h('button', { type: 'button' }, 'Play alone')
+      /** The invite that was found, to join with. */
+      let found: Invite | null = null
 
       const done = (room: Room | null) => {
         this.decline = null
@@ -252,11 +278,12 @@ export class PanelElement extends HTMLElement {
       }
       alone.onclick = this.decline
       join.onclick = async () => {
+        if (!found) return
         join.disabled = true
         status.textContent = ''
         this.controller.name = name.value
         try {
-          const room = await this.controller.enterInvite(invite)
+          const room = await this.controller.enterInvite(found)
           // The player came to play: get out of the way.
           this.collapse()
           done(room)
@@ -266,22 +293,51 @@ export class PanelElement extends HTMLElement {
         }
       }
 
-      this.setBody('Multiplayer', lead, detail, h('label', {}, 'Your name', name), status, h('div', { class: 'row' }, join, alone))
-      this.expand()
+      let turn = 0
+      const look = (whole: Invite) => {
+        const mine = ++turn
+        this.controller.peek(whole).then(
+          (d) => {
+            if (mine !== turn) return
+            found = whole
+            lead.replaceChildren('Join ', h('b', {}, d.roomName), ` on ${where}?`)
+            const playing = d.members === 1 ? '1 player' : `${d.members} players`
+            detail.textContent = d.hostName ? `Hosted by ${d.hostName} · ${playing}` : 'Nobody is here yet'
+            join.disabled = false
+            // Not away from the characters, which the player may still be changing.
+            if (!missing) join.focus()
+          },
+          (err: Failure) => {
+            if (mine !== turn) return
+            lead.textContent = invited
+            status.textContent = missing && err.code === 'auth' ? "Those aren't the right characters." : err.message
+          },
+        )
+      }
 
-      this.controller.peek(invite).then(
-        (d) => {
-          lead.replaceChildren('Join ', h('b', {}, d.roomName), ` on ${where}?`)
-          const playing = d.members === 1 ? '1 player' : `${d.members} players`
-          detail.textContent = d.hostName ? `Hosted by ${d.hostName} · ${playing}` : 'Nobody is here yet'
-          join.disabled = false
-          join.focus()
-        },
-        (err: Error) => {
-          lead.textContent = `You were invited to a room on ${where}.`
-          status.textContent = err.message
-        },
-      )
+      const parts: Node[] = [lead, detail]
+      const chars = missing ? h('input', { type: 'text', autocomplete: 'off', autocapitalize: 'off', spellcheck: 'false', enterkeyhint: 'go' }) : null
+      if (chars) {
+        chars.oninput = () => {
+          turn++
+          found = null
+          join.disabled = true
+          lead.textContent = invited
+          detail.textContent = ''
+          status.textContent = ''
+          const typed = readCode(chars.value)
+          if (typed.length > missing) status.textContent = `Only the last ${missing}.`
+          else if (typed.length === missing) look({ server: invite.server, code: known + typed })
+        }
+        chars.onkeydown = (e) => {
+          if (e.key === 'Enter' && !join.disabled) join.click()
+        }
+        parts.push(h('label', {}, `The last ${missing} characters`, chars))
+      }
+      this.setBody('Multiplayer', ...parts, h('label', {}, 'Your name', name), status, h('div', { class: 'row' }, join, alone))
+      this.expand()
+      if (chars) chars.focus()
+      else look(invite)
     })
   }
 
@@ -368,7 +424,7 @@ export class PanelElement extends HTMLElement {
       }),
       room.chat.on((m) => {
         chatLine(m)
-        if (this.card.hidden && !m.self) this.dot.hidden = false
+        if (this.card.hidden && !m.self) this.setUnread(this.unread + 1)
       }),
       room.on('close', (reason) => this.hide(reason)),
     ]
@@ -391,7 +447,7 @@ export class PanelElement extends HTMLElement {
     this.unsubscribe = []
     this.room = null
     this.count.textContent = ''
-    this.dot.hidden = true
+    this.setUnread(0)
     this.renderSetup(CLOSED[reason])
     if (CLOSED[reason]) this.expand()
   }
