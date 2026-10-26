@@ -39,7 +39,7 @@ const TEAL = 'rgb(44, 199, 177)'
 /** The room's status, as the game sees it. */
 const status = (page: Page) => page.evaluate(() => (window as unknown as { p3p2: { room: { status: string } | null } }).p3p2.room?.status)
 
-test('in the portal, a field nobody can change looks unlike one the owner can, light and dark', { tag: '@this-server' }, async ({ browser, server }) => {
+test('in the portal, a field nobody can change looks unlike one the owner can, light and dark', async ({ browser, server }) => {
   const owner = await createRoom(browser, server, 'Look room')
   for (const colorScheme of ['light', 'dark'] as const) {
     await owner.portal.emulateMedia({ colorScheme })
@@ -69,7 +69,7 @@ test('in the panel, the invite link and the chat log look unlike the fields a pl
   await owner.close()
 })
 
-test('in the portal, a click on an invite link draws no focus ring and Tab does, and a link that does not fit shows whole', { tag: '@this-server' }, async ({ browser, server }) => {
+test('in the portal, a click on an invite link draws no focus ring and Tab does, and a link that does not fit shows whole', async ({ browser, server }) => {
   // The examples' own page as the game: its link is short enough to fit beside Play on the front page.
   const owner = await createRoom(browser, server, 'Ring room', `${GAME}/`, { front: 0 })
   const { portal } = owner
@@ -113,7 +113,7 @@ test('in the portal, a click on an invite link draws no focus ring and Tab does,
   await owner.close()
 })
 
-test('in the portal on a phone, an invite link has a line of its own, with its buttons under it, and a room in the list its badges under its name', { tag: '@this-server' }, async ({ browser, server }) => {
+test('in the portal on a phone, an invite link has a line of its own, with its buttons under it, and a room in the list its badges under its name', async ({ browser, server }) => {
   const owner = await createRoom(browser, server, 'Phone room', undefined, { front: 0 })
   const box = async (l: Locator) => (await l.boundingBox())!
   const alone = async (link: Locator, button: Locator, card: Locator) => {
@@ -144,7 +144,7 @@ test('in the portal on a phone, an invite link has a line of its own, with its b
   await owner.close()
 })
 
-test("in the portal, a part of a card is a step below the card's heading, and links are p3p2's teal, not the green of who is here", { tag: '@this-server' }, async ({ browser, server }) => {
+test("in the portal, a part of a card is a step below the card's heading, and links are p3p2's teal, not the green of who is here", async ({ browser, server }) => {
   const owner = await createRoom(browser, server, 'Colour room')
   const ada = await player(browser)
   await host(ada.page, owner.invite, 'Ada')

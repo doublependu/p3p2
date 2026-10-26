@@ -26,7 +26,8 @@ recommendations.
 - **A room gets its invite when it is created** (you). The room page keeps Create invite for when the room has
   none, as today, and doesn't make one by itself.
 - **The front page lists only rooms whose invite hasn't expired** (you). It never makes an invite.
-- **4. 0.1.2 now, then plan 5 as 0.2.0** (you). 0.1.2 is out: released 2026-10-24 from `630fbfd`.
+- **4. 0.1.2 now, then plan 5 as 0.2.0** (you). 0.1.2 is out: released 2026-10-24 from `630fbfd`. 0.2.0 is out,
+  with plans 5 to 8: released 2026-10-26 from `4602190`.
   - The database gets a new column. A 0.1 server refuses a database that a 0.2 server has opened, and
     `docs/self-host.md` tells owners that pulling `p3p2/p3p2:0.1` only brings fixes. It already says to back up
     before moving to 0.2.
@@ -395,12 +396,14 @@ Following decision 4:
 1. **Done:** 0.1.2, released 2026-10-24 from `630fbfd`. The image's `0.1.2`, `0.1` and `latest` are the same build,
    npm's `latest` is 0.1.2, and jsDelivr's `@0.1` serves it. `@this-server` came off "an op as large as a message
    may be arrives", which then passed against the published image.
-2. **After plan 5:** 0.2.0.
-   - Run `npm version 0.2.0 --workspaces --include-workspace-root --no-git-tag-version`.
-   - Since this is a new minor version, `0.1` becomes `0.2` in the image tag of `deploy/docker-compose.yml` and in
-     the script tags of `client/README.md`, `docs/integrate.md` and `examples/duel/index.html`
-     (`CONTRIBUTING.md`).
-   - Then as always: commit and push; once CI is green, `npm run build && npm run e2e:all`; then tag.
+2. **Done:** 0.2.0, with plans 5 to 8, released 2026-10-26 from `4602190`. The image's `0.2.0`, `0.2` and `latest`
+   are the same build, `0.1` stays on 0.1.2, npm's `latest` is 0.2.0, and jsDelivr's `@0.2` serves it.
+   - The minor version also changed `0.1` in `SECURITY.md`, `deploy/DOCKERHUB.md`, `deploy/Dockerfile`,
+     `docs/self-host.md` and the `CDN` of `duel.spec.ts` and `upgrade.spec.ts`: `CONTRIBUTING.md` lists them now.
+   - `e2e:all` failed once on "through the door …": the tile beside the cellar's door can be a stone, which a
+     player takes as they come in (a world in about 40). The test now checks that stone 0 is Grace's.
+   - `@this-server` came off plans 5 to 8's tests, which then passed against the published image.
+     `@this-client` stays while 0.1 clients are in the clients run.
 
 ## Not in this plan
 

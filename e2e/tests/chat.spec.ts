@@ -468,7 +468,7 @@ async function onFrontPage(portal: Page, hidden: number): Promise<string> {
   return (await chars.textContent())!
 }
 
-test("the owner's room page has an invite link before anyone has played, and no room URL; the link opens the game in a new tab", { tag: '@this-server' }, async ({ browser, server }) => {
+test("the owner's room page has an invite link before anyone has played, and no room URL; the link opens the game in a new tab", async ({ browser, server }) => {
   const owner = await createRoom(browser, server, 'Fresh room')
   await expect(owner.portal.getByLabel('Room URL')).toHaveCount(0)
   await expect(owner.portal.getByText('everyone joins this room through it, you too')).toBeVisible()
@@ -482,7 +482,7 @@ test("the owner's room page has an invite link before anyone has played, and no 
   await owner.close()
 })
 
-test('a room the owner puts on the front page as it is made is there at once', { tag: '@this-server' }, async ({ browser, server }) => {
+test('a room the owner puts on the front page as it is made is there at once', async ({ browser, server }) => {
   const owner = await createRoom(browser, server, 'Straight in', CHAT, { front: 0 })
   await expect(owner.portal.getByLabel("On this server's front page")).toHaveValue('0')
   const visitor = await player(browser, `${server.url}/`)
@@ -491,7 +491,7 @@ test('a room the owner puts on the front page as it is made is there at once', {
   await owner.close()
 })
 
-test("a friend who opens the server's address finds the room, types the characters its link leaves out, and plays with the host", { tag: ['@this-server', '@this-client'] }, async ({ browser, server }) => {
+test("a friend who opens the server's address finds the room, types the characters its link leaves out, and plays with the host", { tag: '@this-client' }, async ({ browser, server }) => {
   const owner = await createRoom(browser, server, 'Friday night')
   const hidden = await onFrontPage(owner.portal, 4)
   const ada = await player(browser)
@@ -533,7 +533,7 @@ test("a friend who opens the server's address finds the room, types the characte
   await owner.close()
 })
 
-test('a game with its own Join? puts in the characters the link leaves out itself', { tag: ['@this-server', '@this-client'] }, async ({ browser, server }) => {
+test('a game with its own Join? puts in the characters the link leaves out itself', { tag: '@this-client' }, async ({ browser, server }) => {
   const owner = await createRoom(browser, server, 'Own menu room')
   const hidden = await onFrontPage(owner.portal, 4)
   const ada = await player(browser)
@@ -650,7 +650,7 @@ test('outside a room the panel is powered by p3p2, says to open an invite link f
   await context.close()
 })
 
-test('two tabs of one browser are one player: the newer takes the place, and the older says why', { tag: '@this-server' }, async ({ browser, server }) => {
+test('two tabs of one browser are one player: the newer takes the place, and the older says why', async ({ browser, server }) => {
   const owner = await createRoom(browser, server, 'Two tabs room')
   const ada = await player(browser)
   const invite = await host(ada.page, owner.invite, 'Ada')
@@ -672,7 +672,7 @@ test('two tabs of one browser are one player: the newer takes the place, and the
   await owner.close()
 })
 
-test('a player who picks a name already in the room is asked for another, and gets in with it', { tag: ['@this-server', '@this-client'] }, async ({ browser, server }) => {
+test('a player who picks a name already in the room is asked for another, and gets in with it', { tag: '@this-client' }, async ({ browser, server }) => {
   const owner = await createRoom(browser, server, 'Names room')
   const ada = await player(browser)
   const invite = await host(ada.page, owner.invite, 'Ada')
